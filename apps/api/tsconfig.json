@@ -3,6 +3,9 @@
   "compilerOptions": {
     "outDir": "./dist",
     "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"]
+    },
     "types": ["node", "jest"]
   },
   "include": ["src/**/*", "test/**/*"]

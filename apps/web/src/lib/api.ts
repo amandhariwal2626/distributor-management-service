@@ -1,39 +1,59 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import axios from "axios";
+import { useAuthStore } from "@/store/auth-store";
 
-export interface User {
-  id: number;
-  email: string;
-  name?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
-export async function fetchUsers(): Promise<User[]> {
-  try {
-    const res = await fetch(`${API_URL}/api/users`, {
-      cache: 'no-store',
-    });
-    if (!res.ok) {
-      throw new Error('Failed to fetch users');
+export const apiClient = axios.create({
+  baseURL: `${API_URL}/api`,
+  withCredentials: true,
+});
+
+let refreshPromise: Promise<string | null> | null = null;
+
+apiClient.interceptors.request.use((config) => {
+  const { accessToken, tenantId } = useAuthStore.getState();
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+  if (tenantId) {
+    config.headers["x-tenant-id"] = tenantId;
+  }
+  return config;
+});
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config as typeof error.config & { _retry?: boolean };
+    if (error.response?.status !== 401 || originalRequest?._retry) {
+      return Promise.reject(error);
     }
-    return res.json();
-  } catch (error) {
-    console.error('fetchUsers error:', error);
-    return [];
-  }
+    originalRequest._retry = true;
+    if (!refreshPromise) {
+      refreshPromise = useAuthStore.getState().refreshAccessToken();
+    }
+    const token = await refreshPromise.finally(() => {
+      refreshPromise = null;
+    });
+    if (!token) {
+      useAuthStore.getState().forceSessionExpired();
+      return Promise.reject(error);
+    }
+    originalRequest.headers.Authorization = `Bearer ${token}`;
+    return apiClient(originalRequest);
+  },
+);
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  fullName: string;
+  tenantId: string;
+  roles: string[];
+  permissions: string[];
 }
 
-export async function createUser(email: string, name?: string): Promise<User> {
-  const res = await fetch(`${API_URL}/api/users`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ email, name }),
-  });
-  if (!res.ok) {
-    const data = await res.json();
-    throw new Error(data.message || 'Failed to create user');
-  }
-  return res.json();
+export interface ApiEnvelope<T> {
+  success: boolean;
+  data: T;
 }
