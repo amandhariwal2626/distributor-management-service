@@ -7,7 +7,7 @@ cd /app/apps/api
 if [ -n "$DATABASE_URL" ]; then
   DB_HOST=$(echo "$DATABASE_URL" | sed -e 's|.*@||' -e 's|/.*||' -e 's|:.*||')
   DB_PORT=$(echo "$DATABASE_URL" | sed -e 's|.*@||' -e 's|/.*||' -e 's|.*:||')
-  
+
   if [ -z "$DB_PORT" ] || [ "$DB_PORT" = "$DB_HOST" ]; then
     DB_PORT=5432
   fi

@@ -9,12 +9,12 @@ COPY apps/api/package.json ./apps/api/package.json
 COPY packages/typescript-config/package.json ./packages/typescript-config/package.json
 COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
 COPY apps/api/prisma ./apps/api/prisma
-RUN npm install
+RUN npm ci
 RUN npx prisma generate --schema=apps/api/prisma/schema.prisma
 COPY . .
 RUN chmod +x ./apps/api/docker-entrypoint.sh
 EXPOSE 3001
-ENTRYPOINT ["./apps/api/docker-entrypoint.sh"]
+ENTRYPOINT ["sh", "./apps/api/docker-entrypoint.sh"]
 
 # Dependencies installer for production builder
 FROM base AS deps
@@ -50,4 +50,4 @@ USER nestjs
 EXPOSE 3001
 ENV PORT=3001
 
-ENTRYPOINT ["./apps/api/docker-entrypoint.sh"]
+ENTRYPOINT ["sh", "./apps/api/docker-entrypoint.sh"]
