@@ -51,6 +51,9 @@ services:
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:3001
       WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "300"
+      NODE_ENV: development
     ports:
       - "3000:3000"
     volumes:

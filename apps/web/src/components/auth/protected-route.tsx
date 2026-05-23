@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
+import { Loader2 } from "lucide-react";
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -23,7 +24,12 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }, [isAuthenticated, isLoading, isSessionExpired, pathname, router]);
 
   if (isLoading) {
-    return <div className="p-6 text-sm text-muted-foreground">Loading session...</div>;
+    return (
+      <div className="flex flex-row gap-2 justify-center items-center min-h-screen w-full">
+        <Loader2 className="w-4 h-4 animate-spin" />
+        <span className="text-base">Loading...</span>
+      </div>
+    );
   }
   return <>{children}</>;
 }
