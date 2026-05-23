@@ -1,0 +1,10 @@
+{
+  "name": "@dms/eslint-config",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "main": "next.js",
+  "dependencies": {
+    "eslint-config-next": "^14.0.0"
+  }
+}
