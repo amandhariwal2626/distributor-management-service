@@ -31,6 +31,7 @@ export const usersService = {
   }) => {
     return apiClient.post("/users", payload);
   },
+  reinvite: async (id: string) => apiClient.post(`/users/${id}/invite`),
   deactivate: async (id: string) => apiClient.patch(`/users/${id}/deactivate`),
   reactivate: async (id: string) => apiClient.patch(`/users/${id}/reactivate`),
 };

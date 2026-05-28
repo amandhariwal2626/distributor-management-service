@@ -2,6 +2,8 @@
 
 import { useAuthStore } from "@/store/auth-store";
 
+const OWNER_PERMISSION = "settings.owner";
+
 export function Can({
   permission,
   children,
@@ -10,8 +12,8 @@ export function Can({
   children: React.ReactNode;
 }) {
   const permissions = useAuthStore((state) => state.user?.permissions ?? []);
-  if (!permissions.includes(permission)) {
-    return null;
+  if (permissions.includes(OWNER_PERMISSION) || permissions.includes(permission)) {
+    return <>{children}</>;
   }
-  return <>{children}</>;
+  return null;
 }

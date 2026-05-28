@@ -1,5 +1,13 @@
 import { SidebarItem } from "@/types/sidebar";
 
+const OWNER_PERMISSION = "settings.owner";
+
+function checkPermission(permissions: string[], required: string | undefined) {
+  if (!required) return true;
+  if (permissions.includes(OWNER_PERMISSION)) return true;
+  return permissions.includes(required);
+}
+
 export const filterSidebarByPermissions = (
   items: SidebarItem[],
   permissions: string[],
@@ -8,8 +16,8 @@ export const filterSidebarByPermissions = (
     .map((item) => ({
       ...item,
       items: item.items?.filter(
-        (subItem) => !subItem.permission || permissions.includes(subItem.permission),
+        (subItem) => checkPermission(permissions, subItem.permission),
       ),
     }))
-    .filter((item) => !item.permission || permissions.includes(item.permission));
+    .filter((item) => checkPermission(permissions, item.permission));
 };

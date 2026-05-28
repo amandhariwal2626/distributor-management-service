@@ -17,4 +17,6 @@ export const FULL_ACCESS_PERMISSIONS = [
   "reports.read",
   "reports.export",
 
+  "settings.owner",
+
 ];
