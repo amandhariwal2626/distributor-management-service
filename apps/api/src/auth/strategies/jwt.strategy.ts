@@ -19,7 +19,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload): Promise<JwtPayload> {
-    const active = await this.sessionsService.isSessionActive(payload.sessionId);
+    const active = await this.sessionsService.isSessionActive(
+      payload.sessionId,
+    );
     if (!active) {
       throw new UnauthorizedException('Session invalid');
     }

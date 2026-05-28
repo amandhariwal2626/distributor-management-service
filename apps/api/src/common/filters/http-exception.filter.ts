@@ -34,14 +34,18 @@ export class HttpExceptionFilter implements ExceptionFilter {
       ) {
         const rawMessage = (exceptionResponse as { message: string | string[] })
           .message;
-        message = Array.isArray(rawMessage) ? rawMessage.join(', ') : rawMessage;
+        message = Array.isArray(rawMessage)
+          ? rawMessage.join(', ')
+          : rawMessage;
       }
     }
 
     const method = request.method;
     const url = request.originalUrl ?? request.url;
     const details =
-      exception instanceof Error ? exception.stack ?? exception.message : String(exception);
+      exception instanceof Error
+        ? (exception.stack ?? exception.message)
+        : String(exception);
 
     this.logger.error(
       `[EXC] ${method} ${url} status=${status} message=${message}`,

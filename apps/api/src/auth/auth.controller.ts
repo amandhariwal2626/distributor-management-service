@@ -45,7 +45,10 @@ export class AuthController {
 
   @Post('refresh')
   @HttpCode(200)
-  async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const refreshToken = req.cookies?.refreshToken as string | undefined;
     const sessionId = req.cookies?.sessionId as string | undefined;
     if (!refreshToken || !sessionId) {
@@ -72,7 +75,9 @@ export class AuthController {
   @HttpCode(200)
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     await this.authService.forgotPassword(dto);
-    return { message: 'If the account exists, reset instructions were generated.' };
+    return {
+      message: 'If the account exists, reset instructions were generated.',
+    };
   }
 
   @Post('reset-password')

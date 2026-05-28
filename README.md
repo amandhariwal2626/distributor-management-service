@@ -127,3 +127,33 @@ If you are running on Windows, file system notification propagation to Linux Doc
 
 ### CORS Errors
 Ensure `CORS_ORIGIN` inside `.env` matches the URL of your Next.js frontend (default `http://localhost:3000`). The NestJS backend is configured to read this variable and dynamically whitelist the frontend.
+
+---
+
+## User Management + RBAC Module
+
+### Added Backend APIs
+- `GET /api/users`, `POST /api/users`, `GET /api/users/:id`, `PATCH /api/users/:id`
+- `PATCH /api/users/:id/deactivate`, `PATCH /api/users/:id/reactivate`
+- `GET /api/roles`, `POST /api/roles`, `PATCH /api/roles/:id`, `DELETE /api/roles/:id`
+- `GET /api/permissions`
+- `POST /api/invites`, `POST /api/invites/resend`, `POST /api/invites/accept`
+
+### Added Frontend Routes
+- `/users`
+- `/users/create`
+- `/roles`
+- `/invite/[token]`
+
+### Prisma Workflow for New Schema
+```bash
+cd apps/api
+npx prisma migrate dev --name user-management-rbac
+npx prisma generate
+npm run db:seed
+```
+
+### Seeded Credentials
+- Tenant code: `default`
+- Email: `admin@example.com`
+- Password: `Admin@12345`

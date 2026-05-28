@@ -15,7 +15,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isLoading) return;
     if (isSessionExpired) {
-      router.replace("/session-expired");
+      router.replace("/login?reason=session-expired");
       return;
     }
     if (!isAuthenticated && pathname !== "/login") {

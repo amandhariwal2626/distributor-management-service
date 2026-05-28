@@ -98,9 +98,14 @@ export const navMain: SidebarItem[] = [
         permission: "users.read",
       },
       {
+        title: "Create User",
+        url: "/users/create",
+        permission: "users.create",
+      },
+      {
         title: "Roles & Permissions",
-        url: "/users/roles",
-        permission: "users.manage",
+        url: "/roles",
+        permission: "roles.manage",
       },
     ],
   },

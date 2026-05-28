@@ -10,6 +10,7 @@ type AuthState = {
   isAuthenticated: boolean;
   isLoading: boolean;
   isSessionExpired: boolean;
+  clearAuth: (sessionExpired?: boolean) => void;
   login: (input: { tenantCode: string; email: string; password: string }) => Promise<void>;
   logout: () => Promise<void>;
   refreshAccessToken: () => Promise<string | null>;
@@ -24,6 +25,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isAuthenticated: false,
   isLoading: true,
   isSessionExpired: false,
+  clearAuth: (sessionExpired = false) =>
+    set({
+      accessToken: null,
+      user: null,
+      tenantId: null,
+      isAuthenticated: false,
+      isSessionExpired: sessionExpired,
+    }),
   login: async (input) => {
     const response = await apiClient.post<ApiEnvelope<{ accessToken: string; user: AuthUser }>>(
       "/auth/login",
@@ -43,12 +52,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       await apiClient.post("/auth/logout");
     } finally {
-      set({
-        accessToken: null,
-        user: null,
-        tenantId: null,
-        isAuthenticated: false,
-      });
+      get().clearAuth();
     }
   },
   refreshAccessToken: async () => {
@@ -58,7 +62,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ accessToken, isAuthenticated: true, isSessionExpired: false });
       return accessToken;
     } catch {
-      set({ accessToken: null, user: null, isAuthenticated: false });
+      get().clearAuth(true);
       return null;
     }
   },
@@ -70,7 +74,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return;
     }
     try {
-      const me = await apiClient.get<ApiEnvelope<Omit<AuthUser, "roles" | "permissions">>>("/auth/me");
+      const me = await apiClient.get<ApiEnvelope<AuthUser>>("/auth/me");
       const userBase = me.data.data;
       set((state) => ({
         user: state.user
@@ -80,8 +84,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               email: userBase.email,
               fullName: userBase.fullName,
               tenantId: userBase.tenantId,
-              roles: [],
-              permissions: [],
+              roles: userBase.roles,
+              permissions: userBase.permissions,
             },
         tenantId: userBase.tenantId,
         isAuthenticated: true,
@@ -91,13 +95,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
   forceSessionExpired: () => {
-    set({
-      accessToken: null,
-      user: null,
-      tenantId: null,
-      isAuthenticated: false,
-      isSessionExpired: true,
-      isLoading: false,
-    });
+    get().clearAuth(true);
+    set({ isLoading: false });
   },
 }));
