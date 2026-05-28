@@ -46,7 +46,16 @@ jobs:
         run: npm ci
 
       # ---------------------------------------------------------------
-      # 4. Cache Turborepo's local build outputs
+      # 4. Generate Prisma client
+      #     Required before building the API (provides typed Prisma
+      #     models, enums, and input types).
+      # ---------------------------------------------------------------
+      - name: Generate Prisma client
+        run: npx prisma generate
+        working-directory: apps/api
+
+      # ---------------------------------------------------------------
+      # 5. Cache Turborepo's local build outputs
       #     Turborepo caches task results in `.turbo/`.  Restoring
       #     this cache avoids re-building unchanged workspaces.
       # ---------------------------------------------------------------
@@ -59,7 +68,7 @@ jobs:
             turbo-${{ runner.os }}-
 
       # ---------------------------------------------------------------
-      # 5. Lint
+      # 6. Lint
       #     Runs ESLint across all workspaces via Turborepo.
       #     Fails the job if any lint error is found.
       # ---------------------------------------------------------------
@@ -67,7 +76,7 @@ jobs:
         run: npm run lint
 
       # ---------------------------------------------------------------
-      # 6. Build
+      # 7. Build
       #     Turborepo resolves dependency order automatically
       #     (apps depend on packages, etc.).
       #     Next.js type-checks during build, so TS errors surface here.
