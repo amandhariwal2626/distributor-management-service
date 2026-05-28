@@ -26,6 +26,18 @@ export class PermissionsService {
         set.add(permissionRow.permission.code);
       });
     });
+    const overrides = await this.prisma.userPermission.findMany({
+      where: { userId },
+      include: { permission: true },
+    });
+    overrides.forEach((row) => set.add(row.permission.code));
     return Array.from(set);
+  }
+
+  async findAll(tenantId: string) {
+    return this.prisma.permission.findMany({
+      where: { tenantId, deletedAt: null },
+      orderBy: { code: 'asc' },
+    });
   }
 }

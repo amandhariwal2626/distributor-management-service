@@ -27,7 +27,12 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config as typeof error.config & {
       _retry?: boolean;
     };
-    if (error.response?.status !== 401 || originalRequest?._retry) {
+    const status = error.response?.status;
+    const isRefreshRequest = originalRequest?.url?.includes("/auth/refresh");
+    if (status !== 401 || originalRequest?._retry || isRefreshRequest) {
+      if (status === 401 && isRefreshRequest) {
+        useAuthStore.getState().clearAuth(true);
+      }
       return Promise.reject(error);
     }
     originalRequest._retry = true;
@@ -38,7 +43,7 @@ apiClient.interceptors.response.use(
       refreshPromise = null;
     });
     if (!token) {
-      useAuthStore.getState().forceSessionExpired();
+      useAuthStore.getState().clearAuth(true);
       return Promise.reject(error);
     }
     originalRequest.headers.Authorization = `Bearer ${token}`;

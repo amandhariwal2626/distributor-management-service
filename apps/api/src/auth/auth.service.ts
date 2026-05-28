@@ -49,7 +49,7 @@ export class AuthService {
         tenantId_email: { tenantId: tenant.id, email: dto.email },
       },
     });
-    if (!user || user.deletedAt) {
+    if (!user || user.deletedAt || !user.isActive || !user.passwordHash) {
       throw new UnauthorizedException('Invalid credentials');
     }
     const valid = await bcrypt.compare(dto.password, user.passwordHash);
@@ -57,10 +57,15 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
     const roles = await this.rolesService.getUserRoles(user.id);
-    const permissions = await this.permissionsService.getUserPermissions(user.id);
+    const permissions = await this.permissionsService.getUserPermissions(
+      user.id,
+    );
     const refreshToken = randomUUID() + randomUUID();
     const refreshTokenHash = await bcrypt.hash(refreshToken, 12);
-    const refreshTtlDays = this.configService.get<number>('JWT_REFRESH_TTL_DAYS', 7);
+    const refreshTtlDays = this.configService.get<number>(
+      'JWT_REFRESH_TTL_DAYS',
+      7,
+    );
     const session = await this.sessionsService.createSession({
       tenantId: tenant.id,
       userId: user.id,
@@ -73,7 +78,7 @@ export class AuthService {
       sub: user.id,
       tenantId: tenant.id,
       email: user.email,
-      roles: roles as JwtPayload['roles'],
+      roles: roles,
       permissions,
       sessionId: session.id,
       jti: randomUUID(),
@@ -101,7 +106,12 @@ export class AuthService {
     };
   }
 
-  async signup(dto: SignupDto): Promise<{ id: string; email: string; fullName: string; tenantId: string }> {
+  async signup(dto: SignupDto): Promise<{
+    id: string;
+    email: string;
+    fullName: string;
+    tenantId: string;
+  }> {
     let tenant = await this.prisma.tenant.findUnique({
       where: { code: dto.tenantCode },
     });
@@ -128,11 +138,15 @@ export class AuthService {
       throw new ConflictException('Email already exists');
     }
 
+    const [firstName, ...rest] = dto.fullName.trim().split(' ');
+    const lastName = rest.join(' ') || '-';
     const passwordHash = await bcrypt.hash(dto.password, 12);
     const user = await this.prisma.user.create({
       data: {
         tenantId: tenant.id,
         email: dto.email,
+        firstName,
+        lastName,
         fullName: dto.fullName,
         passwordHash,
       },
@@ -151,8 +165,14 @@ export class AuthService {
     sessionId: string,
     refreshToken: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
-    const session = await this.prisma.session.findUnique({ where: { id: sessionId } });
-    if (!session || session.expiresAt.getTime() <= Date.now() || session.revokedAt) {
+    const session = await this.prisma.session.findUnique({
+      where: { id: sessionId },
+    });
+    if (
+      !session ||
+      session.expiresAt.getTime() <= Date.now() ||
+      session.revokedAt
+    ) {
       throw new UnauthorizedException('Invalid session');
     }
     const valid = await bcrypt.compare(refreshToken, session.refreshTokenHash);
@@ -160,15 +180,22 @@ export class AuthService {
       await this.sessionsService.revokeSession(session.id);
       throw new UnauthorizedException('Invalid refresh token');
     }
-    const user = await this.prisma.user.findUnique({ where: { id: session.userId } });
-    if (!user || user.deletedAt) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: session.userId },
+    });
+    if (!user || user.deletedAt || !user.isActive) {
       throw new UnauthorizedException('Invalid session');
     }
     const roles = await this.rolesService.getUserRoles(user.id);
-    const permissions = await this.permissionsService.getUserPermissions(user.id);
+    const permissions = await this.permissionsService.getUserPermissions(
+      user.id,
+    );
     const newRefreshToken = randomUUID() + randomUUID();
     const newRefreshTokenHash = await bcrypt.hash(newRefreshToken, 12);
-    const refreshTtlDays = this.configService.get<number>('JWT_REFRESH_TTL_DAYS', 7);
+    const refreshTtlDays = this.configService.get<number>(
+      'JWT_REFRESH_TTL_DAYS',
+      7,
+    );
     await this.sessionsService.rotateSession(
       session.id,
       newRefreshTokenHash,
@@ -178,7 +205,7 @@ export class AuthService {
       sub: user.id,
       tenantId: user.tenantId,
       email: user.email,
-      roles: roles as JwtPayload['roles'],
+      roles: roles,
       permissions,
       sessionId: session.id,
       jti: randomUUID(),
@@ -197,12 +224,21 @@ export class AuthService {
   async me(userId: string): Promise<unknown> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, fullName: true, tenantId: true, status: true },
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        tenantId: true,
+        isActive: true,
+      },
     });
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
-    return user;
+    const roles = await this.rolesService.getUserRoles(userId);
+    const permissions =
+      await this.permissionsService.getUserPermissions(userId);
+    return { ...user, roles, permissions };
   }
 
   async forgotPassword(dto: ForgotPasswordDto): Promise<void> {

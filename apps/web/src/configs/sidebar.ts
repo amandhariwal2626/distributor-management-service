@@ -5,7 +5,7 @@ import {
   Boxes,
   CreditCard,
   BarChart3,
-  Users,
+  UserCog,
 } from "lucide-react";
 
 export const navMain: SidebarItem[] = [
@@ -87,20 +87,25 @@ export const navMain: SidebarItem[] = [
     ],
   },
   {
-    title: "Users",
+    title: "Users & Access",
     url: "/users",
-    icon: Users,
+    icon: UserCog,
     permission: "users.read",
     items: [
       {
-        title: "All Users",
+        title: "Users",
         url: "/users",
         permission: "users.read",
       },
       {
         title: "Roles & Permissions",
-        url: "/users/roles",
-        permission: "users.manage",
+        url: "/roles",
+        permission: "roles.manage",
+      },
+      {
+        title: "Audit Logs",
+        url: "/audit-logs",
+        permission: "audit.read",
       },
     ],
   },

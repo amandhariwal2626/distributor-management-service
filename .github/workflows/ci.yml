@@ -1,0 +1,85 @@
+# -------------------------------------------------------------------
+# CI — Monorepo (Turborepo + npm workspaces)
+# Runs on every PR targeting `main` or `develop`.
+# -------------------------------------------------------------------
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-build:
+    name: Lint & Build
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+    steps:
+      # ---------------------------------------------------------------
+      # 1. Checkout
+      # ---------------------------------------------------------------
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ---------------------------------------------------------------
+      # 2. Setup Node.js with npm cache
+      #     Reads Node version from `.nvmrc`.
+      #     `cache: npm` automatically caches `~/.npm` for `npm ci`.
+      # ---------------------------------------------------------------
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # ---------------------------------------------------------------
+      # 3. Clean install dependencies
+      #     Uses `package-lock.json` for deterministic, reproducible
+      #     installs. Faster than `npm install` in CI.
+      # ---------------------------------------------------------------
+      - name: Install dependencies
+        run: npm ci
+
+      # ---------------------------------------------------------------
+      # 4. Generate Prisma client
+      #     Required before building the API (provides typed Prisma
+      #     models, enums, and input types).
+      # ---------------------------------------------------------------
+      - name: Generate Prisma client
+        run: npx prisma generate
+        working-directory: apps/api
+
+      # ---------------------------------------------------------------
+      # 5. Cache Turborepo's local build outputs
+      #     Turborepo caches task results in `.turbo/`.  Restoring
+      #     this cache avoids re-building unchanged workspaces.
+      # ---------------------------------------------------------------
+      - name: Cache Turborepo
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            turbo-${{ runner.os }}-
+
+      # ---------------------------------------------------------------
+      # 6. Lint
+      #     Runs ESLint across all workspaces via Turborepo.
+      #     Fails the job if any lint error is found.
+      # ---------------------------------------------------------------
+      - name: Lint
+        run: npm run lint
+
+      # ---------------------------------------------------------------
+      # 7. Build
+      #     Turborepo resolves dependency order automatically
+      #     (apps depend on packages, etc.).
+      #     Next.js type-checks during build, so TS errors surface here.
+      # ---------------------------------------------------------------
+      - name: Build
+        run: npm run build

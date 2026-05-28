@@ -8,30 +8,14 @@ generator client {
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
-enum UserStatus {
-  ACTIVE
-  INACTIVE
-  LOCKED
-}
-
 enum SessionStatus {
   ACTIVE
   REVOKED
   EXPIRED
 }
 
-enum RoleCode {
-  SUPER_ADMIN
-  COMPANY_ADMIN
-  DISTRIBUTOR
-  SALESPERSON
-  RETAILER
-  WAREHOUSE_MANAGER
-  ACCOUNTS
-}
-
 model Tenant {
-  id          String   @id @default(cuid())
+  id          String   @id @default(uuid())
   code        String   @unique
   name        String
   createdAt   DateTime @default(now())
@@ -41,60 +25,74 @@ model Tenant {
   roles       Role[]
   permissions Permission[]
   sessions    Session[]
+  invites     InviteToken[]
 
   @@index([deletedAt])
 }
 
 model User {
-  id             String              @id @default(cuid())
-  tenantId       String
-  tenant         Tenant              @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  email          String
-  passwordHash   String
-  fullName       String
-  status         UserStatus          @default(ACTIVE)
-  lastLoginAt    DateTime?
-  deletedAt      DateTime?
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
-  roles          UserRole[]
-  sessions       Session[]
-  resetTokens    PasswordResetToken[]
-  revokedTokens  RevokedToken[]
+  id                    String              @id @default(uuid())
+  tenantId              String
+  tenant                Tenant              @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  email                 String
+  firstName             String
+  lastName              String
+  fullName              String
+  passwordHash          String?
+  isActive              Boolean             @default(true)
+  lastLoginAt           DateTime?
+  deactivatedAt         DateTime?
+  deactivatedBy         String?
+  deletedAt             DateTime?
+  createdBy             String?
+  updatedBy             String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  roles                 UserRole[]
+  sessions              Session[]
+  resetTokens           PasswordResetToken[]
+  revokedTokens         RevokedToken[]
+  invitesCreated        InviteToken[]       @relation("inviteCreator")
+  invitesReceived       InviteToken[]       @relation("inviteUser")
+  permissionOverrides   UserPermission[]
 
   @@unique([tenantId, email])
-  @@index([tenantId, status])
+  @@index([tenantId, isActive])
   @@index([deletedAt])
 }
 
 model Role {
-  id          String           @id @default(cuid())
+  id          String           @id @default(uuid())
   tenantId    String
   tenant      Tenant           @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  code        RoleCode
   name        String
+  description String?
   isSystem    Boolean          @default(false)
   deletedAt   DateTime?
+  createdBy   String?
+  updatedBy   String?
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
   users       UserRole[]
   permissions RolePermission[]
 
-  @@unique([tenantId, code])
+  @@unique([tenantId, name])
   @@index([tenantId])
   @@index([deletedAt])
 }
 
 model Permission {
-  id          String           @id @default(cuid())
+  id          String           @id @default(uuid())
   tenantId    String
   tenant      Tenant           @relation(fields: [tenantId], references: [id], onDelete: Restrict)
   code        String
   name        String
+  description String?
   deletedAt   DateTime?
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
   roles       RolePermission[]
+  userOverrides UserPermission[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -102,10 +100,11 @@ model Permission {
 }
 
 model UserRole {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   userId    String
   roleId    String
   createdAt DateTime @default(now())
+  createdBy String?
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
@@ -114,10 +113,11 @@ model UserRole {
 }
 
 model RolePermission {
-  id           String     @id @default(cuid())
+  id           String     @id @default(uuid())
   roleId       String
   permissionId String
   createdAt    DateTime   @default(now())
+  createdBy    String?
   role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
   permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
@@ -126,7 +126,7 @@ model RolePermission {
 }
 
 model Session {
-  id                 String        @id @default(cuid())
+  id                 String        @id @default(uuid())
   tenantId           String
   userId             String
   refreshTokenHash   String
@@ -147,7 +147,7 @@ model Session {
 }
 
 model PasswordResetToken {
-  id          String   @id @default(cuid())
+  id          String   @id @default(uuid())
   userId       String
   tokenHash    String
   expiresAt    DateTime
@@ -159,7 +159,7 @@ model PasswordResetToken {
 }
 
 model RevokedToken {
-  id         String   @id @default(cuid())
+  id         String   @id @default(uuid())
   userId     String
   tokenJti   String
   expiresAt  DateTime
@@ -168,4 +168,36 @@ model RevokedToken {
 
   @@unique([tokenJti])
   @@index([userId, expiresAt])
+}
+
+model InviteToken {
+  id            String    @id @default(uuid())
+  tenantId      String
+  userId        String
+  tokenHash     String
+  invitedEmail  String
+  expiresAt     DateTime
+  acceptedAt    DateTime?
+  revokedAt     DateTime?
+  inviteSentBy  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  user          User      @relation("inviteUser", fields: [userId], references: [id], onDelete: Cascade)
+  sentByUser    User?     @relation("inviteCreator", fields: [inviteSentBy], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, invitedEmail])
+  @@index([expiresAt])
+}
+
+model UserPermission {
+  id            String      @id @default(uuid())
+  userId        String
+  permissionId  String
+  createdAt     DateTime    @default(now())
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission    Permission  @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, permissionId])
+  @@index([permissionId])
 }

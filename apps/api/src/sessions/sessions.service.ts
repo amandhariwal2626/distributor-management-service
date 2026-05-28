@@ -27,7 +27,11 @@ export class SessionsService {
     return session;
   }
 
-  async rotateSession(sessionId: string, refreshTokenHash: string, expiresAt: Date) {
+  async rotateSession(
+    sessionId: string,
+    refreshTokenHash: string,
+    expiresAt: Date,
+  ) {
     const session = await this.prisma.session.update({
       where: { id: sessionId },
       data: {
@@ -47,7 +51,9 @@ export class SessionsService {
   }
 
   async isSessionActive(sessionId: string): Promise<boolean> {
-    const session = await this.prisma.session.findUnique({ where: { id: sessionId } });
+    const session = await this.prisma.session.findUnique({
+      where: { id: sessionId },
+    });
     if (!session) {
       return false;
     }

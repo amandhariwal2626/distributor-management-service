@@ -10,6 +10,7 @@ import { SessionsModule } from './sessions/sessions.module';
 import { RolesModule } from './roles/roles.module';
 import { PermissionsModule } from './permissions/permissions.module';
 import { AuthModule } from './auth/auth.module';
+import { InvitesModule } from './invites/invites.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { AuthModule } from './auth/auth.module';
     PermissionsModule,
     AuthModule,
     UsersModule,
+    InvitesModule,
   ],
   controllers: [AppController],
   providers: [

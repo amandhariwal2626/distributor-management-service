@@ -13,15 +13,13 @@ import {
 import { filterSidebarByPermissions } from "@/utils/sidebar";
 import { navMain } from "@/configs/sidebar";
 import { useAuthStore } from "@/store/auth-store";
-import { FULL_ACCESS_PERMISSIONS } from "@/configs/permission";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const user = useAuthStore((state) => state.user);
-  const isLoading = useAuthStore((state) => state.isLoading);
   const permissions = user?.permissions ?? [];
   const filteredSidebar = filterSidebarByPermissions(
     navMain,
-    FULL_ACCESS_PERMISSIONS,
+    permissions,
   );
   return (
     <Sidebar collapsible="icon" {...props}>

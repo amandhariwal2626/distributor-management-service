@@ -7,9 +7,10 @@ import {
 import { map, Observable } from 'rxjs';
 
 @Injectable()
-export class SuccessResponseInterceptor<T>
-  implements NestInterceptor<T, { success: boolean; data: T }>
-{
+export class SuccessResponseInterceptor<T> implements NestInterceptor<
+  T,
+  { success: boolean; data: T }
+> {
   intercept(
     _context: ExecutionContext,
     next: CallHandler<T>,
