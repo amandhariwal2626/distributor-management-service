@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -29,14 +29,10 @@ export function AssignRolesDialog({ user, open, onOpenChange }: Props) {
   const assignRoles = useRbacStore((s) => s.assignRoles);
   const [selected, setSelected] = useState<string[]>([]);
 
-  useEffect(() => {
-    if (user) setSelected(user.roleIds);
-  }, [user]);
-
   if (!user) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog key={user.id} open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Manage roles for {user.name}</DialogTitle>

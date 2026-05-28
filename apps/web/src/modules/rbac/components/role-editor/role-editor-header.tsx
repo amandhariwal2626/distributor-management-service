@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { Copy, Save } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,6 @@ interface Props {
 }
 
 export function EditRoleHeader({ roleName, isDirty, isSaving, onSave, onClone }: Props) {
-  const router = useRouter();
 
   return (
     <div className="space-y-3">

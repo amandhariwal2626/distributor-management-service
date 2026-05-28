@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useForm, FormProvider } from "react-hook-form";
+import { useForm, FormProvider, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -81,7 +81,7 @@ export default function EditRolePage() {
   });
 
   const { isDirty } = form.formState;
-  const permissions = form.watch("permissions");
+  const permissions = useWatch({ control: form.control, name: "permissions" });
 
   useEffect(() => {
     loadRoles();
