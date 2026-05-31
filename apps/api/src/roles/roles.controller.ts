@@ -23,13 +23,13 @@ export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 
   @Get()
-  @Permissions('roles.manage')
+  @Permissions('roles.read')
   findAll(@Headers('x-tenant-id') tenantId: string) {
     return this.rolesService.findAll(tenantId);
   }
 
   @Post()
-  @Permissions('roles.manage')
+  @Permissions('roles.create')
   create(
     @Headers('x-tenant-id') tenantId: string,
     @Req() req: Request & { user: { sub: string } },
@@ -39,7 +39,7 @@ export class RolesController {
   }
 
   @Patch(':id')
-  @Permissions('roles.manage')
+  @Permissions('roles.update')
   update(
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
@@ -50,7 +50,7 @@ export class RolesController {
   }
 
   @Delete(':id')
-  @Permissions('roles.manage')
+  @Permissions('roles.delete')
   remove(
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
