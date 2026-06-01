@@ -1,8 +1,8 @@
 #!/bin/sh
 set -e
 
-# Change to the API workspace directory for Prisma to find schema
-cd /app/apps/api
+# Change to the database package directory for Prisma to find schema
+cd /app/packages/database
 
 if [ -n "$DATABASE_URL" ]; then
   DB_HOST=$(echo "$DATABASE_URL" | sed -e 's|.*@||' -e 's|/.*||' -e 's|:.*||')
