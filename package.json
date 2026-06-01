@@ -12,9 +12,10 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
-    "db:migrate": "npm run db:migrate --workspace=@dms/api",
-    "db:generate": "npm run db:generate --workspace=@dms/api",
-    "db:studio": "npm run db:studio --workspace=@dms/api"
+    "db:migrate": "npm run db:migrate --workspace=@dms/database",
+    "db:generate": "npm run db:generate --workspace=@dms/database",
+    "db:studio": "npm run db:studio --workspace=@dms/database",
+    "db:seed": "npm run db:seed --workspace=@dms/database"
   },
   "devDependencies": {
     "prettier": "^3.8.3",

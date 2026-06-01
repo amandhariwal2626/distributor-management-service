@@ -7,6 +7,7 @@ packages/*/node_modules
 # Build outputs
 /dist
 /apps/*/dist
+/packages/*/dist
 /apps/*/.next
 /apps/*/out
 

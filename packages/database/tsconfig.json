@@ -1,0 +1,10 @@
+{
+  "extends": "@dms/typescript-config/nestjs.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "noEmit": false,
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*"]
+}
