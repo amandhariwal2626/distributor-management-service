@@ -15,7 +15,8 @@
     "db:migrate": "npm run db:migrate --workspace=@dms/database",
     "db:generate": "npm run db:generate --workspace=@dms/database",
     "db:studio": "npm run db:studio --workspace=@dms/database",
-    "db:seed": "npm run db:seed --workspace=@dms/database"
+    "db:seed": "npm run db:seed --workspace=@dms/database",
+    "postinstall": "npm run build -w @dms/database"
   },
   "devDependencies": {
     "prettier": "^3.8.3"
