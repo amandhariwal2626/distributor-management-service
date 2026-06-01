@@ -22,7 +22,9 @@
     "turbo": "^2.9.16"
   },
   "dependencies": {
-    "next-themes": "^0.4.6"
+    "next-themes": "^0.4.6",
+    "prisma": "^6.19.3",
+    "@prisma/client": "^6.19.3"
   },
   "overrides": {
     "glob": "^10.5.0",
