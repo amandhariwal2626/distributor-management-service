@@ -136,7 +136,7 @@ export const useRbacStore = create<RbacState>((set, get) => ({
   },
 
   getUser(id) {
-    return apiGet<User>(`/api/users/${id}`);
+    return apiGet<User>(`/users/${id}`);
   },
 
   async createUser(payload) {
@@ -145,7 +145,7 @@ export const useRbacStore = create<RbacState>((set, get) => ({
   },
 
   async updateUser(id, payload) {
-    const user = await apiPatch<User>(`/api/users/${id}`, payload);
+    const user = await apiPatch<User>(`/users/${id}`, payload);
     // Patch local list
     set({
       users: get().users.map((u) => (u.id === id ? { ...u, ...user } : u)),
@@ -154,33 +154,33 @@ export const useRbacStore = create<RbacState>((set, get) => ({
   },
 
   async deleteUser(id) {
-    await apiDelete(`/api/users/${id}`);
+    await apiDelete(`/users/${id}`);
     set({ users: get().users.filter((u) => u.id !== id) });
   },
 
   async deactivateUser(id) {
-    const user = await apiPatch<User>(`/api/users/${id}/deactivate`);
+    const user = await apiPatch<User>(`/users/${id}/deactivate`);
     set({ users: get().users.map((u) => (u.id === id ? { ...u, ...user } : u)) });
   },
   async reactivateUser(id) {
-    const user = await apiPatch<User>(`/api/users/${id}/reactivate`);
+    const user = await apiPatch<User>(`/users/${id}/reactivate`);
     set({ users: get().users.map((u) => (u.id === id ? { ...u, ...user } : u)) });
   },
   async lockUser(id) {
-    const user = await apiPatch<User>(`/api/users/${id}/lock`);
+    const user = await apiPatch<User>(`/users/${id}/lock`);
     set({ users: get().users.map((u) => (u.id === id ? { ...u, ...user } : u)) });
   },
   async unlockUser(id) {
-    const user = await apiPatch<User>(`/api/users/${id}/unlock`);
+    const user = await apiPatch<User>(`/users/${id}/unlock`);
     set({ users: get().users.map((u) => (u.id === id ? { ...u, ...user } : u)) });
   },
   async suspendUser(id) {
-    const user = await apiPatch<User>(`/api/users/${id}/suspend`);
+    const user = await apiPatch<User>(`/users/${id}/suspend`);
     set({ users: get().users.map((u) => (u.id === id ? { ...u, ...user } : u)) });
   },
 
   async resetPassword(id, password) {
-    await apiPost(`/api/users/${id}/reset-password`, { password });
+    await apiPost(`/users/${id}/reset-password`, { password });
   },
 
   getHierarchyTree() {

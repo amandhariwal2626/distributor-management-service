@@ -4,6 +4,10 @@ This file provides system context, architecture boundaries, conventions, and ins
 
 ---
 
+## 0. Critical Rules
+
+- **Never modify `.env` files without asking the user first.** Env files contain credentials and configuration that must not be changed without explicit approval.
+
 ## 1. Stack Architecture & Folder Structure
 
 We use a Monorepo managed by **Turborepo** with **npm workspaces**.
