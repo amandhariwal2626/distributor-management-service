@@ -2,7 +2,7 @@ services:
   - type: web
     name: dms-api
     runtime: node
-    repo: https://github.com/your-org/dms
+    repo: https://github.com/amandhariwal2626/distributor-management-service.git
     plan: free
     region: oregon
     buildCommand: npm install && npm run build -w @dms/database && npm run build -w @dms/api
