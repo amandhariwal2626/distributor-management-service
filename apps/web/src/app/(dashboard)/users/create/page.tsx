@@ -4,18 +4,18 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { RoleGuard } from "@/modules/rbac/components/guards/role-guard";
 import { Button } from "@/components/ui/button";
-import { InviteUserDialog } from "@/modules/rbac/components/rbac/invite-user-dialog";
-import { useRbacStore } from "@/modules/rbac/stores/rbac.store";
-import { useEffect, useState } from "react";
+import { UserForm } from "@/components/users/user-form";
+import { useRbacStore } from "@/store/rbac-store";
+import type { CreateUserPayload } from "@/types";
 
 export default function CreateUserPage() {
   const router = useRouter();
-  const loadRoles = useRbacStore((s) => s.loadRoles);
-  const [open, setOpen] = useState(true);
+  const createUser = useRbacStore((s) => s.createUser);
 
-  useEffect(() => {
-    loadRoles();
-  }, [loadRoles]);
+  async function handleSubmit(payload: CreateUserPayload) {
+    const user = await createUser(payload);
+    router.push(`/users/${user.id}`);
+  }
 
   return (
     <RoleGuard permission="users.create">
@@ -24,13 +24,7 @@ export default function CreateUserPage() {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to users
         </Button>
-        <InviteUserDialog
-          open={open}
-          onOpenChange={(o) => {
-            setOpen(o);
-            if (!o) router.push("/users");
-          }}
-        />
+        <UserForm mode="create" onSubmit={handleSubmit} onCancel={() => router.push("/users")} />
       </div>
     </RoleGuard>
   );

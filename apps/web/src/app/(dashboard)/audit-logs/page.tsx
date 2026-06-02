@@ -1,24 +1,52 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { RoleGuard } from "@/modules/rbac/components/guards/role-guard";
-import { AuditTable } from "@/modules/rbac/components/rbac/audit-table";
-import { useRbacStore } from "@/modules/rbac/stores/rbac.store";
+import { AuditTable } from "@/components/audit/audit-table";
+import { useRbacStore } from "@/store/rbac-store";
+import type { ListAuditLogsParams } from "@/types";
 
 export default function AuditLogsPage() {
-  const loadRoles = useRbacStore((s) => s.loadRoles);
-  const loadUsers = useRbacStore((s) => s.loadUsers);
+  const {
+    auditLogs,
+    totalAuditLogs,
+    auditPage,
+    auditLimit,
+    auditPages,
+    loadAuditLogs,
+  } = useRbacStore();
 
   useEffect(() => {
-    loadRoles();
-    loadUsers();
-  }, [loadRoles, loadUsers]);
+    loadAuditLogs();
+  }, [loadAuditLogs]);
+
+  const handleFiltersChange = useCallback(
+    (filters: ListAuditLogsParams) => {
+      loadAuditLogs({ page: 1, ...filters });
+    },
+    [loadAuditLogs],
+  );
+
+  const handlePageChange = useCallback(
+    (page: number) => {
+      loadAuditLogs({ page });
+    },
+    [loadAuditLogs],
+  );
 
   return (
     <RoleGuard permission="audit.read">
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">Audit Logs</h2>
-        <AuditTable />
+        <AuditTable
+          logs={auditLogs}
+          total={totalAuditLogs}
+          page={auditPage}
+          limit={auditLimit}
+          pages={auditPages}
+          onPageChange={handlePageChange}
+          onFiltersChange={handleFiltersChange}
+        />
       </div>
     </RoleGuard>
   );

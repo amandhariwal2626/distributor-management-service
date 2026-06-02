@@ -9,7 +9,19 @@ export const PERMISSION_CATALOG: PermissionGroup[] = [
       { id: "users.read",   resource: "users", action: "read",   label: "View users" },
       { id: "users.create", resource: "users", action: "create", label: "Invite users", dependsOn: ["users.read"] },
       { id: "users.update", resource: "users", action: "update", label: "Edit users",   dependsOn: ["users.read"] },
-      { id: "users.delete", resource: "users", action: "delete", label: "Deactivate users", dependsOn: ["users.read"] },
+      { id: "users.delete", resource: "users", action: "delete", label: "Delete users", dependsOn: ["users.read"] },
+      { id: "users.reset_password", resource: "users", action: "reset_password", label: "Reset user passwords", dependsOn: ["users.read"] },
+      { id: "users.lock", resource: "users", action: "lock", label: "Lock users", dependsOn: ["users.read"] },
+      { id: "users.unlock", resource: "users", action: "unlock", label: "Unlock users", dependsOn: ["users.read"] },
+    ],
+  },
+  {
+    key: "hierarchy",
+    label: "Hierarchy",
+    description: "View and manage the organizational hierarchy.",
+    permissions: [
+      { id: "hierarchy.view",   resource: "hierarchy", action: "view",   label: "View hierarchy tree" },
+      { id: "hierarchy.export", resource: "hierarchy", action: "export", label: "Export hierarchy", dependsOn: ["hierarchy.view"] },
     ],
   },
   {

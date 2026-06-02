@@ -13,7 +13,7 @@ import { useState } from "react";
 import Link from "next/link";
 
 const schema = z.object({
-  tenantCode: z.string().min(1),
+  organizationCode: z.string().min(1),
   email: z.string().email(),
   password: z.string().min(8),
 });
@@ -47,9 +47,9 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="tenantCode">Tenant Code</Label>
-              <Input id="tenantCode" placeholder="acme-distribution" {...register("tenantCode")} />
-              {errors.tenantCode && <p className="text-xs text-destructive">{errors.tenantCode.message}</p>}
+              <Label htmlFor="organizationCode">Organization Code</Label>
+              <Input id="organizationCode" placeholder="acme-distribution" {...register("organizationCode")} />
+              {errors.organizationCode && <p className="text-xs text-destructive">{errors.organizationCode.message}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>

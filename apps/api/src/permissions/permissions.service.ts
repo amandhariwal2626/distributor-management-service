@@ -34,9 +34,9 @@ export class PermissionsService {
     return Array.from(set);
   }
 
-  async findAll(tenantId: string) {
+  async findAll(organizationId: string) {
     return this.prisma.permission.findMany({
-      where: { tenantId, deletedAt: null },
+      where: { organizationId, deletedAt: null },
       orderBy: { code: 'asc' },
     });
   }

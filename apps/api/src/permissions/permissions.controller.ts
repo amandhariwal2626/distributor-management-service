@@ -11,7 +11,7 @@ export class PermissionsController {
 
   @Get()
   @Permissions('roles.manage')
-  findAll(@Headers('x-tenant-id') tenantId: string) {
-    return this.permissionsService.findAll(tenantId);
+  findAll(@Headers('x-organization-id') organizationId: string) {
+    return this.permissionsService.findAll(organizationId);
   }
 }

@@ -11,6 +11,7 @@ import { RolesModule } from './roles/roles.module';
 import { PermissionsModule } from './permissions/permissions.module';
 import { AuthModule } from './auth/auth.module';
 import { InvitesModule } from './invites/invites.module';
+import { AuditLogsModule } from './audit-logs/audit-logs.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { InvitesModule } from './invites/invites.module';
     AuthModule,
     UsersModule,
     InvitesModule,
+    AuditLogsModule,
   ],
   controllers: [AppController],
   providers: [

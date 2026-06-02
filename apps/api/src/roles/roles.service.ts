@@ -14,26 +14,34 @@ export class RolesService {
     return roles.map((item) => item.role.name);
   }
 
-  async findAll(tenantId: string) {
+  async findAll(organizationId: string) {
     return this.prisma.role.findMany({
-      where: { tenantId, deletedAt: null },
+      where: { organizationId, deletedAt: null },
       include: { permissions: { include: { permission: true } } },
       orderBy: { name: 'asc' },
     });
   }
 
-  async create(tenantId: string, actorUserId: string, body: CreateRoleDto) {
+  async create(
+    organizationId: string,
+    actorUserId: string,
+    body: CreateRoleDto,
+  ) {
     return this.prisma.$transaction(async (tx) => {
       const role = await tx.role.create({
         data: {
-          tenantId,
+          organizationId,
           name: body.name,
           description: body.description,
           createdBy: actorUserId,
         },
       });
       const permissions = await tx.permission.findMany({
-        where: { tenantId, code: { in: body.permissions }, deletedAt: null },
+        where: {
+          organizationId,
+          code: { in: body.permissions },
+          deletedAt: null,
+        },
       });
       if (permissions.length) {
         await tx.rolePermission.createMany({
@@ -49,20 +57,24 @@ export class RolesService {
   }
 
   async update(
-    tenantId: string,
+    organizationId: string,
     id: string,
     actorUserId: string,
     body: UpdateRoleDto,
   ) {
     const role = await this.prisma.role.findFirst({
-      where: { id, tenantId, deletedAt: null },
+      where: { id, organizationId, deletedAt: null },
     });
     if (!role) throw new NotFoundException('Role not found');
     return this.prisma.$transaction(async (tx) => {
       if (body.permissions) {
         await tx.rolePermission.deleteMany({ where: { roleId: id } });
         const permissions = await tx.permission.findMany({
-          where: { tenantId, code: { in: body.permissions }, deletedAt: null },
+          where: {
+            organizationId,
+            code: { in: body.permissions },
+            deletedAt: null,
+          },
         });
         if (permissions.length) {
           await tx.rolePermission.createMany({
@@ -85,9 +97,9 @@ export class RolesService {
     });
   }
 
-  async remove(tenantId: string, id: string, actorUserId: string) {
+  async remove(organizationId: string, id: string, actorUserId: string) {
     const role = await this.prisma.role.findFirst({
-      where: { id, tenantId, deletedAt: null },
+      where: { id, organizationId, deletedAt: null },
     });
     if (!role) throw new NotFoundException('Role not found');
     return this.prisma.role.update({

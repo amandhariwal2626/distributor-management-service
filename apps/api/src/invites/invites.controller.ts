@@ -23,12 +23,12 @@ export class InvitesController {
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Permissions('users.create')
   create(
-    @Headers('x-tenant-id') tenantId: string,
+    @Headers('x-organization-id') organizationId: string,
     @Body() body: ResendInviteDto,
     @Req() req: Request & { user: { sub: string } },
   ) {
     return this.invitesService.createInvite(
-      tenantId,
+      organizationId,
       body.userId,
       req.user.sub,
     );
@@ -38,12 +38,12 @@ export class InvitesController {
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Permissions('users.update')
   resend(
-    @Headers('x-tenant-id') tenantId: string,
+    @Headers('x-organization-id') organizationId: string,
     @Body() body: ResendInviteDto,
     @Req() req: Request & { user: { sub: string } },
   ) {
     return this.invitesService.resendInvite(
-      tenantId,
+      organizationId,
       body.userId,
       req.user.sub,
     );

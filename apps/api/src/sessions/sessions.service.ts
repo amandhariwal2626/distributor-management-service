@@ -7,7 +7,7 @@ export class SessionsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async createSession(input: {
-    tenantId: string;
+    organizationId: string;
     userId: string;
     refreshTokenHash: string;
     expiresAt: Date;
@@ -16,7 +16,7 @@ export class SessionsService {
   }) {
     const session = await this.prisma.session.create({
       data: {
-        tenantId: input.tenantId,
+        organizationId: input.organizationId,
         userId: input.userId,
         refreshTokenHash: input.refreshTokenHash,
         expiresAt: input.expiresAt,
