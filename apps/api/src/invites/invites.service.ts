@@ -11,16 +11,20 @@ import * as bcrypt from 'bcrypt';
 export class InvitesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createInvite(tenantId: string, userId: string, actorUserId: string) {
+  async createInvite(
+    organizationId: string,
+    userId: string,
+    actorUserId: string,
+  ) {
     const user = await this.prisma.user.findFirst({
-      where: { id: userId, tenantId, deletedAt: null },
+      where: { id: userId, organizationId, deletedAt: null },
     });
     if (!user) throw new NotFoundException('User not found');
     const rawToken = `${randomUUID()}${randomUUID()}`;
     const tokenHash = await bcrypt.hash(rawToken, 12);
     await this.prisma.inviteToken.create({
       data: {
-        tenantId,
+        organizationId,
         userId: user.id,
         invitedEmail: user.email,
         tokenHash,
@@ -34,8 +38,12 @@ export class InvitesService {
     };
   }
 
-  async resendInvite(tenantId: string, userId: string, actorUserId: string) {
-    return this.createInvite(tenantId, userId, actorUserId);
+  async resendInvite(
+    organizationId: string,
+    userId: string,
+    actorUserId: string,
+  ) {
+    return this.createInvite(organizationId, userId, actorUserId);
   }
 
   async acceptInvite(token: string, passwordHash: string) {
@@ -58,7 +66,7 @@ export class InvitesService {
     await this.prisma.$transaction([
       this.prisma.user.update({
         where: { id: matched.userId },
-        data: { passwordHash, isActive: true, updatedAt: new Date() },
+        data: { passwordHash, status: 'ACTIVE', updatedAt: new Date() },
       }),
       this.prisma.inviteToken.update({
         where: { id: matched.id },

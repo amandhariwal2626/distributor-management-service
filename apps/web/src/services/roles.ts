@@ -14,7 +14,7 @@ export const rolesService = {
   },
   getById: async (id: string) => {
     const all = await rolesService.list();
-    const role = all.find((r) => r.id === id);
+    const role = all.find((r: RoleItem) => r.id === id);
     if (!role) throw new Error(`Role not found: ${id}`);
     return role;
   },
@@ -28,7 +28,7 @@ export const rolesService = {
     const payload = {
       name: `${source.name} (copy)`,
       description: source.description,
-      permissions: source.permissions.map((p) => p.permission.code),
+      permissions: source.permissions.map((p: { permission: { code: string } }) => p.permission.code),
     };
     const response = await apiClient.post("/roles", payload);
     return response.data;

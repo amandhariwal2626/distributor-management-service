@@ -1,12 +1,17 @@
 import { apiClient, ApiEnvelope } from "@/lib/api";
+import { User, UserStatus } from "@/modules/rbac/types";
 
 export interface UserListItem {
   id: string;
+  userCode?: string;
   fullName: string;
   email: string;
-  isActive: boolean;
+  mobile?: string;
+  status: UserStatus;
+  lastLoginAt?: string;
   createdAt: string;
-  roles: { role: { id: string; name: string } }[];
+  roles: { role: { id: string; name: string; level: number } }[];
+  reportingManager?: { id: string; fullName: string; email: string } | null;
 }
 
 export interface UsersResponse {
@@ -22,16 +27,31 @@ export const usersService = {
     const response = await apiClient.get<ApiEnvelope<UsersResponse>>("/users", { params });
     return response.data.data;
   },
-  create: async (payload: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    roleIds: string[];
-    permissionOverrides?: string[];
-  }) => {
-    return apiClient.post("/users", payload);
+  getById: async (id: string) => {
+    const response = await apiClient.get<ApiEnvelope<User>>(`/users/${id}`);
+    return response.data.data;
   },
-  reinvite: async (id: string) => apiClient.post(`/users/${id}/invite`),
+  create: async (payload: Record<string, unknown>) => {
+    const response = await apiClient.post<ApiEnvelope<User>>("/users", payload);
+    return response.data.data;
+  },
+  update: async (id: string, payload: Record<string, unknown>) => {
+    const response = await apiClient.patch<ApiEnvelope<User>>(`/users/${id}`, payload);
+    return response.data.data;
+  },
+  delete: async (id: string) => apiClient.delete(`/users/${id}`),
   deactivate: async (id: string) => apiClient.patch(`/users/${id}/deactivate`),
   reactivate: async (id: string) => apiClient.patch(`/users/${id}/reactivate`),
+  lock: async (id: string) => apiClient.patch(`/users/${id}/lock`),
+  unlock: async (id: string) => apiClient.patch(`/users/${id}/unlock`),
+  suspend: async (id: string) => apiClient.patch(`/users/${id}/suspend`),
+  resetPassword: async (id: string, password: string) => apiClient.post(`/users/${id}/reset-password`, { password }),
+  getHierarchyTree: async () => {
+    const response = await apiClient.get<ApiEnvelope<unknown[]>>("/users/hierarchy/tree");
+    return response.data.data;
+  },
+  getCreateOptions: async () => {
+    const response = await apiClient.get<ApiEnvelope<{ roles: unknown[]; managers: unknown[] }>>("/users/create-options");
+    return response.data.data;
+  },
 };

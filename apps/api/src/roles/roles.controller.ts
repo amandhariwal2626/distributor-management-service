@@ -24,38 +24,38 @@ export class RolesController {
 
   @Get()
   @Permissions('roles.read')
-  findAll(@Headers('x-tenant-id') tenantId: string) {
-    return this.rolesService.findAll(tenantId);
+  findAll(@Headers('x-organization-id') organizationId: string) {
+    return this.rolesService.findAll(organizationId);
   }
 
   @Post()
   @Permissions('roles.create')
   create(
-    @Headers('x-tenant-id') tenantId: string,
+    @Headers('x-organization-id') organizationId: string,
     @Req() req: Request & { user: { sub: string } },
     @Body() body: CreateRoleDto,
   ) {
-    return this.rolesService.create(tenantId, req.user.sub, body);
+    return this.rolesService.create(organizationId, req.user.sub, body);
   }
 
   @Patch(':id')
   @Permissions('roles.update')
   update(
-    @Headers('x-tenant-id') tenantId: string,
+    @Headers('x-organization-id') organizationId: string,
     @Param('id') id: string,
     @Req() req: Request & { user: { sub: string } },
     @Body() body: UpdateRoleDto,
   ) {
-    return this.rolesService.update(tenantId, id, req.user.sub, body);
+    return this.rolesService.update(organizationId, id, req.user.sub, body);
   }
 
   @Delete(':id')
   @Permissions('roles.delete')
   remove(
-    @Headers('x-tenant-id') tenantId: string,
+    @Headers('x-organization-id') organizationId: string,
     @Param('id') id: string,
     @Req() req: Request & { user: { sub: string } },
   ) {
-    return this.rolesService.remove(tenantId, id, req.user.sub);
+    return this.rolesService.remove(organizationId, id, req.user.sub);
   }
 }

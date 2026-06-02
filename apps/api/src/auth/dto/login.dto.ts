@@ -2,7 +2,7 @@ import { IsEmail, IsString, MinLength } from 'class-validator';
 
 export class LoginDto {
   @IsString()
-  tenantCode!: string;
+  organizationCode!: string;
 
   @IsEmail()
   email!: string;

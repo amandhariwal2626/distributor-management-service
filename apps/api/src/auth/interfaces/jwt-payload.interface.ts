@@ -1,6 +1,6 @@
 export interface JwtPayload {
   sub: string;
-  tenantId: string;
+  organizationId: string;
   email: string;
   roles: string[];
   permissions: string[];

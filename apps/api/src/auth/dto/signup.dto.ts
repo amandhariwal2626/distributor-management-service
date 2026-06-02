@@ -2,7 +2,7 @@ import { IsEmail, IsString, MinLength } from 'class-validator';
 
 export class SignupDto {
   @IsString()
-  tenantCode!: string;
+  organizationCode!: string;
 
   @IsEmail()
   email!: string;

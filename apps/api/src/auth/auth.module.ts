@@ -7,6 +7,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { SessionsModule } from '../sessions/sessions.module';
 import { PermissionsModule } from '../permissions/permissions.module';
 import { RolesModule } from '../roles/roles.module';
+import { AuditLogsModule } from '../audit-logs/audit-logs.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { RolesModule } from '../roles/roles.module';
     SessionsModule,
     PermissionsModule,
     RolesModule,
+    AuditLogsModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

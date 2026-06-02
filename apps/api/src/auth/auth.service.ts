@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -8,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { SessionsService } from '../sessions/sessions.service';
+import { AuditLogService } from '../audit-logs/audit-logs.service';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
@@ -18,6 +20,8 @@ import { RolesService } from '../roles/roles.service';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { SignupDto } from './dto/signup.dto';
 
+const MAX_LOGIN_ATTEMPTS = 5;
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -27,6 +31,7 @@ export class AuthService {
     private readonly sessionsService: SessionsService,
     private readonly permissionsService: PermissionsService,
     private readonly rolesService: RolesService,
+    private readonly auditLog: AuditLogService,
   ) {}
 
   async login(
@@ -38,24 +43,90 @@ export class AuthService {
     sessionId: string;
     user: unknown;
   }> {
-    const tenant = await this.prisma.tenant.findUnique({
-      where: { code: dto.tenantCode },
+    const organization = await this.prisma.organization.findUnique({
+      where: { code: dto.organizationCode },
     });
-    if (!tenant) {
+    if (!organization) {
       throw new UnauthorizedException('Invalid credentials');
     }
     const user = await this.prisma.user.findUnique({
       where: {
-        tenantId_email: { tenantId: tenant.id, email: dto.email },
+        organizationId_email: {
+          organizationId: organization.id,
+          email: dto.email,
+        },
       },
+      include: { profile: { select: { fullName: true } } },
     });
-    if (!user || user.deletedAt || !user.isActive || !user.passwordHash) {
+
+    if (!user || user.deletedAt || !user.passwordHash) {
       throw new UnauthorizedException('Invalid credentials');
     }
+
+    if (user.status === 'LOCKED') {
+      if (user.lockedUntil && user.lockedUntil > new Date()) {
+        throw new ForbiddenException(
+          `Account is locked. Try again after ${user.lockedUntil.toISOString()}`,
+        );
+      }
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { status: 'ACTIVE', failedLoginAttempts: 0, lockedUntil: null },
+      });
+    }
+
+    if (user.status === 'INACTIVE' || user.status === 'SUSPENDED') {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
     const valid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!valid) {
+      const attempts = user.failedLoginAttempts + 1;
+      const lockData: Record<string, unknown> = {
+        failedLoginAttempts: attempts,
+      };
+
+      if (attempts >= MAX_LOGIN_ATTEMPTS) {
+        lockData.status = 'LOCKED';
+        lockData.lockedUntil = new Date(Date.now() + 30 * 60 * 1000);
+        await this.prisma.user.update({
+          where: { id: user.id },
+          data: lockData as any,
+        });
+        await this.auditLog.create({
+          organizationId: organization.id,
+          actorId: user.id,
+          action: 'ACCOUNT_LOCKED',
+          entityType: 'user',
+          entityId: user.id,
+          newValue: { status: 'LOCKED', failedLoginAttempts: attempts },
+          ipAddress: context.ipAddress,
+        });
+      } else {
+        await this.prisma.user.update({
+          where: { id: user.id },
+          data: { failedLoginAttempts: attempts },
+        });
+      }
+
+      await this.auditLog.create({
+        organizationId: organization.id,
+        actorId: user.id,
+        action: 'LOGIN_FAILED',
+        entityType: 'user',
+        entityId: user.id,
+        newValue: { failedLoginAttempts: attempts },
+        ipAddress: context.ipAddress,
+      });
+
       throw new UnauthorizedException('Invalid credentials');
     }
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { failedLoginAttempts: 0, lastLoginAt: new Date() },
+    });
+
     const roles = await this.rolesService.getUserRoles(user.id);
     const permissions = await this.permissionsService.getUserPermissions(
       user.id,
@@ -67,7 +138,7 @@ export class AuthService {
       7,
     );
     const session = await this.sessionsService.createSession({
-      tenantId: tenant.id,
+      organizationId: organization.id,
       userId: user.id,
       refreshTokenHash,
       expiresAt: new Date(Date.now() + refreshTtlDays * 24 * 60 * 60 * 1000),
@@ -76,9 +147,9 @@ export class AuthService {
     });
     const payload: JwtPayload = {
       sub: user.id,
-      tenantId: tenant.id,
+      organizationId: organization.id,
       email: user.email,
-      roles: roles,
+      roles,
       permissions,
       sessionId: session.id,
       jti: randomUUID(),
@@ -87,10 +158,6 @@ export class AuthService {
       secret: this.configService.get<string>('JWT_ACCESS_SECRET', 'dev-secret'),
       expiresIn: '15m',
     });
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: { lastLoginAt: new Date() },
-    });
     return {
       accessToken,
       refreshToken,
@@ -98,8 +165,8 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
-        fullName: user.fullName,
-        tenantId: user.tenantId,
+        fullName: user.profile?.fullName,
+        organizationId: user.organizationId,
         roles,
         permissions,
       },
@@ -110,25 +177,25 @@ export class AuthService {
     id: string;
     email: string;
     fullName: string;
-    tenantId: string;
+    organizationId: string;
   }> {
-    let tenant = await this.prisma.tenant.findUnique({
-      where: { code: dto.tenantCode },
+    let organization = await this.prisma.organization.findUnique({
+      where: { code: dto.organizationCode },
     });
 
-    if (!tenant) {
-      tenant = await this.prisma.tenant.create({
+    if (!organization) {
+      organization = await this.prisma.organization.create({
         data: {
-          code: dto.tenantCode,
-          name: dto.tenantCode,
+          code: dto.organizationCode,
+          name: dto.organizationCode,
         },
       });
     }
 
     const existing = await this.prisma.user.findUnique({
       where: {
-        tenantId_email: {
-          tenantId: tenant.id,
+        organizationId_email: {
+          organizationId: organization.id,
           email: dto.email,
         },
       },
@@ -143,22 +210,32 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(dto.password, 12);
     const user = await this.prisma.user.create({
       data: {
-        tenantId: tenant.id,
+        organizationId: organization.id,
         email: dto.email,
-        firstName,
-        lastName,
-        fullName: dto.fullName,
         passwordHash,
+        status: 'ACTIVE',
+        profile: {
+          create: {
+            firstName,
+            lastName,
+            fullName: dto.fullName,
+          },
+        },
       },
       select: {
         id: true,
         email: true,
-        fullName: true,
-        tenantId: true,
+        organizationId: true,
+        profile: { select: { fullName: true } },
       },
     });
 
-    return user;
+    return {
+      id: user.id,
+      email: user.email,
+      fullName: user.profile?.fullName ?? '',
+      organizationId: user.organizationId,
+    };
   }
 
   async refresh(
@@ -183,7 +260,7 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({
       where: { id: session.userId },
     });
-    if (!user || user.deletedAt || !user.isActive) {
+    if (!user || user.deletedAt || user.status !== 'ACTIVE') {
       throw new UnauthorizedException('Invalid session');
     }
     const roles = await this.rolesService.getUserRoles(user.id);
@@ -203,7 +280,7 @@ export class AuthService {
     );
     const payload: JwtPayload = {
       sub: user.id,
-      tenantId: user.tenantId,
+      organizationId: user.organizationId,
       email: user.email,
       roles: roles,
       permissions,
@@ -227,9 +304,9 @@ export class AuthService {
       select: {
         id: true,
         email: true,
-        fullName: true,
-        tenantId: true,
-        isActive: true,
+        organizationId: true,
+        status: true,
+        profile: { select: { fullName: true } },
       },
     });
     if (!user) {
@@ -238,18 +315,23 @@ export class AuthService {
     const roles = await this.rolesService.getUserRoles(userId);
     const permissions =
       await this.permissionsService.getUserPermissions(userId);
-    return { ...user, roles, permissions };
+    return { ...user, fullName: user.profile?.fullName, roles, permissions };
   }
 
   async forgotPassword(dto: ForgotPasswordDto): Promise<void> {
-    const tenant = await this.prisma.tenant.findUnique({
-      where: { code: dto.tenantCode },
+    const organization = await this.prisma.organization.findUnique({
+      where: { code: dto.organizationCode },
     });
-    if (!tenant) {
+    if (!organization) {
       return;
     }
     const user = await this.prisma.user.findUnique({
-      where: { tenantId_email: { tenantId: tenant.id, email: dto.email } },
+      where: {
+        organizationId_email: {
+          organizationId: organization.id,
+          email: dto.email,
+        },
+      },
     });
     if (!user) {
       return;

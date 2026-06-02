@@ -24,12 +24,29 @@ export class ListUsersDto {
   roleId?: string;
 
   @IsOptional()
-  @IsIn(['active', 'inactive'])
-  status?: 'active' | 'inactive';
+  @IsIn(['ACTIVE', 'INACTIVE', 'LOCKED', 'SUSPENDED'])
+  status?: 'ACTIVE' | 'INACTIVE' | 'LOCKED' | 'SUSPENDED';
 
   @IsOptional()
-  @IsIn(['fullName', 'email', 'createdAt'])
-  sortBy: 'fullName' | 'email' | 'createdAt' = 'createdAt';
+  @IsIn([
+    'fullName',
+    'email',
+    'createdAt',
+    'firstName',
+    'lastName',
+    'userCode',
+    'status',
+    'lastLoginAt',
+  ])
+  sortBy:
+    | 'fullName'
+    | 'email'
+    | 'createdAt'
+    | 'firstName'
+    | 'lastName'
+    | 'userCode'
+    | 'status'
+    | 'lastLoginAt' = 'createdAt';
 
   @IsOptional()
   @IsIn(['asc', 'desc'])
