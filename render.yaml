@@ -5,7 +5,7 @@ services:
     repo: https://github.com/amandhariwal2626/distributor-management-service.git
     plan: free
     region: oregon
-    buildCommand: npm install && npm run build -w @dms/database && npm run build -w @dms/api
+    buildCommand: npm install --include=dev && npm run build -w @dms/database && npm run build -w @dms/api
     startCommand: bash apps/api/render-start.sh
     healthCheckPath: /api
     envVars:
