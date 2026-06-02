@@ -1,20 +1,22 @@
 #!/bin/bash
-set -e
+set -Eeuo pipefail
+
+trap 'echo "[FATAL] Line $LINENO exited with code $?" >&2' ERR
 
 export PATH="node_modules/.bin:$PATH"
+ROOT="$(pwd)"
 
-# Build database package
-npm run build -w @dms/database
+echo "[1/3] Running database migrations..."
+prisma migrate deploy --schema=packages/database/prisma/schema.prisma 2>&1
 
-# Replace npm workspace symlink with actual built package
-# to avoid symlink resolution issues on Render
-rm -rf node_modules/@dms/database
-mkdir -p node_modules/@dms/database/dist
-cp -r packages/database/dist/* node_modules/@dms/database/dist/
-cp packages/database/package.json node_modules/@dms/database/package.json
+echo "[2/3] Verifying API build output..."
+if [ ! -f "apps/api/dist/main.js" ]; then
+  echo "[FATAL] apps/api/dist/main.js does not exist" >&2
+  ls -la apps/api/dist/ >&2
+  exit 1
+fi
 
-echo "Running database migrations..."
-prisma migrate deploy --schema=packages/database/prisma/schema.prisma
-
-echo "Starting API server..."
+echo "[3/3] Starting API server..."
+echo "  node version: $(node --version)"
+echo "  cwd: $ROOT"
 exec node apps/api/dist/main

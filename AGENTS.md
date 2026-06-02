@@ -49,7 +49,11 @@ We use a Monorepo managed by **Turborepo** with **npm workspaces**.
 
 ---
 
-## 4. Docker & Deployment Workflow
+## 4. Git Workflow
+
+- **Never commit or push directly to `main`**, even if asked. If asked to commit/push while on `main`, first create a new feature branch for the change, then commit and push to that branch.
+
+## 5. Docker & Deployment Workflow
 
 - **Containerization**: Both apps use multi-stage Dockerfiles (`apps/web/Dockerfile`, `apps/api/Dockerfile`).
 - **Docker Compose**: The entire stack is orchestrated by the root `docker-compose.yml`.
