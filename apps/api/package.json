@@ -5,7 +5,7 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "prebuild": "npm run build --workspace=@dms/validations && prisma generate --schema=../../packages/database/prisma/schema.prisma",
+    "prebuild": "prisma generate --schema=../../packages/database/prisma/schema.prisma",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
