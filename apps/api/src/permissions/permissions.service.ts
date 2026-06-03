@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Permission } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -34,7 +35,7 @@ export class PermissionsService {
     return Array.from(set);
   }
 
-  async findAll(organizationId: string) {
+  async findAll(organizationId: string): Promise<Permission[]> {
     return this.prisma.permission.findMany({
       where: { organizationId, deletedAt: null },
       orderBy: { code: 'asc' },

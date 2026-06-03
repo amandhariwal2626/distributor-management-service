@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRoleDto, UpdateRoleDto } from './dto/upsert-role.dto';
 
@@ -14,7 +15,11 @@ export class RolesService {
     return roles.map((item) => item.role.name);
   }
 
-  async findAll(organizationId: string) {
+  async findAll(organizationId: string): Promise<
+    Prisma.RoleGetPayload<{
+      include: { permissions: { include: { permission: true } } };
+    }>[]
+  > {
     return this.prisma.role.findMany({
       where: { organizationId, deletedAt: null },
       include: { permissions: { include: { permission: true } } },
@@ -26,7 +31,7 @@ export class RolesService {
     organizationId: string,
     actorUserId: string,
     body: CreateRoleDto,
-  ) {
+  ): Promise<Role> {
     return this.prisma.$transaction(async (tx) => {
       const role = await tx.role.create({
         data: {
@@ -61,11 +66,14 @@ export class RolesService {
     id: string,
     actorUserId: string,
     body: UpdateRoleDto,
-  ) {
+  ): Promise<Role> {
     const role = await this.prisma.role.findFirst({
       where: { id, organizationId, deletedAt: null },
     });
-    if (!role) throw new NotFoundException('Role not found');
+    if (!role)
+      throw new NotFoundException(
+        `Role not found. The specified role ID (${id}) does not exist.`,
+      );
     return this.prisma.$transaction(async (tx) => {
       if (body.permissions) {
         await tx.rolePermission.deleteMany({ where: { roleId: id } });
@@ -97,11 +105,18 @@ export class RolesService {
     });
   }
 
-  async remove(organizationId: string, id: string, actorUserId: string) {
+  async remove(
+    organizationId: string,
+    id: string,
+    actorUserId: string,
+  ): Promise<Role> {
     const role = await this.prisma.role.findFirst({
       where: { id, organizationId, deletedAt: null },
     });
-    if (!role) throw new NotFoundException('Role not found');
+    if (!role)
+      throw new NotFoundException(
+        `Role not found. The specified role ID (${id}) does not exist.`,
+      );
     return this.prisma.role.update({
       where: { id },
       data: { deletedAt: new Date(), updatedBy: actorUserId },

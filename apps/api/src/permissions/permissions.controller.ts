@@ -1,4 +1,5 @@
 import { Controller, Get, Headers, UseGuards } from '@nestjs/common';
+import { Permission } from '@prisma/client';
 import { PermissionsService } from './permissions.service';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { PermissionsGuard } from '../guards/permissions.guard';
@@ -11,7 +12,9 @@ export class PermissionsController {
 
   @Get()
   @Permissions('roles.manage')
-  findAll(@Headers('x-organization-id') organizationId: string) {
+  findAll(
+    @Headers('x-organization-id') organizationId: string,
+  ): Promise<Permission[]> {
     return this.permissionsService.findAll(organizationId);
   }
 }

@@ -10,7 +10,11 @@ const STORAGE = {
   org: "dms.organizationId",
 };
 
-function persist(token: string | null, refresh: string | null, user: AuthUser | null) {
+function persist(
+  token: string | null,
+  refresh: string | null,
+  user: AuthUser | null,
+): void {
   if (typeof window === "undefined") return;
   if (token) localStorage.setItem(STORAGE.access, token);
   else localStorage.removeItem(STORAGE.access);
@@ -34,7 +38,11 @@ type AuthState = {
   isLoading: boolean;
   isSessionExpired: boolean;
   clearAuth: (sessionExpired?: boolean) => void;
-  login: (input: { organizationCode: string; email: string; password: string }) => Promise<void>;
+  login: (input: {
+    organizationCode: string;
+    email: string;
+    password: string;
+  }) => Promise<void>;
   logout: () => Promise<void>;
   refreshAccessToken: () => Promise<string | null>;
   bootstrap: () => Promise<void>;
@@ -68,10 +76,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (typeof window !== "undefined") {
       localStorage.setItem(STORAGE.org, input.organizationCode);
     }
-    const res = await apiPost<{ accessToken: string; refreshToken?: string; user: AuthUser }>(
-      "/auth/login",
-      input,
-    );
+    const res = await apiPost<{
+      accessToken: string;
+      refreshToken?: string;
+      user: AuthUser;
+    }>("/auth/login", input);
     persist(res.accessToken, res.refreshToken ?? null, res.user);
     set({
       accessToken: res.accessToken,
@@ -106,7 +115,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   refreshAccessToken: async () => {
     try {
       const res = await apiPost<{ accessToken: string }>("/auth/refresh");
-      set({ accessToken: res.accessToken, isAuthenticated: true, isSessionExpired: false });
+      set({
+        accessToken: res.accessToken,
+        isAuthenticated: true,
+        isSessionExpired: false,
+      });
       persist(res.accessToken, get().refreshToken, get().user);
       return res.accessToken;
     } catch {

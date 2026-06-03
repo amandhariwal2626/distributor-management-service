@@ -34,7 +34,7 @@ export class AuthController {
     @Body(new ZodValidationPipe(loginSchema)) dto: LoginDto,
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<{ accessToken: string; user: unknown }> {
     const result = await this.authService.login(dto, {
       userAgent: req.headers['user-agent'],
       ipAddress: req.ip,
@@ -45,7 +45,16 @@ export class AuthController {
 
   @Post('signup')
   @HttpCode(201)
-  async signup(@Body(new ZodValidationPipe(signupSchema)) dto: SignupDto) {
+  async signup(
+    @Body(new ZodValidationPipe(signupSchema)) dto: SignupDto,
+  ): Promise<{
+    user: {
+      id: string;
+      email: string;
+      fullName: string;
+      organizationId: string;
+    };
+  }> {
     const user = await this.authService.signup(dto);
     return { user };
   }
@@ -55,7 +64,7 @@ export class AuthController {
   async refresh(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<{ accessToken: string }> {
     const refreshToken = req.cookies?.refreshToken as string | undefined;
     const sessionId = req.cookies?.sessionId as string | undefined;
     if (!refreshToken || !sessionId) {
@@ -68,7 +77,10 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(200)
-  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+  async logout(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<{ message: string }> {
     const sessionId = req.cookies?.sessionId as string | undefined;
     if (sessionId) {
       await this.authService.logout(sessionId);
@@ -82,7 +94,7 @@ export class AuthController {
   @HttpCode(200)
   async forgotPassword(
     @Body(new ZodValidationPipe(forgotPasswordSchema)) dto: ForgotPasswordDto,
-  ) {
+  ): Promise<{ message: string }> {
     await this.authService.forgotPassword(dto);
     return {
       message: 'If the account exists, reset instructions were generated.',
@@ -93,14 +105,14 @@ export class AuthController {
   @HttpCode(200)
   async resetPassword(
     @Body(new ZodValidationPipe(resetPasswordSchema)) dto: ResetPasswordDto,
-  ) {
+  ): Promise<{ message: string }> {
     await this.authService.resetPassword(dto);
     return { message: 'Password reset successful' };
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  async me(@Req() req: Request & { user: { sub: string } }) {
+  async me(@Req() req: Request & { user: { sub: string } }): Promise<unknown> {
     return this.authService.me(req.user.sub);
   }
 
