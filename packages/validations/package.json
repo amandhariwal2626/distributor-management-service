@@ -11,6 +11,11 @@
   "dependencies": {
     "zod": "^4.4.3"
   },
+  "turbo": {
+    "build": {
+      "outputs": []
+    }
+  },
   "devDependencies": {
     "@dms/typescript-config": "*",
     "typescript": "^5"
