@@ -11,6 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
+import { Prisma, Role } from '@prisma/client';
 import { createRoleSchema, updateRoleSchema } from '@dms/validations';
 import { Permissions } from '../decorators/permissions.decorator';
 import { PermissionsGuard } from '../guards/permissions.guard';
@@ -26,9 +27,11 @@ export class RolesController {
 
   @Get()
   @Permissions('roles.read')
-  findAll(
-    @Headers('x-organization-id') organizationId: string,
-  ): Promise<any[]> {
+  findAll(@Headers('x-organization-id') organizationId: string): Promise<
+    Prisma.RoleGetPayload<{
+      include: { permissions: { include: { permission: true } } };
+    }>[]
+  > {
     return this.rolesService.findAll(organizationId);
   }
 
@@ -38,7 +41,7 @@ export class RolesController {
     @Headers('x-organization-id') organizationId: string,
     @Req() req: Request & { user: { sub: string } },
     @Body(new ZodValidationPipe(createRoleSchema)) body: CreateRoleDto,
-  ): Promise<any> {
+  ): Promise<Role> {
     return this.rolesService.create(organizationId, req.user.sub, body);
   }
 
@@ -49,7 +52,7 @@ export class RolesController {
     @Param('id') id: string,
     @Req() req: Request & { user: { sub: string } },
     @Body(new ZodValidationPipe(updateRoleSchema)) body: UpdateRoleDto,
-  ): Promise<any> {
+  ): Promise<Role> {
     return this.rolesService.update(organizationId, id, req.user.sub, body);
   }
 
@@ -59,7 +62,7 @@ export class RolesController {
     @Headers('x-organization-id') organizationId: string,
     @Param('id') id: string,
     @Req() req: Request & { user: { sub: string } },
-  ): Promise<any> {
+  ): Promise<Role> {
     return this.rolesService.remove(organizationId, id, req.user.sub);
   }
 }

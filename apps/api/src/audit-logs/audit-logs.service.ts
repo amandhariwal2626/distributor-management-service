@@ -35,7 +35,17 @@ export class AuditLogService {
     organizationId: string,
     query: ListAuditLogsDto,
   ): Promise<{
-    items: any[];
+    items: Prisma.UserAuditLogGetPayload<{
+      include: {
+        actor: {
+          select: {
+            id: true;
+            profile: { select: { fullName: true } };
+            email: true;
+          };
+        };
+      };
+    }>[];
     total: number;
     page: number;
     limit: number;

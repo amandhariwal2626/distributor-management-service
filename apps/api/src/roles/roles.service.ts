@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Role } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRoleDto, UpdateRoleDto } from './dto/upsert-role.dto';
 
@@ -15,7 +15,11 @@ export class RolesService {
     return roles.map((item) => item.role.name);
   }
 
-  async findAll(organizationId: string): Promise<any[]> {
+  async findAll(organizationId: string): Promise<
+    Prisma.RoleGetPayload<{
+      include: { permissions: { include: { permission: true } } };
+    }>[]
+  > {
     return this.prisma.role.findMany({
       where: { organizationId, deletedAt: null },
       include: { permissions: { include: { permission: true } } },

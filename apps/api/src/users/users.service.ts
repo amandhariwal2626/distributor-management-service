@@ -4,13 +4,27 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, User } from '@prisma/client';
+import { Prisma, Role, User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditLogService } from '../audit-logs/audit-logs.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ListUsersDto } from './dto/list-users.dto';
+
+export type HierarchyNode = Prisma.UserGetPayload<{
+  select: {
+    id: true;
+    email: true;
+    reportingManagerId: true;
+    status: true;
+    profile: { select: { fullName: true } };
+    roles: { include: { role: { select: { name: true; level: true } } } };
+  };
+}> & {
+  fullName: string | undefined;
+  children: HierarchyNode[];
+};
 
 const DISTRIBUTOR_TEAM_ROLES = [
   'Salesman',
@@ -30,7 +44,20 @@ export class UsersService {
     organizationId: string,
     query: ListUsersDto,
   ): Promise<{
-    items: any[];
+    items: Prisma.UserGetPayload<{
+      include: {
+        roles: { include: { role: true } };
+        profile: true;
+        reportingManager: {
+          select: {
+            id: true;
+            profile: { select: { fullName: true } };
+            email: true;
+          };
+        };
+        invitesReceived: { orderBy: { createdAt: 'desc' }; take: 1 };
+      };
+    }>[];
     total: number;
     page: number;
     limit: number;
@@ -108,7 +135,33 @@ export class UsersService {
     };
   }
 
-  async findById(organizationId: string, id: string): Promise<any> {
+  async findById(
+    organizationId: string,
+    id: string,
+  ): Promise<
+    Prisma.UserGetPayload<{
+      include: {
+        roles: { include: { role: true } };
+        profile: true;
+        reportingManager: {
+          select: {
+            id: true;
+            profile: { select: { fullName: true } };
+            email: true;
+          };
+        };
+        subordinates: {
+          where: { deletedAt: null };
+          select: {
+            id: true;
+            profile: { select: { fullName: true } };
+            email: true;
+          };
+        };
+        permissionOverrides: true;
+      };
+    }>
+  > {
     const user = await this.prisma.user.findFirst({
       where: { id, organizationId, deletedAt: null },
       include: {
@@ -145,7 +198,14 @@ export class UsersService {
     actorRoleNames: string[],
     data: CreateUserDto,
     ipAddress?: string,
-  ): Promise<any> {
+  ): Promise<
+    Prisma.UserGetPayload<{
+      include: {
+        roles: { include: { role: true } };
+        profile: true;
+      };
+    }>
+  > {
     const existing = await this.prisma.user.findUnique({
       where: { organizationId_email: { organizationId, email: data.email } },
     });
@@ -273,7 +333,21 @@ export class UsersService {
     actorRoleNames: string[],
     data: UpdateUserDto,
     ipAddress?: string,
-  ): Promise<any> {
+  ): Promise<
+    Prisma.UserGetPayload<{
+      include: {
+        roles: { include: { role: true } };
+        profile: true;
+        reportingManager: {
+          select: {
+            id: true;
+            profile: { select: { fullName: true } };
+            email: true;
+          };
+        };
+      };
+    }>
+  > {
     const existing = await this.findById(organizationId, id);
 
     if (data.email && data.email !== existing.email) {
@@ -780,7 +854,7 @@ export class UsersService {
     return result;
   }
 
-  async getHierarchyTree(organizationId: string): Promise<any[]> {
+  async getHierarchyTree(organizationId: string): Promise<HierarchyNode[]> {
     const users = await this.prisma.user.findMany({
       where: { organizationId, deletedAt: null },
       select: {
@@ -797,11 +871,6 @@ export class UsersService {
       },
       orderBy: { createdAt: 'asc' },
     });
-
-    type HierarchyNode = (typeof users)[number] & {
-      fullName: string | undefined;
-      children: HierarchyNode[];
-    };
 
     const userMap = new Map<string, HierarchyNode>(
       users.map((u) => [
@@ -822,9 +891,16 @@ export class UsersService {
     return roots;
   }
 
-  async getCreateOptions(
-    organizationId: string,
-  ): Promise<{ roles: any[]; managers: any[] }> {
+  async getCreateOptions(organizationId: string): Promise<{
+    roles: Role[];
+    managers: Prisma.UserGetPayload<{
+      select: {
+        id: true;
+        profile: { select: { fullName: true } };
+        email: true;
+      };
+    }>[];
+  }> {
     const roles = await this.prisma.role.findMany({
       where: { organizationId, deletedAt: null },
       orderBy: { level: 'asc' },

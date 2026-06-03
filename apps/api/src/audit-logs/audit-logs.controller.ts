@@ -1,4 +1,5 @@
 import { Controller, Get, Headers, Query, UseGuards } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { listAuditLogsSchema } from '@dms/validations';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { PermissionsGuard } from '../guards/permissions.guard';
@@ -17,7 +18,23 @@ export class AuditLogsController {
   findAll(
     @Headers('x-organization-id') organizationId: string,
     @Query(new ZodValidationPipe(listAuditLogsSchema)) query: ListAuditLogsDto,
-  ): Promise<any> {
+  ): Promise<{
+    items: Prisma.UserAuditLogGetPayload<{
+      include: {
+        actor: {
+          select: {
+            id: true;
+            profile: { select: { fullName: true } };
+            email: true;
+          };
+        };
+      };
+    }>[];
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  }> {
     return this.auditLogService.findAll(organizationId, query);
   }
 }
