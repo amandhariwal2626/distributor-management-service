@@ -7,6 +7,7 @@ This file provides system context, architecture boundaries, conventions, and ins
 ## 0. Critical Rules
 
 - **Never modify `.env` files without asking the user first.** Env files contain credentials and configuration that must not be changed without explicit approval.
+- **Every API endpoint must return specific, descriptive error messages.** Never use generic messages like `'Invalid credentials'`, `'Forbidden'`, `'Not found'`, or `'Bad request'` without describing what specifically went wrong. Include contextual details (e.g., which field conflicts, how many attempts remain, why access was denied) so the frontend can display a meaningful message to the user. For security-sensitive endpoints (e.g., forgot-password), return the same generic response for both found and not-found cases to prevent enumeration.
 
 ## 1. Stack Architecture & Folder Structure
 
@@ -70,6 +71,7 @@ Login: username, passwordHash, forcePasswordChange, passwordExpiryDays, twoFacto
 
 ### General Rules:
 - **TypeScript**: Enable strict mode (`strict: true`) everywhere. Avoid using `any`; define explicit interfaces and types.
+- **Every component and every function must have proper TypeScript types** — no implicit `any`, no missing return types on functions, and no untyped component props. For React components, always define a `Props` interface and use it as `React.FC<Props>` or explicit `{ prop1, prop2 }: Props`. For API/functions, always specify parameter and return types.
 - **Import Statements**: Use path aliases (`@/*` pointing to `src/*`) in both frontend and backend configurations instead of relative paths (e.g., `../../components`).
 
 ### Backend (NestJS):
@@ -84,6 +86,11 @@ Login: username, passwordHash, forcePasswordChange, passwordExpiryDays, twoFacto
 - **Tailwind CSS v4**: Tailwind CSS v4 is used. Styles are configured directly in `src/app/globals.css` with `@theme` blocks. Do not look for a `tailwind.config.js`.
 - **UI Generation**: Frontend components are generated via **Lovable**. Refer to `docs/UI-SPECS-FOR-LOVABLE.md` for detailed specs on each page/component.
 - **shadcn/ui Components**: Always install new shadcn UI components using the CLI from `apps/web/`. Run `npx shadcn@latest add <component-name>` to add the component and its dependencies (e.g., `npx shadcn@latest add calendar`). Do not manually create or copy shadcn component files.
+- **Component Lookup Order**: Before creating any new component, look in `apps/web/src/components` first, then in `apps/web/src/components/ui`. Only create a new component if it does not exist in either location.
+- **File Length**: FE files should not exceed 200 lines of code. Exceptions can be made when necessary (e.g., complex forms or page layouts with many fields).
+- **One Component Per File**: Each file should contain exactly one component. Do not define multiple components in a single file.
+- **Strict Types**: Always define proper TypeScript interfaces and types. Never use `any`.
+- **File Organization**: Keep types in `types/<feature>` if feature-specific or in `types/` if shared across features. Keep utility functions in `utils/<feature>` if feature-specific or in `utils/` if shared. Apply the same convention for configs (`config/<feature>` or `config/`).
 
 ---
 

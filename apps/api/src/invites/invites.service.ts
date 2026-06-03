@@ -62,7 +62,10 @@ export class InvitesService {
         break;
       }
     }
-    if (!matched) throw new BadRequestException('Invalid invite token');
+    if (!matched)
+      throw new BadRequestException(
+        'Invalid or expired invite token. Please request a new invite.',
+      );
     await this.prisma.$transaction([
       this.prisma.user.update({
         where: { id: matched.userId },

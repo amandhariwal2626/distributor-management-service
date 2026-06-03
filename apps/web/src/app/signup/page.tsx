@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -11,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const schema = z
   .object({
@@ -29,8 +29,6 @@ type FormValues = z.infer<typeof schema>;
 
 export default function SignupPage() {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
@@ -41,18 +39,16 @@ export default function SignupPage() {
 
   const onSubmit = async (values: FormValues) => {
     try {
-      setError(null);
-      setSuccess(null);
       await apiClient.post("/auth/signup", {
         tenantCode: values.tenantCode,
         fullName: values.fullName,
         email: values.email,
         password: values.password,
       });
-      setSuccess("Account created. Redirecting to login...");
-      router.replace("/login");
+      toast.success("Account created successfully. Redirecting to login...");
+      setTimeout(() => router.replace("/login"), 1500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Sign up failed");
+      toast.error(err instanceof Error ? err.message : "Sign up failed");
     }
   };
 
@@ -89,8 +85,6 @@ export default function SignupPage() {
               <Input id="confirmPassword" type="password" placeholder="********" {...register("confirmPassword")} />
               {errors.confirmPassword && <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>}
             </div>
-            {error && <p className="text-xs text-destructive">{error}</p>}
-            {success && <p className="text-xs text-emerald-600">{success}</p>}
             <Button type="submit" disabled={isSubmitting} className="w-full">
               {isSubmitting ? "Creating account..." : "Sign up"}
             </Button>

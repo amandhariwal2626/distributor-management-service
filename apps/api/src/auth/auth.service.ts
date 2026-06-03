@@ -47,7 +47,9 @@ export class AuthService {
       where: { code: dto.organizationCode },
     });
     if (!organization) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException(
+        'Organization not found. Please check your organization code.',
+      );
     }
     const user = await this.prisma.user.findUnique({
       where: {
@@ -60,7 +62,9 @@ export class AuthService {
     });
 
     if (!user || user.deletedAt || !user.passwordHash) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException(
+        'This email is not registered in our system.',
+      );
     }
 
     if (user.status === 'LOCKED') {
@@ -76,7 +80,9 @@ export class AuthService {
     }
 
     if (user.status === 'INACTIVE' || user.status === 'SUSPENDED') {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException(
+        'Your account is inactive or suspended. Contact your administrator.',
+      );
     }
 
     const valid = await bcrypt.compare(dto.password, user.passwordHash);
@@ -102,6 +108,9 @@ export class AuthService {
           newValue: { status: 'LOCKED', failedLoginAttempts: attempts },
           ipAddress: context.ipAddress,
         });
+        throw new UnauthorizedException(
+          `Incorrect password. Your account has been locked due to ${MAX_LOGIN_ATTEMPTS} failed attempts. Try again after 30 minutes.`,
+        );
       } else {
         await this.prisma.user.update({
           where: { id: user.id },
@@ -119,7 +128,9 @@ export class AuthService {
         ipAddress: context.ipAddress,
       });
 
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException(
+        `Incorrect password. ${MAX_LOGIN_ATTEMPTS - attempts} attempt(s) remaining before your account is locked.`,
+      );
     }
 
     await this.prisma.user.update({
@@ -245,12 +256,18 @@ export class AuthService {
     const session = await this.prisma.session.findUnique({
       where: { id: sessionId },
     });
-    if (
-      !session ||
-      session.expiresAt.getTime() <= Date.now() ||
-      session.revokedAt
-    ) {
-      throw new UnauthorizedException('Invalid session');
+    if (!session) {
+      throw new UnauthorizedException('Session not found. Please login again.');
+    }
+    if (session.revokedAt) {
+      throw new UnauthorizedException(
+        'Session has been revoked. Please login again.',
+      );
+    }
+    if (session.expiresAt.getTime() <= Date.now()) {
+      throw new UnauthorizedException(
+        'Session has expired. Please login again.',
+      );
     }
     const valid = await bcrypt.compare(refreshToken, session.refreshTokenHash);
     if (!valid) {
@@ -260,8 +277,13 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({
       where: { id: session.userId },
     });
-    if (!user || user.deletedAt || user.status !== 'ACTIVE') {
-      throw new UnauthorizedException('Invalid session');
+    if (!user || user.deletedAt) {
+      throw new UnauthorizedException('User not found. Please login again.');
+    }
+    if (user.status !== 'ACTIVE') {
+      throw new UnauthorizedException(
+        `Your account is ${user.status.toLowerCase()}. Please contact your administrator.`,
+      );
     }
     const roles = await this.rolesService.getUserRoles(user.id);
     const permissions = await this.permissionsService.getUserPermissions(
@@ -355,7 +377,9 @@ export class AuthService {
     });
     const match = await this.findMatchingToken(tokens, dto.token);
     if (!match) {
-      throw new BadRequestException('Invalid reset token');
+      throw new BadRequestException(
+        'Invalid or expired password reset token. Please request a new password reset link.',
+      );
     }
     await this.prisma.user.update({
       where: { id: match.userId },

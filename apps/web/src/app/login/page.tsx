@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { toast } from "sonner";
 import Link from "next/link";
 
 const schema = z.object({
@@ -23,18 +23,16 @@ type FormValues = z.infer<typeof schema>;
 export default function LoginPage() {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
-  const [error, setError] = useState<string | null>(null);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(schema),
   });
 
   const onSubmit = async (values: FormValues) => {
     try {
-      setError(null);
       await login(values);
       router.replace("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      toast.error(err instanceof Error ? err.message : "Login failed");
     }
   };
 
@@ -61,7 +59,6 @@ export default function LoginPage() {
               <Input id="password" type="password" placeholder="********" {...register("password")} />
               {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
             </div>
-            {error && <p className="text-xs text-destructive">{error}</p>}
             <Button type="submit" disabled={isSubmitting} className="w-full">
               {isSubmitting ? "Signing in..." : "Sign in"}
             </Button>

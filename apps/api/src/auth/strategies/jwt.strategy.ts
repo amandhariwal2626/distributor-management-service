@@ -23,7 +23,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       payload.sessionId,
     );
     if (!active) {
-      throw new UnauthorizedException('Session invalid');
+      throw new UnauthorizedException(
+        'Session has expired or been revoked. Please login again.',
+      );
     }
     return payload;
   }

@@ -1,16 +1,4 @@
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { signupSchema } from '@dms/validations';
+import type { z } from 'zod/v4';
 
-export class SignupDto {
-  @IsString()
-  organizationCode!: string;
-
-  @IsEmail()
-  email!: string;
-
-  @IsString()
-  fullName!: string;
-
-  @IsString()
-  @MinLength(8)
-  password!: string;
-}
+export type SignupDto = z.infer<typeof signupSchema>;

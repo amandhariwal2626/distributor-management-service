@@ -1,9 +1,4 @@
-import { IsEmail, IsString } from 'class-validator';
+import { forgotPasswordSchema } from '@dms/validations';
+import type { z } from 'zod/v4';
 
-export class ForgotPasswordDto {
-  @IsString()
-  organizationCode!: string;
-
-  @IsEmail()
-  email!: string;
-}
+export type ForgotPasswordDto = z.infer<typeof forgotPasswordSchema>;

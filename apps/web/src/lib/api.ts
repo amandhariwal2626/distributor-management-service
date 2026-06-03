@@ -43,9 +43,12 @@ api.interceptors.response.use(
   async (error: AxiosError<ApiEnvelope<unknown>>) => {
     const originalRequest = error.config as typeof error.config & { _retry?: boolean };
     const status = error.response?.status;
-    const isRefreshRequest = originalRequest?.url?.includes("/auth/refresh");
+    const url = originalRequest?.url ?? "";
+    const isRefreshRequest = url.includes("/auth/refresh");
+    const isPublicAuth = url.includes("/auth/login") || url.includes("/auth/signup") ||
+      url.includes("/auth/forgot-password") || url.includes("/auth/reset-password");
 
-    if (status !== 401 || originalRequest?._retry || isRefreshRequest) {
+    if (status !== 401 || originalRequest?._retry || isRefreshRequest || isPublicAuth) {
       if (status === 401 && isRefreshRequest) {
         useAuthStore.getState().clearAuth(true);
       }
