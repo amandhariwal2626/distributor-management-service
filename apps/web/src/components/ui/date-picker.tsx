@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -40,7 +40,7 @@ function DatePicker({
           )}
         >
           <CalendarIcon className="mr-2 size-4 shrink-0" />
-          {value ? format(value, "PPP") : <span>{placeholder}</span>}
+          {value && isValid(value) ? format(value, "PPP") : <span>{placeholder}</span>}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
