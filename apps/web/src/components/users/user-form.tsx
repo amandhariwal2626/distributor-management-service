@@ -304,7 +304,7 @@ export function UserForm({ initial, mode, onSubmit, onCancel }: UserFormProps) {
                   <FormLabel>Date of Birth</FormLabel>
                   <FormControl>
                     <DatePicker
-                      value={field.value ? new Date(field.value + "T00:00:00") : undefined}
+                      value={field.value ? new Date(field.value) : undefined}
                       onChange={(date) => field.onChange(date ? formatDate(date) : undefined)}
                     />
                   </FormControl>

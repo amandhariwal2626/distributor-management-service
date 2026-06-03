@@ -10,6 +10,7 @@ COPY packages/typescript-config/package.json ./packages/typescript-config/packag
 COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
 COPY packages/database/package.json ./packages/database/package.json
 COPY packages/database/prisma ./packages/database/prisma
+COPY packages/validations/package.json ./packages/validations/package.json
 RUN npm ci
 RUN npx prisma generate --schema=packages/database/prisma/schema.prisma
 COPY . .
@@ -25,6 +26,7 @@ COPY packages/typescript-config/package.json ./packages/typescript-config/packag
 COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
 COPY packages/database/package.json ./packages/database/package.json
 COPY packages/database/prisma ./packages/database/prisma
+COPY packages/validations/package.json ./packages/validations/package.json
 RUN npm ci
 RUN npx prisma generate --schema=packages/database/prisma/schema.prisma
 
@@ -33,6 +35,7 @@ FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build -w @dms/database
+RUN npm run build -w @dms/validations
 RUN npm run build -w @dms/api
 
 # Production runner stage
@@ -46,6 +49,8 @@ COPY --from=builder --chown=nestjs:nodejs /app/apps/api/dist ./apps/api/dist
 COPY --from=builder --chown=nestjs:nodejs /app/packages/database/dist ./packages/database/dist
 COPY --from=builder --chown=nestjs:nodejs /app/packages/database/prisma ./packages/database/prisma
 COPY --from=builder --chown=nestjs:nodejs /app/packages/database/package.json ./packages/database/package.json
+COPY --from=builder --chown=nestjs:nodejs /app/packages/validations/dist ./packages/validations/dist
+COPY --from=builder --chown=nestjs:nodejs /app/packages/validations/package.json ./packages/validations/package.json
 COPY --from=builder --chown=nestjs:nodejs /app/apps/api/package.json ./apps/api/package.json
 COPY --from=builder --chown=nestjs:nodejs /app/apps/api/docker-entrypoint.sh ./apps/api/docker-entrypoint.sh
 
