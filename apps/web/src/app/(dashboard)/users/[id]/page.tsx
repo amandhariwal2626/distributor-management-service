@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { RoleGuard } from "@/modules/rbac/components/guards/role-guard";
 import { Button } from "@/components/ui/button";
 import { UserDetail } from "@/components/users/user-detail";
+import { UserDetailSkeleton } from "@/components/users/user-detail-skeleton";
 import { useRbacStore } from "@/store/rbac-store";
 import type { User } from "@/types";
 
@@ -23,7 +24,7 @@ export default function UserDetailPage() {
       .finally(() => setLoading(false));
   }, [getUser, params.id]);
 
-  if (loading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
+  if (loading) return <UserDetailSkeleton />;
   if (!user) return <div className="p-8 text-center text-muted-foreground">User not found</div>;
 
   return (

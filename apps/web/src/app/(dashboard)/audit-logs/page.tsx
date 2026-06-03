@@ -3,6 +3,7 @@
 import { useCallback, useEffect } from "react";
 import { RoleGuard } from "@/modules/rbac/components/guards/role-guard";
 import { AuditTable } from "@/components/audit/audit-table";
+import { AuditTableSkeleton } from "@/components/audit/audit-table-skeleton";
 import { useRbacStore } from "@/store/rbac-store";
 import type { ListAuditLogsParams } from "@/types";
 
@@ -13,6 +14,7 @@ export default function AuditLogsPage() {
     auditPage,
     auditLimit,
     auditPages,
+    loading,
     loadAuditLogs,
   } = useRbacStore();
 
@@ -38,15 +40,19 @@ export default function AuditLogsPage() {
     <RoleGuard permission="audit.read">
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">Audit Logs</h2>
-        <AuditTable
-          logs={auditLogs}
-          total={totalAuditLogs}
-          page={auditPage}
-          limit={auditLimit}
-          pages={auditPages}
-          onPageChange={handlePageChange}
-          onFiltersChange={handleFiltersChange}
-        />
+        {loading && auditLogs.length === 0 ? (
+          <AuditTableSkeleton />
+        ) : (
+          <AuditTable
+            logs={auditLogs}
+            total={totalAuditLogs}
+            page={auditPage}
+            limit={auditLimit}
+            pages={auditPages}
+            onPageChange={handlePageChange}
+            onFiltersChange={handleFiltersChange}
+          />
+        )}
       </div>
     </RoleGuard>
   );

@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { RolesTableSkeleton } from "@/modules/rbac/components/rbac/roles-table-skeleton";
 import { useRbacStore } from "@/store/rbac-store";
 
 export function RolesTable() {
@@ -20,7 +21,7 @@ export function RolesTable() {
   }, [loadRoles]);
 
   if (loading && roles.length === 0) {
-    return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
+    return <RolesTableSkeleton />;
   }
 
   return (

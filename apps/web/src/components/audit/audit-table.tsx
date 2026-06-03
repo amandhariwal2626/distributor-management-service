@@ -20,19 +20,44 @@ import {
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/utils/common";
 import type { AuditLog, ListAuditLogsParams } from "@/types";
 
 const ACTIONS: Record<string, { label: string; className: string }> = {
-  USER_CREATED: { label: "User Created", className: "bg-green-100 text-green-800" },
-  USER_UPDATED: { label: "User Updated", className: "bg-blue-100 text-blue-800" },
+  USER_CREATED: {
+    label: "User Created",
+    className: "bg-green-100 text-green-800",
+  },
+  USER_UPDATED: {
+    label: "User Updated",
+    className: "bg-blue-100 text-blue-800",
+  },
   USER_DELETED: { label: "User Deleted", className: "bg-red-100 text-red-800" },
-  PASSWORD_RESET: { label: "Password Reset", className: "bg-yellow-100 text-yellow-800" },
-  ROLE_CHANGED: { label: "Role Changed", className: "bg-purple-100 text-purple-800" },
-  STATUS_CHANGED: { label: "Status Changed", className: "bg-orange-100 text-orange-800" },
-  REPORTING_MANAGER_CHANGED: { label: "Manager Changed", className: "bg-cyan-100 text-cyan-800" },
+  PASSWORD_RESET: {
+    label: "Password Reset",
+    className: "bg-yellow-100 text-yellow-800",
+  },
+  ROLE_CHANGED: {
+    label: "Role Changed",
+    className: "bg-purple-100 text-purple-800",
+  },
+  STATUS_CHANGED: {
+    label: "Status Changed",
+    className: "bg-orange-100 text-orange-800",
+  },
+  REPORTING_MANAGER_CHANGED: {
+    label: "Manager Changed",
+    className: "bg-cyan-100 text-cyan-800",
+  },
   LOGIN_FAILED: { label: "Login Failed", className: "bg-red-100 text-red-800" },
-  ACCOUNT_LOCKED: { label: "Account Locked", className: "bg-orange-100 text-orange-800" },
-  ACCOUNT_UNLOCKED: { label: "Account Unlocked", className: "bg-green-100 text-green-800" },
+  ACCOUNT_LOCKED: {
+    label: "Account Locked",
+    className: "bg-orange-100 text-orange-800",
+  },
+  ACCOUNT_UNLOCKED: {
+    label: "Account Unlocked",
+    className: "bg-green-100 text-green-800",
+  },
 };
 
 interface AuditTableProps {
@@ -69,13 +94,6 @@ export function AuditTable({
     });
   }
 
-  function formatDate(date: Date): string {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const d = String(date.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
-  }
-
   function applyFilters() {
     onFiltersChange({
       action: action === "ALL" ? undefined : action,
@@ -92,7 +110,9 @@ export function AuditTable({
     <div className="space-y-4">
       <div className="flex flex-wrap items-end gap-3">
         <div>
-          <label className="mb-1 block text-xs text-muted-foreground">Action</label>
+          <label className="mb-1 block text-xs text-muted-foreground">
+            Action
+          </label>
           <Select
             value={action}
             onValueChange={(v) => {
@@ -119,7 +139,9 @@ export function AuditTable({
           </Select>
         </div>
         <div>
-          <label className="mb-1 block text-xs text-muted-foreground">Actor ID</label>
+          <label className="mb-1 block text-xs text-muted-foreground">
+            Actor ID
+          </label>
           <Input
             value={actor}
             onChange={(e) => setActor(e.target.value)}
@@ -128,20 +150,14 @@ export function AuditTable({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs text-muted-foreground">From</label>
-          <DatePicker
-            value={from}
-            onChange={setFrom}
-            placeholder="From date"
-          />
+          <label className="mb-1 block text-xs text-muted-foreground">
+            From
+          </label>
+          <DatePicker value={from} onChange={setFrom} placeholder="From date" />
         </div>
         <div>
           <label className="mb-1 block text-xs text-muted-foreground">To</label>
-          <DatePicker
-            value={to}
-            onChange={setTo}
-            placeholder="To date"
-          />
+          <DatePicker value={to} onChange={setTo} placeholder="To date" />
         </div>
         <Button onClick={applyFilters}>Apply</Button>
       </div>
@@ -161,7 +177,10 @@ export function AuditTable({
           <TableBody>
             {logs.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                <TableCell
+                  colSpan={6}
+                  className="py-8 text-center text-muted-foreground"
+                >
                   No audit logs
                 </TableCell>
               </TableRow>
@@ -199,20 +218,27 @@ export function AuditTable({
                             <div className="text-sm font-medium">
                               {log.actor.profile.fullName}
                             </div>
-                            <div className="text-xs text-muted-foreground">{log.actor.email}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {log.actor.email}
+                            </div>
                           </div>
                         ) : (
                           <span className="text-muted-foreground">System</span>
                         )}
                       </TableCell>
                       <TableCell>
-                        <Badge className={cn(meta.className, "font-medium")} variant="secondary">
+                        <Badge
+                          className={cn(meta.className, "font-medium")}
+                          variant="secondary"
+                        >
                           {meta.label}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm">
                         <div className="font-medium">{log.entityType}</div>
-                        <div className="text-xs text-muted-foreground">{log.entityId}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {log.entityId}
+                        </div>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {log.ipAddress ?? "—"}
