@@ -1,29 +1,5 @@
-import { IsArray, IsOptional, IsString } from 'class-validator';
+import { createRoleSchema, updateRoleSchema } from '@dms/validations';
+import type { z } from 'zod/v4';
 
-export class CreateRoleDto {
-  @IsString()
-  name!: string;
-
-  @IsOptional()
-  @IsString()
-  description?: string;
-
-  @IsArray()
-  @IsString({ each: true })
-  permissions!: string[];
-}
-
-export class UpdateRoleDto {
-  @IsOptional()
-  @IsString()
-  name?: string;
-
-  @IsOptional()
-  @IsString()
-  description?: string;
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  permissions?: string[];
-}
+export type CreateRoleDto = z.infer<typeof createRoleSchema>;
+export type UpdateRoleDto = z.infer<typeof updateRoleSchema>;

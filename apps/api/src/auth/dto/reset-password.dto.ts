@@ -1,10 +1,4 @@
-import { IsString, MinLength } from 'class-validator';
+import { resetPasswordSchema } from '@dms/validations';
+import type { z } from 'zod/v4';
 
-export class ResetPasswordDto {
-  @IsString()
-  token!: string;
-
-  @IsString()
-  @MinLength(8)
-  password!: string;
-}
+export type ResetPasswordDto = z.infer<typeof resetPasswordSchema>;

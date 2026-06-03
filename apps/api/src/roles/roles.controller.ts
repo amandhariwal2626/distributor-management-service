@@ -11,11 +11,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
+import { createRoleSchema, updateRoleSchema } from '@dms/validations';
 import { Permissions } from '../decorators/permissions.decorator';
 import { PermissionsGuard } from '../guards/permissions.guard';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
-import { CreateRoleDto, UpdateRoleDto } from './dto/upsert-role.dto';
+import type { CreateRoleDto, UpdateRoleDto } from './dto/upsert-role.dto';
 import { RolesService } from './roles.service';
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 
 @Controller('roles')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -33,7 +35,7 @@ export class RolesController {
   create(
     @Headers('x-organization-id') organizationId: string,
     @Req() req: Request & { user: { sub: string } },
-    @Body() body: CreateRoleDto,
+    @Body(new ZodValidationPipe(createRoleSchema)) body: CreateRoleDto,
   ) {
     return this.rolesService.create(organizationId, req.user.sub, body);
   }
@@ -44,7 +46,7 @@ export class RolesController {
     @Headers('x-organization-id') organizationId: string,
     @Param('id') id: string,
     @Req() req: Request & { user: { sub: string } },
-    @Body() body: UpdateRoleDto,
+    @Body(new ZodValidationPipe(updateRoleSchema)) body: UpdateRoleDto,
   ) {
     return this.rolesService.update(organizationId, id, req.user.sub, body);
   }

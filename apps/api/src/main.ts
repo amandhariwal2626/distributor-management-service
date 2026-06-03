@@ -1,5 +1,4 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
@@ -22,13 +21,6 @@ async function bootstrap() {
   });
   app.use(helmet());
   app.use(cookieParser());
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true,
-      forbidNonWhitelisted: true,
-    }),
-  );
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(
     new RequestLoggingInterceptor(),

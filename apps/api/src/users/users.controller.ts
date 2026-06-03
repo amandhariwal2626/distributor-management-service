@@ -12,20 +12,20 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
+import {
+  createUserSchema,
+  updateUserSchema,
+  listUsersSchema,
+  adminResetPasswordSchema,
+} from '@dms/validations';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { PermissionsGuard } from '../guards/permissions.guard';
 import { Permissions } from '../decorators/permissions.decorator';
 import { UsersService } from './users.service';
-import { ListUsersDto } from './dto/list-users.dto';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { IsString, MinLength } from 'class-validator';
-
-class ResetPasswordDto {
-  @IsString()
-  @MinLength(8)
-  password!: string;
-}
+import type { ListUsersDto } from './dto/list-users.dto';
+import type { CreateUserDto } from './dto/create-user.dto';
+import type { UpdateUserDto } from './dto/update-user.dto';
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 
 function getIp(req: Request, forwardedFor?: string): string | undefined {
   return forwardedFor || (req as any).ip;
@@ -40,7 +40,7 @@ export class UsersController {
   @Permissions('users.read')
   findAll(
     @Headers('x-organization-id') organizationId: string,
-    @Query() query: ListUsersDto,
+    @Query(new ZodValidationPipe(listUsersSchema)) query: ListUsersDto,
   ) {
     return this.usersService.findAll(organizationId, query);
   }
@@ -71,7 +71,7 @@ export class UsersController {
   create(
     @Headers('x-organization-id') organizationId: string,
     @Req() req: Request & { user: { sub: string; roles: string[] } },
-    @Body() body: CreateUserDto,
+    @Body(new ZodValidationPipe(createUserSchema)) body: CreateUserDto,
     @Headers('x-forwarded-for') forwardedFor?: string,
   ) {
     return this.usersService.create(
@@ -89,7 +89,7 @@ export class UsersController {
     @Headers('x-organization-id') organizationId: string,
     @Param('id') id: string,
     @Req() req: Request & { user: { sub: string; roles: string[] } },
-    @Body() body: UpdateUserDto,
+    @Body(new ZodValidationPipe(updateUserSchema)) body: UpdateUserDto,
     @Headers('x-forwarded-for') forwardedFor?: string,
   ) {
     return this.usersService.update(
@@ -204,7 +204,8 @@ export class UsersController {
     @Headers('x-organization-id') organizationId: string,
     @Param('id') id: string,
     @Req() req: Request & { user: { sub: string } },
-    @Body() body: ResetPasswordDto,
+    @Body(new ZodValidationPipe(adminResetPasswordSchema))
+    body: { password: string },
     @Headers('x-forwarded-for') forwardedFor?: string,
   ) {
     return this.usersService.adminResetPassword(

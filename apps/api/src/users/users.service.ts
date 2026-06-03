@@ -839,7 +839,9 @@ export class UsersService {
       return;
     }
 
-    throw new ForbiddenException('You do not have permission to create users');
+    throw new ForbiddenException(
+      `User creation is restricted to Admin and Distributor roles only. Your roles (${actorRoleNames.join(', ')}) do not have create permission.`,
+    );
   }
 
   private async validateReportingManager(
