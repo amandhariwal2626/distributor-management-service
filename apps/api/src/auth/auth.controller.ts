@@ -10,12 +10,19 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
+import {
+  loginSchema,
+  signupSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+} from '@dms/validations';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
+import type { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
-import { ForgotPasswordDto } from './dto/forgot-password.dto';
-import { ResetPasswordDto } from './dto/reset-password.dto';
-import { SignupDto } from './dto/signup.dto';
+import type { ForgotPasswordDto } from './dto/forgot-password.dto';
+import type { ResetPasswordDto } from './dto/reset-password.dto';
+import type { SignupDto } from './dto/signup.dto';
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 
 @Controller('auth')
 export class AuthController {
@@ -24,7 +31,7 @@ export class AuthController {
   @Post('login')
   @HttpCode(200)
   async login(
-    @Body() dto: LoginDto,
+    @Body(new ZodValidationPipe(loginSchema)) dto: LoginDto,
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
@@ -38,7 +45,7 @@ export class AuthController {
 
   @Post('signup')
   @HttpCode(201)
-  async signup(@Body() dto: SignupDto) {
+  async signup(@Body(new ZodValidationPipe(signupSchema)) dto: SignupDto) {
     const user = await this.authService.signup(dto);
     return { user };
   }
@@ -73,7 +80,9 @@ export class AuthController {
 
   @Post('forgot-password')
   @HttpCode(200)
-  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+  async forgotPassword(
+    @Body(new ZodValidationPipe(forgotPasswordSchema)) dto: ForgotPasswordDto,
+  ) {
     await this.authService.forgotPassword(dto);
     return {
       message: 'If the account exists, reset instructions were generated.',
@@ -82,7 +91,9 @@ export class AuthController {
 
   @Post('reset-password')
   @HttpCode(200)
-  async resetPassword(@Body() dto: ResetPasswordDto) {
+  async resetPassword(
+    @Body(new ZodValidationPipe(resetPasswordSchema)) dto: ResetPasswordDto,
+  ) {
     await this.authService.resetPassword(dto);
     return { message: 'Password reset successful' };
   }
