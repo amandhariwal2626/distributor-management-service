@@ -5,7 +5,12 @@ import { useAuthStore } from "@/store/auth-store";
 import { hasAll, hasAny, hasPermission } from "../lib/permissions";
 import type { PermissionId } from "../types";
 
-export function usePermissions() {
+export function usePermissions(): {
+  permissions: string[];
+  has: (id: PermissionId) => boolean;
+  hasAll: (ids: PermissionId[]) => boolean;
+  hasAny: (ids: PermissionId[]) => boolean;
+} {
   const user = useAuthStore((s) => s.user);
   const permissions = useMemo(() => user?.permissions ?? [], [user]);
 

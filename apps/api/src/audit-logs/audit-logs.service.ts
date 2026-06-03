@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, UserAuditLog } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ListAuditLogsDto } from './dto/list-audit-logs.dto';
 
@@ -16,7 +16,7 @@ export class AuditLogService {
     oldValue?: Record<string, unknown>;
     newValue?: Record<string, unknown>;
     ipAddress?: string;
-  }) {
+  }): Promise<UserAuditLog> {
     return this.prisma.userAuditLog.create({
       data: {
         organizationId: data.organizationId,
@@ -31,7 +31,16 @@ export class AuditLogService {
     });
   }
 
-  async findAll(organizationId: string, query: ListAuditLogsDto) {
+  async findAll(
+    organizationId: string,
+    query: ListAuditLogsDto,
+  ): Promise<{
+    items: any[];
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  }> {
     const where: Prisma.UserAuditLogWhereInput = {
       organizationId,
       ...(query.action ? { action: query.action } : {}),

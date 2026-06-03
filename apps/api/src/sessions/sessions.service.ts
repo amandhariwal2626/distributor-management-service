@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { SessionStatus } from '@prisma/client';
+import { Session, SessionStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -13,7 +13,7 @@ export class SessionsService {
     expiresAt: Date;
     userAgent?: string;
     ipAddress?: string;
-  }) {
+  }): Promise<Session> {
     const session = await this.prisma.session.create({
       data: {
         organizationId: input.organizationId,
@@ -31,7 +31,7 @@ export class SessionsService {
     sessionId: string,
     refreshTokenHash: string,
     expiresAt: Date,
-  ) {
+  ): Promise<Session> {
     const session = await this.prisma.session.update({
       where: { id: sessionId },
       data: {

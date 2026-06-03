@@ -11,7 +11,9 @@ export class PermissionsController {
 
   @Get()
   @Permissions('roles.manage')
-  findAll(@Headers('x-organization-id') organizationId: string) {
+  findAll(
+    @Headers('x-organization-id') organizationId: string,
+  ): Promise<any[]> {
     return this.permissionsService.findAll(organizationId);
   }
 }

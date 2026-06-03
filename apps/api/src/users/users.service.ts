@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditLogService } from '../audit-logs/audit-logs.service';
@@ -26,7 +26,16 @@ export class UsersService {
     private readonly auditLog: AuditLogService,
   ) {}
 
-  async findAll(organizationId: string, query: ListUsersDto) {
+  async findAll(
+    organizationId: string,
+    query: ListUsersDto,
+  ): Promise<{
+    items: any[];
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  }> {
     const profileSortFields = [
       'fullName',
       'firstName',
@@ -99,7 +108,7 @@ export class UsersService {
     };
   }
 
-  async findById(organizationId: string, id: string) {
+  async findById(organizationId: string, id: string): Promise<any> {
     const user = await this.prisma.user.findFirst({
       where: { id, organizationId, deletedAt: null },
       include: {
@@ -123,7 +132,10 @@ export class UsersService {
         permissionOverrides: true,
       },
     });
-    if (!user) throw new NotFoundException('User not found');
+    if (!user)
+      throw new NotFoundException(
+        `User not found. The specified user ID (${id}) does not exist or has been removed.`,
+      );
     return user;
   }
 
@@ -133,7 +145,7 @@ export class UsersService {
     actorRoleNames: string[],
     data: CreateUserDto,
     ipAddress?: string,
-  ) {
+  ): Promise<any> {
     const existing = await this.prisma.user.findUnique({
       where: { organizationId_email: { organizationId, email: data.email } },
     });
@@ -261,7 +273,7 @@ export class UsersService {
     actorRoleNames: string[],
     data: UpdateUserDto,
     ipAddress?: string,
-  ) {
+  ): Promise<any> {
     const existing = await this.findById(organizationId, id);
 
     if (data.email && data.email !== existing.email) {
@@ -300,7 +312,8 @@ export class UsersService {
         await this.validateReportingManager(
           organizationId,
           data.reportingManagerId,
-          data.roleIds || existing.roles.map((r: any) => r.roleId),
+          data.roleIds ||
+            existing.roles.map((r: { roleId: string }) => r.roleId),
         );
       }
     }
@@ -377,11 +390,13 @@ export class UsersService {
       'twoFactorAuth',
     ];
 
+    const existingRecord = existing as Record<string, unknown>;
+    const profileRecord = existing.profile as Record<string, unknown> | null;
     for (const field of updatableFields) {
       if (data[field] !== undefined) {
-        (oldValue as any)[field] = profileFields.has(field)
-          ? (existing as any).profile?.[field]
-          : (existing as any)[field];
+        oldValue[field] = profileFields.has(field)
+          ? profileRecord?.[field]
+          : existingRecord[field];
       }
     }
 
@@ -391,7 +406,9 @@ export class UsersService {
           where: { userId: id },
           include: { role: true },
         });
-        oldValue.roleIds = previous.map((r: any) => r.role.name);
+        oldValue.roleIds = previous.map(
+          (r: { role: { name: string } }) => r.role.name,
+        );
 
         await tx.userRole.deleteMany({ where: { userId: id } });
         await tx.userRole.createMany({
@@ -516,15 +533,19 @@ export class UsersService {
     });
 
     const newValue: Record<string, unknown> = {};
+    const resultRecord = result as Record<string, unknown>;
+    const resultProfile = result.profile as Record<string, unknown> | null;
     for (const field of updatableFields) {
-      if ((data as any)[field] !== undefined) {
-        (newValue as any)[field] = profileFields.has(field)
-          ? (result as any).profile?.[field]
-          : (result as any)[field];
+      if (data[field] !== undefined) {
+        newValue[field] = profileFields.has(field)
+          ? resultProfile?.[field]
+          : resultRecord[field];
       }
     }
     if (data.roleIds) {
-      newValue.roleIds = (result as any).roles.map((r: any) => r.role.name);
+      newValue.roleIds = result.roles.map(
+        (r: { role: { name: string } }) => r.role.name,
+      );
     }
 
     await this.auditLog.create({
@@ -546,7 +567,7 @@ export class UsersService {
     id: string,
     actorUserId: string,
     ipAddress?: string,
-  ) {
+  ): Promise<User> {
     await this.findById(organizationId, id);
     const result = await this.prisma.user.update({
       where: { id },
@@ -571,7 +592,7 @@ export class UsersService {
     id: string,
     actorUserId: string,
     ipAddress?: string,
-  ) {
+  ): Promise<User> {
     const user = await this.findById(organizationId, id);
     if (user.status === 'LOCKED')
       throw new ConflictException('User is already locked');
@@ -600,7 +621,7 @@ export class UsersService {
     id: string,
     actorUserId: string,
     ipAddress?: string,
-  ) {
+  ): Promise<User> {
     const user = await this.findById(organizationId, id);
     if (user.status !== 'LOCKED')
       throw new ConflictException('User is not locked');
@@ -634,7 +655,7 @@ export class UsersService {
     id: string,
     actorUserId: string,
     ipAddress?: string,
-  ) {
+  ): Promise<User> {
     const user = await this.findById(organizationId, id);
     if (user.status === 'INACTIVE')
       throw new ConflictException('User is already inactive');
@@ -668,7 +689,7 @@ export class UsersService {
     id: string,
     actorUserId: string,
     ipAddress?: string,
-  ) {
+  ): Promise<User> {
     const user = await this.findById(organizationId, id);
     if (user.status === 'ACTIVE')
       throw new ConflictException('User is already active');
@@ -702,7 +723,7 @@ export class UsersService {
     id: string,
     actorUserId: string,
     ipAddress?: string,
-  ) {
+  ): Promise<User> {
     const user = await this.findById(organizationId, id);
     if (user.status === 'SUSPENDED')
       throw new ConflictException('User is already suspended');
@@ -732,7 +753,7 @@ export class UsersService {
     actorUserId: string,
     newPassword: string,
     ipAddress?: string,
-  ) {
+  ): Promise<User> {
     const user = await this.findById(organizationId, id);
     const passwordHash = await bcrypt.hash(newPassword, 12);
 
@@ -759,7 +780,7 @@ export class UsersService {
     return result;
   }
 
-  async getHierarchyTree(organizationId: string) {
+  async getHierarchyTree(organizationId: string): Promise<any[]> {
     const users = await this.prisma.user.findMany({
       where: { organizationId, deletedAt: null },
       select: {
@@ -777,13 +798,18 @@ export class UsersService {
       orderBy: { createdAt: 'asc' },
     });
 
-    const userMap = new Map(
+    type HierarchyNode = (typeof users)[number] & {
+      fullName: string | undefined;
+      children: HierarchyNode[];
+    };
+
+    const userMap = new Map<string, HierarchyNode>(
       users.map((u) => [
         u.id,
-        { ...u, fullName: u.profile?.fullName, children: [] as any[] },
+        { ...u, fullName: u.profile?.fullName, children: [] },
       ]),
     );
-    const roots: any[] = [];
+    const roots: HierarchyNode[] = [];
 
     for (const user of userMap.values()) {
       if (user.reportingManagerId && userMap.has(user.reportingManagerId)) {
@@ -796,7 +822,9 @@ export class UsersService {
     return roots;
   }
 
-  async getCreateOptions(organizationId: string) {
+  async getCreateOptions(
+    organizationId: string,
+  ): Promise<{ roles: any[]; managers: any[] }> {
     const roles = await this.prisma.role.findMany({
       where: { organizationId, deletedAt: null },
       orderBy: { level: 'asc' },
@@ -853,14 +881,17 @@ export class UsersService {
       where: { id: managerId, organizationId, deletedAt: null },
       include: { roles: { include: { role: true } } },
     });
-    if (!manager) throw new NotFoundException('Reporting manager not found');
+    if (!manager)
+      throw new NotFoundException(
+        `Reporting manager not found. The specified manager ID (${managerId}) does not exist.`,
+      );
 
     const targetRoles = await this.prisma.role.findMany({
       where: { id: { in: targetRoleIds } },
     });
 
     const managerLevel = Math.min(
-      ...manager.roles.map((r: any) => r.role.level),
+      ...manager.roles.map((r: { role: { level: number } }) => r.role.level),
     );
     const targetLevel = Math.min(...targetRoles.map((r) => r.level));
 
@@ -879,10 +910,13 @@ export class UsersService {
       where: { id: distributorId, organizationId, deletedAt: null },
       include: { roles: { include: { role: true } } },
     });
-    if (!distributor) throw new NotFoundException('Distributor not found');
+    if (!distributor)
+      throw new NotFoundException(
+        `Distributor not found. The specified distributor ID (${distributorId}) does not exist.`,
+      );
 
     const isDistributor = distributor.roles.some(
-      (r: any) => r.role.name === 'Distributor',
+      (r: { role: { name: string } }) => r.role.name === 'Distributor',
     );
     if (!isDistributor) {
       throw new ForbiddenException(

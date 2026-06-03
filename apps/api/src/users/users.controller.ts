@@ -28,7 +28,7 @@ import type { UpdateUserDto } from './dto/update-user.dto';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 
 function getIp(req: Request, forwardedFor?: string): string | undefined {
-  return forwardedFor || (req as any).ip;
+  return forwardedFor || req.ip;
 }
 
 @Controller('users')
@@ -41,19 +41,23 @@ export class UsersController {
   findAll(
     @Headers('x-organization-id') organizationId: string,
     @Query(new ZodValidationPipe(listUsersSchema)) query: ListUsersDto,
-  ) {
+  ): Promise<any> {
     return this.usersService.findAll(organizationId, query);
   }
 
   @Get('create-options')
   @Permissions('users.read')
-  getCreateOptions(@Headers('x-organization-id') organizationId: string) {
+  getCreateOptions(
+    @Headers('x-organization-id') organizationId: string,
+  ): Promise<any> {
     return this.usersService.getCreateOptions(organizationId);
   }
 
   @Get('hierarchy/tree')
   @Permissions('hierarchy.view')
-  getHierarchyTree(@Headers('x-organization-id') organizationId: string) {
+  getHierarchyTree(
+    @Headers('x-organization-id') organizationId: string,
+  ): Promise<any[]> {
     return this.usersService.getHierarchyTree(organizationId);
   }
 
@@ -62,7 +66,7 @@ export class UsersController {
   findById(
     @Headers('x-organization-id') organizationId: string,
     @Param('id') id: string,
-  ) {
+  ): Promise<any> {
     return this.usersService.findById(organizationId, id);
   }
 
@@ -73,7 +77,7 @@ export class UsersController {
     @Req() req: Request & { user: { sub: string; roles: string[] } },
     @Body(new ZodValidationPipe(createUserSchema)) body: CreateUserDto,
     @Headers('x-forwarded-for') forwardedFor?: string,
-  ) {
+  ): Promise<any> {
     return this.usersService.create(
       organizationId,
       req.user.sub,
@@ -91,7 +95,7 @@ export class UsersController {
     @Req() req: Request & { user: { sub: string; roles: string[] } },
     @Body(new ZodValidationPipe(updateUserSchema)) body: UpdateUserDto,
     @Headers('x-forwarded-for') forwardedFor?: string,
-  ) {
+  ): Promise<any> {
     return this.usersService.update(
       organizationId,
       id,
@@ -109,7 +113,7 @@ export class UsersController {
     @Param('id') id: string,
     @Req() req: Request & { user: { sub: string } },
     @Headers('x-forwarded-for') forwardedFor?: string,
-  ) {
+  ): Promise<any> {
     return this.usersService.delete(
       organizationId,
       id,
@@ -125,7 +129,7 @@ export class UsersController {
     @Param('id') id: string,
     @Req() req: Request & { user: { sub: string } },
     @Headers('x-forwarded-for') forwardedFor?: string,
-  ) {
+  ): Promise<any> {
     return this.usersService.deactivate(
       organizationId,
       id,
@@ -141,7 +145,7 @@ export class UsersController {
     @Param('id') id: string,
     @Req() req: Request & { user: { sub: string } },
     @Headers('x-forwarded-for') forwardedFor?: string,
-  ) {
+  ): Promise<any> {
     return this.usersService.reactivate(
       organizationId,
       id,
@@ -157,7 +161,7 @@ export class UsersController {
     @Param('id') id: string,
     @Req() req: Request & { user: { sub: string } },
     @Headers('x-forwarded-for') forwardedFor?: string,
-  ) {
+  ): Promise<any> {
     return this.usersService.lock(
       organizationId,
       id,
@@ -173,7 +177,7 @@ export class UsersController {
     @Param('id') id: string,
     @Req() req: Request & { user: { sub: string } },
     @Headers('x-forwarded-for') forwardedFor?: string,
-  ) {
+  ): Promise<any> {
     return this.usersService.unlock(
       organizationId,
       id,
@@ -189,7 +193,7 @@ export class UsersController {
     @Param('id') id: string,
     @Req() req: Request & { user: { sub: string } },
     @Headers('x-forwarded-for') forwardedFor?: string,
-  ) {
+  ): Promise<any> {
     return this.usersService.suspend(
       organizationId,
       id,
@@ -207,7 +211,7 @@ export class UsersController {
     @Body(new ZodValidationPipe(adminResetPasswordSchema))
     body: { password: string },
     @Headers('x-forwarded-for') forwardedFor?: string,
-  ) {
+  ): Promise<any> {
     return this.usersService.adminResetPassword(
       organizationId,
       id,

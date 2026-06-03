@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { SessionsService } from '../sessions/sessions.service';
 import { AuditLogService } from '../audit-logs/audit-logs.service';
@@ -48,7 +49,7 @@ export class AuthService {
     });
     if (!organization) {
       throw new UnauthorizedException(
-        'Organization not found. Please check your organization code.',
+        'Organization with this code does not exist.',
       );
     }
     const user = await this.prisma.user.findUnique({
@@ -61,9 +62,14 @@ export class AuthService {
       include: { profile: { select: { fullName: true } } },
     });
 
-    if (!user || user.deletedAt || !user.passwordHash) {
+    if (!user) {
       throw new UnauthorizedException(
         'This email is not registered in our system.',
+      );
+    }
+    if (user.deletedAt || !user.passwordHash) {
+      throw new UnauthorizedException(
+        'This account has been deactivated or is not fully set up. Contact your administrator.',
       );
     }
 
@@ -81,14 +87,14 @@ export class AuthService {
 
     if (user.status === 'INACTIVE' || user.status === 'SUSPENDED') {
       throw new UnauthorizedException(
-        'Your account is inactive or suspended. Contact your administrator.',
+        `Your account is ${user.status.toLowerCase()}. Contact your administrator.`,
       );
     }
 
     const valid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!valid) {
       const attempts = user.failedLoginAttempts + 1;
-      const lockData: Record<string, unknown> = {
+      const lockData: Prisma.UserUpdateInput = {
         failedLoginAttempts: attempts,
       };
 
@@ -97,7 +103,7 @@ export class AuthService {
         lockData.lockedUntil = new Date(Date.now() + 30 * 60 * 1000);
         await this.prisma.user.update({
           where: { id: user.id },
-          data: lockData as any,
+          data: lockData,
         });
         await this.auditLog.create({
           organizationId: organization.id,
@@ -272,7 +278,9 @@ export class AuthService {
     const valid = await bcrypt.compare(refreshToken, session.refreshTokenHash);
     if (!valid) {
       await this.sessionsService.revokeSession(session.id);
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException(
+        'Invalid refresh token. Token does not match our records. Please login again.',
+      );
     }
     const user = await this.prisma.user.findUnique({
       where: { id: session.userId },
@@ -332,7 +340,9 @@ export class AuthService {
       },
     });
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new UnauthorizedException(
+        'User not found. The specified user ID does not exist or has been removed.',
+      );
     }
     const roles = await this.rolesService.getUserRoles(userId);
     const permissions =

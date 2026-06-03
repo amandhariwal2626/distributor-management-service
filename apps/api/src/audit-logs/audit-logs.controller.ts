@@ -17,7 +17,7 @@ export class AuditLogsController {
   findAll(
     @Headers('x-organization-id') organizationId: string,
     @Query(new ZodValidationPipe(listAuditLogsSchema)) query: ListAuditLogsDto,
-  ) {
+  ): Promise<any> {
     return this.auditLogService.findAll(organizationId, query);
   }
 }

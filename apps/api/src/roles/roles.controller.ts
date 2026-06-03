@@ -26,7 +26,9 @@ export class RolesController {
 
   @Get()
   @Permissions('roles.read')
-  findAll(@Headers('x-organization-id') organizationId: string) {
+  findAll(
+    @Headers('x-organization-id') organizationId: string,
+  ): Promise<any[]> {
     return this.rolesService.findAll(organizationId);
   }
 
@@ -36,7 +38,7 @@ export class RolesController {
     @Headers('x-organization-id') organizationId: string,
     @Req() req: Request & { user: { sub: string } },
     @Body(new ZodValidationPipe(createRoleSchema)) body: CreateRoleDto,
-  ) {
+  ): Promise<any> {
     return this.rolesService.create(organizationId, req.user.sub, body);
   }
 
@@ -47,7 +49,7 @@ export class RolesController {
     @Param('id') id: string,
     @Req() req: Request & { user: { sub: string } },
     @Body(new ZodValidationPipe(updateRoleSchema)) body: UpdateRoleDto,
-  ) {
+  ): Promise<any> {
     return this.rolesService.update(organizationId, id, req.user.sub, body);
   }
 
@@ -57,7 +59,7 @@ export class RolesController {
     @Headers('x-organization-id') organizationId: string,
     @Param('id') id: string,
     @Req() req: Request & { user: { sub: string } },
-  ) {
+  ): Promise<any> {
     return this.rolesService.remove(organizationId, id, req.user.sub);
   }
 }

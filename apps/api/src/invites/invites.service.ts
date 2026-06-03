@@ -15,11 +15,14 @@ export class InvitesService {
     organizationId: string,
     userId: string,
     actorUserId: string,
-  ) {
+  ): Promise<{ token: string; expiresAt: Date }> {
     const user = await this.prisma.user.findFirst({
       where: { id: userId, organizationId, deletedAt: null },
     });
-    if (!user) throw new NotFoundException('User not found');
+    if (!user)
+      throw new NotFoundException(
+        `User not found. The specified user ID (${userId}) does not exist.`,
+      );
     const rawToken = `${randomUUID()}${randomUUID()}`;
     const tokenHash = await bcrypt.hash(rawToken, 12);
     await this.prisma.inviteToken.create({
@@ -42,11 +45,14 @@ export class InvitesService {
     organizationId: string,
     userId: string,
     actorUserId: string,
-  ) {
+  ): Promise<{ token: string; expiresAt: Date }> {
     return this.createInvite(organizationId, userId, actorUserId);
   }
 
-  async acceptInvite(token: string, passwordHash: string) {
+  async acceptInvite(
+    token: string,
+    passwordHash: string,
+  ): Promise<{ success: boolean }> {
     const invites = await this.prisma.inviteToken.findMany({
       where: {
         acceptedAt: null,

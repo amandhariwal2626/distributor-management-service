@@ -28,7 +28,7 @@ export class InvitesController {
     @Headers('x-organization-id') organizationId: string,
     @Body(new ZodValidationPipe(resendInviteSchema)) body: ResendInviteDto,
     @Req() req: Request & { user: { sub: string } },
-  ) {
+  ): Promise<any> {
     return this.invitesService.createInvite(
       organizationId,
       body.userId,
@@ -43,7 +43,7 @@ export class InvitesController {
     @Headers('x-organization-id') organizationId: string,
     @Body(new ZodValidationPipe(resendInviteSchema)) body: ResendInviteDto,
     @Req() req: Request & { user: { sub: string } },
-  ) {
+  ): Promise<any> {
     return this.invitesService.resendInvite(
       organizationId,
       body.userId,
@@ -55,7 +55,7 @@ export class InvitesController {
   @HttpCode(200)
   async accept(
     @Body(new ZodValidationPipe(acceptInviteSchema)) body: AcceptInviteDto,
-  ) {
+  ): Promise<any> {
     const passwordHash = await bcrypt.hash(body.password, 12);
     return this.invitesService.acceptInvite(body.token, passwordHash);
   }
