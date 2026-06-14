@@ -1,14 +1,53 @@
 "use client"
 
+import { useMemo } from "react"
 import { useFormContext } from "react-hook-form"
 import type { ProductFormValues } from "../../schemas"
 import { Card } from "@/components/ui/card"
 import { CheckCircle2, AlertTriangle } from "lucide-react"
+import {
+  useBrands,
+  useBusinessUnits,
+  useCategories,
+  useDivisions,
+  useSubBrands,
+  useSubCategories,
+  useGeography,
+  useUoms,
+} from "../../hooks/use-master-data"
 
 export function Step8Review() {
   const { getValues, formState: { errors } } = useFormContext<ProductFormValues>()
   const v = getValues()
   const errorCount = Object.keys(errors ?? {}).length
+
+  const buQ = useBusinessUnits()
+  const divQ = useDivisions(v.businessUnit || undefined)
+  const catQ = useCategories()
+  const subCatQ = useSubCategories(v.categoryId || undefined)
+  const brandsQ = useBrands()
+  const subBrandsQ = useSubBrands(v.brandId || undefined)
+  const uomQ = useUoms()
+  const geoQ = useGeography()
+
+  const uomMap = useMemo(() => new Map(uomQ.data?.map((u) => [u.id, u.name])), [uomQ.data])
+  const buMap = useMemo(() => new Map(buQ.data?.map((b) => [b.id, b.name])), [buQ.data])
+  const divMap = useMemo(() => new Map(divQ.data?.map((d) => [d.id, d.name])), [divQ.data])
+  const catMap = useMemo(() => new Map(catQ.data?.map((c) => [c.id, c.name])), [catQ.data])
+  const subCatMap = useMemo(() => new Map(subCatQ.data?.map((c) => [c.id, c.name])), [subCatQ.data])
+  const brandMap = useMemo(() => new Map(brandsQ.data?.map((b) => [b.id, b.name])), [brandsQ.data])
+  const subBrandMap = useMemo(() => new Map(subBrandsQ.data?.map((b) => [b.id, b.name])), [subBrandsQ.data])
+  const geoMap = useMemo(() => {
+    const map = new Map<string, string>()
+    const walk = (nodes: { id: string; name: string; children?: typeof nodes }[]) => {
+      for (const n of nodes) {
+        map.set(n.id, n.name)
+        if (n.children) walk(n.children)
+      }
+    }
+    if (geoQ.data) walk(geoQ.data)
+    return map
+  }, [geoQ.data])
 
   return (
     <div className="space-y-4">
@@ -30,10 +69,22 @@ export function Step8Review() {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Summary title="Product Information" rows={[["Code", v.code], ["SAP", v.sapCode], ["Name", v.name], ["Short Name", v.shortName], ["Barcode", v.barcode], ["EAN", v.eanCode]]} />
-        <Summary title="Hierarchy" rows={[["Business Unit", v.businessUnit], ["Division", v.division], ["Category", v.categoryId], ["Sub Category", v.subCategoryId], ["Brand", v.brandId], ["Sub Brand", v.subBrand], ["Variant", v.variant]]} />
-        <Summary title="Packaging" rows={[["Base UOM", v.baseUom], ["Pack Size", v.packSize], ["Case Qty", v.caseQuantity], ["Weight", v.weight], ["Volume", v.volume]]} />
+        <Summary title="Hierarchy" rows={[
+          ["Business Unit", buMap.get(v.businessUnit ?? "") ?? v.businessUnit],
+          ["Division", divMap.get(v.division ?? "") ?? v.division],
+          ["Category", catMap.get(v.categoryId ?? "") ?? v.categoryId],
+          ["Sub Category", subCatMap.get(v.subCategoryId ?? "") ?? v.subCategoryId],
+          ["Brand", brandMap.get(v.brandId ?? "") ?? v.brandId],
+          ["Sub Brand", subBrandMap.get(v.subBrand ?? "") ?? v.subBrand],
+          ["Variant", v.variant],
+        ]} />
+        <Summary title="Packaging" rows={[["Base UOM", uomMap.get(v.baseUom ?? "") ?? v.baseUom], ["Pack Size", v.packSize], ["Case Qty", v.caseQuantity], ["Weight", v.weight], ["Volume", v.volume]]} />
         <Summary title="Tax" rows={[["HSN", v.hsn], ["GST %", v.gst], ["CGST %", v.cgst], ["SGST %", v.sgst], ["IGST %", v.igst]]} />
-        <Summary title="Geography" rows={[["Regions", `${v.geographies?.length ?? 0} selected`]]} />
+        <Summary title="Geography" rows={[
+          ["Regions", v.geographies?.length
+            ? v.geographies.map((g) => geoMap.get(g.geographyId) ?? g.geographyId).join(", ")
+            : "0 selected"],
+        ]} />
         <Summary title="Attributes" rows={[["Total", `${v.attributes?.length ?? 0} attributes`]]} />
         <Summary title="Documents" rows={[["Total", `${v.documents?.length ?? 0} files`]]} />
       </div>
