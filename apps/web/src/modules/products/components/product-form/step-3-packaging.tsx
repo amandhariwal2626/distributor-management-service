@@ -1,147 +1,87 @@
 "use client"
 
-import { useFormContext, useFieldArray } from "react-hook-form"
-import { Trash2, Plus } from "lucide-react"
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form"
+import { Controller, useFieldArray, useFormContext } from "react-hook-form"
+import type { ProductFormValues } from "../../schemas"
+import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { useUoms } from "@/hooks/use-master-data"
+import { SearchableCombobox } from "@/components/shared/searchable-combobox"
+import { Field } from "./step-1-product-info"
+import { useUoms } from "../../hooks/use-master-data"
+import { Plus, Trash2 } from "lucide-react"
 
 export function Step3Packaging() {
-  const form = useFormContext()
-  const { data: uoms, isLoading: uomLoading } = useUoms()
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "uomConversions",
-  })
+  const { control, register, formState: { errors } } = useFormContext<ProductFormValues>()
+  const uomQ = useUoms()
+  const uomOptions = (uomQ.data ?? []).map((u) => ({ value: u.id, label: u.name, hint: u.code }))
+  const { fields, append, remove } = useFieldArray({ control, name: "uomConversions" })
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium">Packaging & UOM</h3>
-        <p className="text-sm text-muted-foreground">Configure packaging details and unit of measure conversions</p>
-      </div>
-      <div className="grid gap-6 md:grid-cols-2">
-        <FormField
-          control={form.control}
-          name="uomId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>UOM</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value} disabled={uomLoading}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder={uomLoading ? "Loading..." : "Select UOM"} />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {(uoms ?? []).map((uom) => (
-                    <SelectItem key={uom.value} value={uom.value}>{uom.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="reorderLevel"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Reorder Level</FormLabel>
-              <FormControl>
-                <Input type="number" min="0" placeholder="e.g. 10" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+    <Card className="p-6">
+      <h2 className="text-base font-semibold">Packaging</h2>
+      <p className="text-sm text-muted-foreground">UOM, pack size, and physical dimensions.</p>
+      <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+        <Field label="Base UOM" error={errors.baseUom?.message}>
+          <Controller control={control} name="baseUom"
+            render={({ field }) => (
+              <SearchableCombobox value={field.value} onChange={field.onChange} options={uomOptions} placeholder="Select UOM" loading={uomQ.isLoading} />
+            )} />
+        </Field>
+        <Field label="Pack Size" error={errors.packSize?.message}>
+          <Input type="number" step="any" {...register("packSize")} />
+        </Field>
+        <Field label="Case Quantity" error={errors.caseQuantity?.message}>
+          <Input type="number" step="1" {...register("caseQuantity")} />
+        </Field>
+        <Field label="Weight (g)" error={errors.weight?.message}>
+          <Input type="number" step="any" {...register("weight")} />
+        </Field>
+        <Field label="Volume (ml)" error={errors.volume?.message}>
+          <Input type="number" step="any" {...register("volume")} />
+        </Field>
+        <div className="grid grid-cols-3 gap-2 md:col-span-2">
+          <Field label="Length (cm)"><Input type="number" step="any" {...register("dimensions.l")} /></Field>
+          <Field label="Width (cm)"><Input type="number" step="any" {...register("dimensions.w")} /></Field>
+          <Field label="Height (cm)"><Input type="number" step="any" {...register("dimensions.h")} /></Field>
+        </div>
       </div>
 
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h4 className="text-sm font-medium">UOM Conversions</h4>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => append({ fromUom: "", toUom: "", conversionFactor: 1 })}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Row
+      <div className="mt-6">
+        <div className="mb-2 flex items-center justify-between">
+          <h3 className="text-sm font-semibold">UOM Conversions</h3>
+          <Button type="button" size="sm" variant="outline" onClick={() => append({ fromUom: "", toUom: "", factor: 1 })}>
+            <Plus className="mr-1.5 h-3.5 w-3.5" />Add row
           </Button>
         </div>
-        {fields.length > 0 && (
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>From UOM</TableHead>
-                  <TableHead>To UOM</TableHead>
-                  <TableHead>Factor</TableHead>
-                  <TableHead className="w-12" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {fields.map((field, index) => (
-                  <TableRow key={field.id}>
-                    <TableCell>
-                      <select
-                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
-                        value={form.watch(`uomConversions.${index}.fromUom`)}
-                        onChange={(e) => form.setValue(`uomConversions.${index}.fromUom`, e.target.value)}
-                      >
-                        <option value="">Select</option>
-                        {(uoms ?? []).map((u) => <option key={u.value} value={u.value}>{u.label}</option>)}
-                      </select>
-                    </TableCell>
-                    <TableCell>
-                      <select
-                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
-                        value={form.watch(`uomConversions.${index}.toUom`)}
-                        onChange={(e) => form.setValue(`uomConversions.${index}.toUom`, e.target.value)}
-                      >
-                        <option value="">Select</option>
-                        {(uoms ?? []).map((u) => <option key={u.value} value={u.value}>{u.label}</option>)}
-                      </select>
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        className="h-9"
-                        value={form.watch(`uomConversions.${index}.conversionFactor`)}
-                        onChange={(e) => form.setValue(`uomConversions.${index}.conversionFactor`, Number(e.target.value))}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
+        <div className="overflow-hidden rounded-md border border-border">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
+              <tr>
+                <th className="p-2 text-left font-medium">From UOM</th>
+                <th className="p-2 text-left font-medium">To UOM</th>
+                <th className="p-2 text-left font-medium">Factor</th>
+                <th className="w-10"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {fields.length === 0 ? (
+                <tr><td colSpan={4} className="p-4 text-center text-xs text-muted-foreground">No conversions added.</td></tr>
+              ) : fields.map((f, idx) => (
+                <tr key={f.id} className="border-t border-border">
+                  <td className="p-2"><Input {...register(`uomConversions.${idx}.fromUom`)} className="h-8" /></td>
+                  <td className="p-2"><Input {...register(`uomConversions.${idx}.toUom`)} className="h-8" /></td>
+                  <td className="p-2"><Input type="number" step="any" {...register(`uomConversions.${idx}.factor`)} className="h-8" /></td>
+                  <td className="p-2">
+                    <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => remove(idx)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </Card>
   )
 }

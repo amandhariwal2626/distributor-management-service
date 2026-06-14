@@ -1,216 +1,177 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, FormProvider, useWatch } from "react-hook-form";
-import { ArrowLeft, ArrowRight, Save } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Stepper } from "@/components/shared/stepper";
-import { ErrorState } from "@/components/shared/error-state";
-import { useCreateProduct } from "../hooks/use-products";
-import { createProductSchema } from "../schemas";
-import { Step1ProductInfo } from "./product-form/step-1-product-info";
-import { Step2Hierarchy } from "./product-form/step-2-hierarchy";
-import { Step3Packaging } from "./product-form/step-3-packaging";
-import { Step4Tax } from "./product-form/step-4-tax";
-import { Step6Attributes } from "./product-form/step-6-attributes";
-import { Step7Documents } from "./product-form/step-7-documents";
-import { Step8Review } from "./product-form/step-8-review";
-import type { ProductAttribute } from "../types";
+import { useRouter } from "next/navigation"
+import { useEffect, useMemo, useState } from "react"
+import { FormProvider, useForm, type Resolver } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import {
+  productFullSchema, productInfoSchema, productHierarchySchema,
+  productPackagingSchema, productTaxSchema, productGeographySchema,
+  productAttributesSchema, productDocumentsSchema, type ProductFormValues,
+} from "../schemas"
+import { Stepper, type Step } from "@/components/shared/stepper"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { PageHeader } from "@/components/shared/page-header"
+import { Step1Info } from "./product-form/step-1-product-info"
+import { Step2Hierarchy } from "./product-form/step-2-hierarchy"
+import { Step3Packaging } from "./product-form/step-3-packaging"
+import { Step4Tax } from "./product-form/step-4-tax"
+import { Step5Geography } from "./product-form/step-5-geography"
+import { Step6Attributes } from "./product-form/step-6-attributes"
+import { Step7Documents } from "./product-form/step-7-documents"
+import { Step8Review } from "./product-form/step-8-review"
+import { ChevronLeft, ChevronRight, Save } from "lucide-react"
+import { useCreateProduct } from "../hooks/use-products"
+import { toast } from "sonner"
+import type { ZodSchema } from "zod"
 
-const steps = [
-  { id: "info", label: "Product Info", description: "Basic details" },
-  { id: "hierarchy", label: "Hierarchy", description: "Category & brand" },
-  { id: "packaging", label: "Packaging", description: "UOM & dimensions" },
-  { id: "tax", label: "Tax", description: "GST & HSN" },
-  { id: "attributes", label: "Attributes", description: "Custom fields" },
-  { id: "documents", label: "Documents", description: "Files & images" },
-  { id: "review", label: "Review", description: "Final checks" },
-];
+const STEPS: Step[] = [
+  { id: "info", title: "Product Information", description: "Code, name, identifiers" },
+  { id: "hierarchy", title: "Hierarchy", description: "BU, division, brand" },
+  { id: "packaging", title: "Packaging", description: "UOM and dimensions" },
+  { id: "tax", title: "Tax", description: "HSN and GST" },
+  { id: "geography", title: "Geography", description: "Region availability" },
+  { id: "attributes", title: "Attributes", description: "Product attributes" },
+  { id: "documents", title: "Documents", description: "Files and certificates" },
+  { id: "review", title: "Review & Submit", description: "Final check" },
+]
 
-const defaultValues = {
-  productCode: "",
-  productName: "",
-  shortName: "",
-  description: "",
-  categoryId: "",
-  subCategoryId: "",
-  brandId: "",
-  manufacturerId: "",
-  uomId: "",
-  taxGroupId: "",
-  barcode: "",
-  hsnCode: "",
-  skuType: "",
-  shelfLifeDays: undefined as number | undefined,
-  reorderLevel: undefined as number | undefined,
-};
+const stepSchemas: Array<ZodSchema | null> = [
+  productInfoSchema,
+  productHierarchySchema,
+  productPackagingSchema,
+  productTaxSchema,
+  productGeographySchema,
+  productAttributesSchema,
+  productDocumentsSchema,
+  null,
+]
+
+const STORAGE_KEY = "dms.product-draft"
 
 export function ProductCreatePage() {
-  const router = useRouter();
-  const [currentStep, setCurrentStep] = useState(0);
-  const [attributes, setAttributes] = useState<ProductAttribute[]>([]);
-  const [documents, setDocuments] = useState<{ id: string; file: File; documentType: string }[]>([]);
-  const createProduct = useCreateProduct();
+  const router = useRouter()
+  const [step, setStep] = useState(0)
+  const [savedAt, setSavedAt] = useState<Date | null>(null)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const resolver = zodResolver(createProductSchema) as any
-  const form = useForm({
-    resolver,
-    defaultValues,
-    mode: "onChange",
-  });
+  const methods = useForm<ProductFormValues>({
+    resolver: zodResolver(productFullSchema) as unknown as Resolver<ProductFormValues>,
+    mode: "onBlur",
+    defaultValues: {
+      code: "", sapCode: "", name: "", shortName: "", barcode: "", eanCode: "", description: "",
+      businessUnit: "", division: "", categoryId: "", subCategoryId: "", brandId: "", subBrand: "", variant: "",
+      baseUom: "", packSize: undefined, caseQuantity: undefined, weight: undefined, volume: undefined,
+      uomConversions: [],
+      hsn: "", gst: undefined,
+      cgst: undefined, sgst: undefined, igst: undefined, cess: undefined, tds: undefined, tcs: undefined,
+      geographies: [], attributes: [], documents: [],
+    },
+  })
 
-  const [productCode, productName] = useWatch({
-    control: form.control,
-    name: ["productCode", "productName"],
-  });
-
-  const canProceed = () => {
-    if (currentStep === 0) {
-      return !!(productCode && productName);
+  useEffect(() => {
+    const saved = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null
+    if (saved) {
+      try { methods.reset(JSON.parse(saved)) } catch { /* ignore */ }
     }
-    return true;
-  };
+  }, [methods])
 
-  const handleNext = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep((s) => s + 1);
+  useEffect(() => {
+    const sub = methods.watch((value) => {
+      if (typeof window !== "undefined") {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(value))
+        setSavedAt(new Date())
+      }
+    })
+    return () => sub.unsubscribe()
+  }, [methods])
+
+  const createMut = useCreateProduct()
+
+  const next = async () => {
+    const schema = stepSchemas[step]
+    if (schema) {
+      const values = methods.getValues()
+      const result = schema.safeParse(values)
+      if (!result.success) {
+        const fields = Object.keys((result as { error: { format: () => Record<string, unknown> } }).error.format()).filter((k) => k !== "_errors")
+        if (fields.length) {
+          await methods.trigger(fields as Array<keyof ProductFormValues>)
+          toast.error("Please fix the highlighted fields")
+          return
+        }
+      }
     }
-  };
-
-  const handleBack = () => {
-    if (currentStep > 0) {
-      setCurrentStep((s) => s - 1);
-    }
-  };
-
-  const handleSubmit = async () => {
-    const values = form.watch();
-    createProduct.mutate(
-      {
-        productCode: values.productCode,
-        productName: values.productName,
-        shortName: values.shortName || undefined,
-        description: values.description || undefined,
-        categoryId: values.categoryId || undefined,
-        subCategoryId: values.subCategoryId || undefined,
-        brandId: values.brandId || undefined,
-        manufacturerId: values.manufacturerId || undefined,
-        uomId: values.uomId || undefined,
-        taxGroupId: values.taxGroupId || undefined,
-        barcode: values.barcode || undefined,
-        hsnCode: values.hsnCode || undefined,
-        skuType: values.skuType || undefined,
-        shelfLifeDays: values.shelfLifeDays ?? undefined,
-        reorderLevel: values.reorderLevel ?? undefined,
-        attributes: attributes,
-      },
-      {
-        onSuccess: () => router.push("/products"),
-      },
-    );
-  };
-
-  if (createProduct.isError) {
-    return (
-      <ErrorState
-        title="Failed to create product"
-        message={createProduct.error?.message}
-        onRetry={handleSubmit}
-      />
-    );
+    setStep((s) => Math.min(s + 1, STEPS.length - 1))
   }
 
+  const back = () => setStep((s) => Math.max(0, s - 1))
+
+  const submit = methods.handleSubmit(async (values) => {
+    try {
+      const created = await createMut.mutateAsync(values as Partial<ProductFormValues>)
+      if (typeof window !== "undefined") localStorage.removeItem(STORAGE_KEY)
+      router.push(`/products/${created.id}`)
+    } catch {
+      // Error handled by mutation
+    }
+  })
+
+  const StepComp = useMemo(() => {
+    const map = [Step1Info, Step2Hierarchy, Step3Packaging, Step4Tax, Step5Geography, Step6Attributes, Step7Documents, Step8Review]
+    return map[step]
+  }, [step])
+
+  const progress = ((step + 1) / STEPS.length) * 100
+
   return (
-    <div className="space-y-8 w-full">
-      <div className="flex items-center justify-between">
-        <div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.push("/products")}
-            className="mb-2"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Products
-          </Button>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Create Product
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Complete all steps to create a new product
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
-            <Save className="mr-2 h-4 w-4" />
-            Save Draft
-          </Button>
+    <FormProvider {...methods}>
+      <div className="mx-auto flex max-w-6xl flex-col gap-6">
+        <PageHeader
+          title="Create Product"
+          description="Define a new product across information, hierarchy, packaging, tax, and rollout."
+          actions={
+            <>
+              <Button variant="outline" size="sm" onClick={() => router.push("/products")}>Cancel</Button>
+              <Button variant="outline" size="sm" onClick={() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(methods.getValues())); toast.success("Draft saved") }}>
+                <Save className="mr-1.5 h-3.5 w-3.5" />Save draft
+              </Button>
+            </>
+          }
+        />
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr]">
+          <Card className="h-fit p-3">
+            <div className="px-2 pb-3">
+              <Progress value={progress} className="h-1" />
+              <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                <span>Step {step + 1} of {STEPS.length}</span>
+                {savedAt ? <span>Saved {savedAt.toLocaleTimeString()}</span> : null}
+              </div>
+            </div>
+            <Stepper steps={STEPS} current={step} onStepClick={setStep} />
+          </Card>
+
+          <div className="flex flex-col gap-4">
+            <StepComp />
+            <div className="flex items-center justify-between">
+              <Button variant="outline" size="sm" onClick={back} disabled={step === 0}>
+                <ChevronLeft className="mr-1.5 h-3.5 w-3.5" />Back
+              </Button>
+              {step < STEPS.length - 1 ? (
+                <Button size="sm" onClick={next}>
+                  Continue<ChevronRight className="ml-1.5 h-3.5 w-3.5" />
+                </Button>
+              ) : (
+                <Button size="sm" onClick={submit} disabled={createMut.isPending}>
+                  {createMut.isPending ? "Submitting…" : "Submit For Approval"}
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-
-      <Stepper steps={steps} currentStep={currentStep} />
-
-      <Card>
-        <CardContent className="p-6 max-w-full">
-          <FormProvider {...form}>
-            <form onSubmit={(e) => e.preventDefault()}>
-              {currentStep === 0 && <Step1ProductInfo />}
-              {currentStep === 1 && <Step2Hierarchy />}
-              {currentStep === 2 && <Step3Packaging />}
-              {currentStep === 3 && <Step4Tax />}
-              {currentStep === 4 && (
-                <Step6Attributes
-                  value={attributes}
-                  onChange={(attrs) => setAttributes(attrs)}
-                />
-              )}
-              {currentStep === 5 && (
-                <Step7Documents
-                  value={documents}
-                  onChange={(docs) => setDocuments(docs)}
-                />
-              )}
-              {currentStep === 6 && (
-                <Step8Review
-                  data={{
-                    productInfo: form.watch() as Record<string, unknown>,
-                    hierarchy: form.watch() as Record<string, unknown>,
-                    packaging: form.watch() as Record<string, unknown>,
-                    tax: form.watch() as Record<string, unknown>,
-                    geography: { states: [] },
-                    attributes,
-                    documents,
-                  }}
-                  onBack={handleBack}
-                  onSubmit={handleSubmit}
-                  submitting={createProduct.isPending}
-                />
-              )}
-            </form>
-          </FormProvider>
-        </CardContent>
-      </Card>
-
-      {currentStep < 6 && (
-        <div className="flex items-center justify-between">
-          <Button
-            variant="outline"
-            onClick={handleBack}
-            disabled={currentStep === 0}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
-          <Button onClick={handleNext} disabled={!canProceed()}>
-            Next
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
-      )}
-    </div>
-  );
+    </FormProvider>
+  )
 }

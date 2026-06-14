@@ -1,267 +1,151 @@
 "use client"
 
-import { useRouter } from "next/navigation"
-import { Edit, Trash2, MoreHorizontal, ArrowLeft, Clock, Shield, Package, Activity } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useProduct, useProductDocuments } from "../hooks/use-products"
+import { Card } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { DetailSkeleton } from "@/components/shared/loading-skeleton"
+import { StatusBadge } from "@/components/shared/status-badge"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Button } from "@/components/ui/button"
 import { ErrorState } from "@/components/shared/error-state"
-import { useProduct, useDeleteProduct } from "../hooks/use-products"
-import type { ProductStatus } from "../types"
-
-const statusStyles: Record<ProductStatus, string> = {
-  ACTIVE: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  DRAFT: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400",
-  INACTIVE: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-}
-
-function InfoRow({ label, value }: { label: string; value?: string | number | null }) {
-  return (
-    <div className="flex items-baseline justify-between border-b py-3 last:border-b-0">
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="text-sm font-medium">{value ?? "\u2014"}</span>
-    </div>
-  )
-}
-
-function ActivityEntry({ action, user, date }: { action: string; user: string; date: string }) {
-  return (
-    <div className="flex items-start gap-3 py-3">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
-        <Activity className="h-4 w-4 text-muted-foreground" />
-      </div>
-      <div className="space-y-1">
-        <p className="text-sm">{action}</p>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span>{user}</span>
-          <span>•</span>
-          <span>{new Date(date).toLocaleDateString()}</span>
-        </div>
-      </div>
-    </div>
-  )
-}
+import { EmptyState } from "@/components/shared/empty-state"
+import { Separator } from "@/components/ui/separator"
+import { ArrowLeft, Package, FileText, History } from "lucide-react"
+import Link from "next/link"
 
 export function ProductDetailPage({ id }: { id: string }) {
-  const router = useRouter()
-  const { data: product, isLoading, isError, refetch } = useProduct(id)
-  const deleteProduct = useDeleteProduct()
+  const { data, isLoading, isError, refetch } = useProduct(id)
+  const docsQ = useProductDocuments(id)
 
-  if (isLoading) return <DetailSkeleton />
-
-  if (isError || !product) {
-    return <ErrorState message="Product not found" onRetry={() => refetch()} />
-  }
-
-  const handleDelete = () => {
-    deleteProduct.mutate(id, { onSuccess: () => router.push("/products") })
-  }
+  if (isError) return <ErrorState message="Could not load product." onRetry={() => refetch()} />
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <Button variant="ghost" size="sm" onClick={() => router.push("/products")} className="mb-2">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Products
-          </Button>
-          <div className="flex items-start gap-4">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-muted">
-              <Package className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-semibold">{product.productName}</h1>
-              <div className="mt-1 flex items-center gap-3">
-                <code className="rounded bg-muted px-2 py-0.5 text-xs font-mono text-muted-foreground">
-                  {product.productCode}
-                </code>
-                <Badge className={statusStyles[product.status]}>
-                  {product.status}
-                </Badge>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => router.push(`/products/${id}/edit`)}>
-            <Edit className="mr-2 h-4 w-4" />
-            Edit
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem className="text-destructive" onClick={handleDelete}>
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+    <div className="mx-auto flex max-w-7xl flex-col gap-6">
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Button asChild variant="ghost" size="sm" className="h-7 px-2">
+          <Link href="/products"><ArrowLeft className="mr-1 h-3.5 w-3.5" />Back to products</Link>
+        </Button>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
+      <Card className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center">
+        <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-md border border-border bg-muted text-muted-foreground">
+          {data?.imageUrl ? <img src={data.imageUrl} alt={data.name} className="h-full w-full object-cover" /> : <Package className="h-6 w-6" />}
+        </div>
+        <div className="min-w-0 flex-1">
+          {isLoading ? (
+            <>
+              <Skeleton className="h-6 w-64" />
+              <Skeleton className="mt-1 h-3.5 w-32" />
+            </>
+          ) : (
+            <>
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-xl font-semibold tracking-tight">{data?.name}</h1>
+                <StatusBadge value={data?.status} />
+              </div>
+              <p className="font-mono text-xs text-muted-foreground">{data?.code}</p>
+            </>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/prices/${id}/history`}><History className="mr-1.5 h-3.5 w-3.5" />Price History</Link>
+          </Button>
+        </div>
+      </Card>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
+        <Card className="p-2 sm:p-4">
           <Tabs defaultValue="overview">
-            <TabsList>
+            <TabsList className="flex flex-wrap">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="hierarchy">Hierarchy</TabsTrigger>
               <TabsTrigger value="pricing">Pricing</TabsTrigger>
+              <TabsTrigger value="geography">Geography</TabsTrigger>
               <TabsTrigger value="attributes">Attributes</TabsTrigger>
               <TabsTrigger value="documents">Documents</TabsTrigger>
               <TabsTrigger value="audit">Audit</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="mt-4 space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Product Information</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <InfoRow label="Product Code" value={product.productCode} />
-                  <InfoRow label="Product Name" value={product.productName} />
-                  <InfoRow label="Short Name" value={product.shortName} />
-                  <InfoRow label="Description" value={product.description} />
-                  <InfoRow label="Barcode" value={product.barcode} />
-                  <InfoRow label="HSN Code" value={product.hsnCode} />
-                  <InfoRow label="SKU Type" value={product.skuType?.replace(/_/g, " ")} />
-                  <InfoRow label="UOM" value={product.uom?.uomName} />
-                  <InfoRow label="Manufacturer" value={product.manufacturer?.manufacturerName} />
-                  <InfoRow label="Shelf Life (Days)" value={product.shelfLifeDays} />
-                  <InfoRow label="Reorder Level" value={product.reorderLevel} />
-                </CardContent>
-              </Card>
+            <TabsContent value="overview" className="mt-4 grid grid-cols-1 gap-3 p-2 sm:grid-cols-2">
+              <Field label="Short Name" value={data?.shortName} loading={isLoading} />
+              <Field label="Brand" value={data?.brandName} loading={isLoading} />
+              <Field label="Category" value={data?.categoryName} loading={isLoading} />
+              <Field label="Variant" value={data?.variant} loading={isLoading} />
+              <Field label="Base UOM" value={data?.baseUom} loading={isLoading} />
+              <Field label="Pack Size" value={data?.packSize} loading={isLoading} />
+              <Field label="Barcode" value={data?.barcode} loading={isLoading} />
+              <Field label="Description" value={data?.description} loading={isLoading} className="sm:col-span-2" />
             </TabsContent>
-
-            <TabsContent value="hierarchy" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Product Hierarchy</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <InfoRow label="Category" value={product.category?.categoryName} />
-                  <InfoRow label="Sub Category" value={product.subCategory?.subCategoryName} />
-                  <InfoRow label="Brand" value={product.brand?.brandName} />
-                  <InfoRow label="Manufacturer" value={product.manufacturer?.manufacturerName} />
-                </CardContent>
-              </Card>
+            <TabsContent value="hierarchy" className="mt-4 grid grid-cols-1 gap-3 p-2 sm:grid-cols-2">
+              <Field label="Business Unit" value={data?.businessUnit} loading={isLoading} />
+              <Field label="Division" value={data?.division} loading={isLoading} />
+              <Field label="Sub Brand" value={data?.subBrand} loading={isLoading} />
             </TabsContent>
-
-            <TabsContent value="pricing" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Pricing</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    View pricing details in the{" "}
-                    <Button variant="link" className="h-auto p-0 text-sm" onClick={() => router.push("/prices")}>
-                      Price Master
-                    </Button>
-                  </p>
-                </CardContent>
-              </Card>
+            <TabsContent value="pricing" className="mt-4 p-2">
+              <EmptyState title="Pricing" description="View and manage prices from the Price Master module."
+                action={<Button asChild size="sm" variant="outline"><Link href="/prices">Open Price Master</Link></Button>} />
             </TabsContent>
-
-            <TabsContent value="attributes" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Attributes</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">Attribute data coming soon</p>
-                </CardContent>
-              </Card>
+            <TabsContent value="geography" className="mt-4 p-2">
+              <EmptyState title="Geography" description="Geography availability is shown here." />
             </TabsContent>
-
-            <TabsContent value="documents" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Documents</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">No documents uploaded</p>
-                </CardContent>
-              </Card>
+            <TabsContent value="attributes" className="mt-4 p-2">
+              <EmptyState title="Attributes" description="Product attributes are shown here." />
             </TabsContent>
-
-            <TabsContent value="audit" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Audit Trail</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">No audit entries yet</p>
-                </CardContent>
-              </Card>
+            <TabsContent value="documents" className="mt-4 p-2">
+              {docsQ.isLoading ? (
+                <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
+              ) : (docsQ.data?.length ?? 0) === 0 ? (
+                <EmptyState title="No documents" description="Attach files from the product edit screen." />
+              ) : (
+                <ul className="space-y-2">
+                  {docsQ.data!.map((d) => (
+                    <li key={d.id} className="flex items-center gap-3 rounded-md border border-border bg-card p-3">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">{d.name}</p>
+                        <p className="text-xs text-muted-foreground">{d.type} · {new Date(d.uploadedAt).toLocaleDateString()}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </TabsContent>
+            <TabsContent value="audit" className="mt-4 p-2">
+              <EmptyState title="Audit trail" description="A timeline of changes will appear here."
+                action={<Button asChild size="sm" variant="outline"><Link href="/audit">Open Audit</Link></Button>} />
             </TabsContent>
           </Tabs>
-        </div>
+        </Card>
 
-        <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                Recent Activity
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ActivityEntry action="Product created" user="System" date={product.createdAt} />
-              {product.updatedAt !== product.createdAt && (
-                <ActivityEntry action="Product updated" user="System" date={product.updatedAt} />
-              )}
-            </CardContent>
+        <div className="flex flex-col gap-4">
+          <Card className="p-5">
+            <h3 className="text-sm font-semibold">Approval Status</h3>
+            <Separator className="my-3" />
+            <div className="flex items-center gap-2 text-sm">
+              <StatusBadge value={data?.status} /> <span className="text-muted-foreground">current</span>
+            </div>
           </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Shield className="h-4 w-4" />
-                Status
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
-                <Badge className={statusStyles[product.status]}>
-                  {product.status}
-                </Badge>
-              </div>
-            </CardContent>
+          <Card className="p-5">
+            <h3 className="text-sm font-semibold">Recent Activity</h3>
+            <Separator className="my-3" />
+            <p className="text-xs text-muted-foreground">Activity for this product will appear here.</p>
           </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Activity className="h-4 w-4" />
-                Audit Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Created</span>
-                <span>{new Date(product.createdAt).toLocaleDateString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Last Updated</span>
-                <span>{new Date(product.updatedAt).toLocaleDateString()}</span>
-              </div>
-            </CardContent>
+          <Card className="p-5">
+            <h3 className="text-sm font-semibold">Audit Summary</h3>
+            <Separator className="my-3" />
+            <p className="text-xs text-muted-foreground">Created {data?.createdAt ? new Date(data.createdAt).toLocaleString() : "—"}.</p>
           </Card>
         </div>
       </div>
+    </div>
+  )
+}
+
+function Field({ label, value, loading, className }: { label: string; value?: React.ReactNode; loading?: boolean; className?: string }) {
+  return (
+    <div className={className}>
+      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
+      {loading ? <Skeleton className="mt-1 h-4 w-32" /> : <p className="mt-0.5 text-sm text-foreground">{value ?? "—"}</p>}
     </div>
   )
 }

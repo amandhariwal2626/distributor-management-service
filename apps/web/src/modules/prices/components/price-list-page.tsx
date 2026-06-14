@@ -1,167 +1,127 @@
 "use client"
 
-import type { ColumnDef } from "@tanstack/react-table"
+import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Upload, Download, MoreHorizontal } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import type { ColumnDef } from "@tanstack/react-table"
+import { BadgeIndianRupee, Clock, Download, MoreHorizontal, Plus, Upload } from "lucide-react"
 import { PageHeader } from "@/components/shared/page-header"
-import { KpiCards } from "@/components/shared/kpi-cards"
+import { KpiCard } from "@/components/shared/kpi-card"
 import { DataTable } from "@/components/shared/data-table"
-import { FilterBar } from "@/components/shared/filter-bar"
+import { StatusBadge } from "@/components/shared/status-badge"
 import { ErrorState } from "@/components/shared/error-state"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { usePrices } from "../hooks/use-prices"
-import type { Price } from "@/modules/products/types"
-
-const statusStyles: Record<string, string> = {
-  ACTIVE: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-  FUTURE: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  EXPIRED: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-}
+import { toast } from "sonner"
+import type { Price, PriceFilters, PriceStatus } from "../types"
 
 export function PriceListPage() {
   const router = useRouter()
-  const { data, isLoading, isError, refetch } = usePrices()
+  const [filters, setFilters] = useState<PriceFilters>({ page: 1, pageSize: 25 })
+  const pricesQ = usePrices(filters)
+  const rows = pricesQ.data?.data ?? []
 
-  const columns: ColumnDef<Price>[] = [
+  const kpis = useMemo(() => ({
+    active: rows.filter((r) => r.status === "active").length,
+    future: rows.filter((r) => r.status === "future").length,
+    pending: rows.filter((r) => r.status === "pending").length,
+    expiring: rows.filter((r) => r.effectiveTo && new Date(r.effectiveTo) < new Date(Date.now() + 30 * 86400000)).length,
+  }), [rows])
+
+  const columns = useMemo<ColumnDef<Price>[]>(() => [
+    { id: "product", header: "Product", cell: ({ row }) => (
+      <div>
+        <div className="font-medium text-foreground">{row.original.productName ?? row.original.productId}</div>
+        <div className="font-mono text-xs text-muted-foreground">{row.original.productCode ?? "—"}</div>
+      </div>
+    ) },
+    { id: "mrp", accessorKey: "mrp", header: "MRP", cell: ({ row }) => <span className="tabular-nums">₹{row.original.mrp.toFixed(2)}</span> },
+    { id: "ptr", accessorKey: "ptr", header: "PTR", cell: ({ row }) => <span className="tabular-nums">₹{row.original.ptr.toFixed(2)}</span> },
+    { id: "pts", accessorKey: "pts", header: "PTS", cell: ({ row }) => <span className="tabular-nums">₹{row.original.pts.toFixed(2)}</span> },
+    { id: "effectiveFrom", header: "Effective", cell: ({ row }) => (
+      <span className="text-xs text-muted-foreground">
+        {new Date(row.original.effectiveFrom).toLocaleDateString()}
+        {row.original.effectiveTo ? ` → ${new Date(row.original.effectiveTo).toLocaleDateString()}` : ""}
+      </span>
+    ) },
+    { id: "status", header: "Status", cell: ({ row }) => <StatusBadge value={row.original.status} /> },
     {
-      id: "select",
-      header: ({ table }) => (
-        <Checkbox
-          checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(v) => table.toggleAllPageRowsSelected(!!v)}
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox checked={row.getIsSelected()} onCheckedChange={(v) => row.toggleSelected(!!v)} />
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
-    {
-      header: "Product",
-      accessorKey: "product",
-      cell: ({ row }) => (
-        <div>
-          <p className="text-sm font-medium">{row.original.product?.productName}</p>
-          <p className="text-xs text-muted-foreground">{row.original.product?.productCode}</p>
-        </div>
-      ),
-    },
-    {
-      header: "MRP",
-      accessorKey: "mrp",
-      cell: ({ row }) => <span className="font-medium">₹{Number(row.original.mrp).toFixed(2)}</span>,
-    },
-    {
-      header: "PTR",
-      accessorKey: "ptr",
-      cell: ({ row }) => <span>₹{Number(row.original.ptr).toFixed(2)}</span>,
-    },
-    {
-      header: "PTS",
-      accessorKey: "pts",
-      cell: ({ row }) => <span>₹{Number(row.original.pts).toFixed(2)}</span>,
-    },
-    {
-      header: "Effective From",
-      accessorKey: "effectiveFrom",
-      cell: ({ row }) => new Date(row.original.effectiveFrom).toLocaleDateString(),
-    },
-    {
-      header: "Status",
-      accessorKey: "status",
-      cell: ({ row }) => (
-        <Badge className={statusStyles[row.original.status]} variant="secondary">
-          {row.original.status.replace("_", " ")}
-        </Badge>
-      ),
-    },
-    {
-      id: "actions",
+      id: "actions", header: "", size: 40,
       cell: ({ row }) => (
         <DropdownMenu>
-          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => e.stopPropagation()}>
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => router.push(`/prices/${row.original.id}/history`)}>
-              View History
-            </DropdownMenuItem>
-            <DropdownMenuItem>Edit</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push(`/prices/${row.original.id}/history`)}>View history</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       ),
     },
-  ]
-
-  const filterOptions = [
-    { key: "status", label: "Status", type: "select" as const, placeholder: "Select status", options: [
-      { label: "Active", value: "ACTIVE" },
-      { label: "Future", value: "FUTURE" },
-      { label: "Expired", value: "EXPIRED" },
-      { label: "Pending Approval", value: "PENDING_APPROVAL" },
-    ]},
-  ]
-
-  if (isError) return <ErrorState onRetry={() => refetch()} />
-
-  const activePrices = data?.data?.filter((p) => p.status === "ACTIVE").length ?? 0
-  const futurePrices = data?.data?.filter((p) => p.status === "FUTURE").length ?? 0
-  const expiredPrices = data?.data?.filter((p) => p.status === "EXPIRED").length ?? 0
+  ], [router])
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto flex max-w-7xl flex-col gap-6">
       <PageHeader
         title="Price Master"
-        description="Manage product pricing across the organization"
+        description="Track active, future, and pending prices across products."
         actions={
           <>
-            <Button variant="outline" size="sm">
-              <Upload className="mr-2 h-4 w-4" />
-              Bulk Upload
+            <Button variant="outline" size="sm" onClick={() => toast.info("Bulk upload coming soon")}>
+              <Upload className="mr-1.5 h-3.5 w-3.5" />Bulk Upload
             </Button>
-            <Button variant="outline" size="sm">
-              <Download className="mr-2 h-4 w-4" />
-              Export
+            <Button variant="outline" size="sm" onClick={() => toast.info("Export coming soon")}>
+              <Download className="mr-1.5 h-3.5 w-3.5" />Export
             </Button>
             <Button size="sm" onClick={() => router.push("/prices/create")}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Price
+              <Plus className="mr-1.5 h-3.5 w-3.5" />Create Price
             </Button>
           </>
         }
       />
 
-      <KpiCards
-        loading={isLoading}
-        cards={[
-          { label: "Active Prices", value: activePrices },
-          { label: "Future Prices", value: futurePrices },
-          { label: "Expired Prices", value: expiredPrices },
-        ]}
-      />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard label="Active Prices" value={kpis.active} icon={BadgeIndianRupee} loading={pricesQ.isLoading} />
+        <KpiCard label="Future Prices" value={kpis.future} icon={Clock} loading={pricesQ.isLoading} />
+        <KpiCard label="Pending Approval" value={kpis.pending} icon={Clock} loading={pricesQ.isLoading} />
+        <KpiCard label="Expiring (30d)" value={kpis.expiring} icon={Clock} loading={pricesQ.isLoading} />
+      </div>
 
-      <FilterBar options={filterOptions} />
+      <div className="rounded-lg border border-border bg-card p-3">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <Input placeholder="Search product…" value={filters.q ?? ""}
+            onChange={(e) => setFilters((f) => ({ ...f, q: e.target.value || undefined }))} />
+          <Select value={filters.status ?? ""}
+            onValueChange={(v) => setFilters((f) => ({ ...f, status: (v || undefined) as PriceStatus | undefined }))}>
+            <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="future">Future</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="expired">Expired</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
-      <DataTable
-        columns={columns}
-        data={data?.data ?? []}
-        loading={isLoading}
-        searchPlaceholder="Search prices..."
-        emptyTitle="No prices found"
-        emptyDescription="Create your first price entry to get started."
-        emptyAction={{ label: "Create Price", onClick: () => router.push("/prices/create") }}
-      />
+      {pricesQ.isError ? (
+        <ErrorState message="Failed to load prices." onRetry={() => pricesQ.refetch()} />
+      ) : (
+        <DataTable<Price>
+          data={rows}
+          columns={columns}
+          loading={pricesQ.isLoading}
+          enableSelection
+          rowKey={(r) => r.id}
+          onRowClick={(r) => router.push(`/prices/${r.id}/history`)}
+          emptyTitle="No prices yet"
+          emptyDescription="Create a price to make it available to outlets."
+        />
+      )}
     </div>
   )
 }

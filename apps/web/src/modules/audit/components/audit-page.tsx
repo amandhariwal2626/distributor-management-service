@@ -1,222 +1,195 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import {
-  Activity,
-  ArrowRight,
-  User,
-  Calendar,
-  Filter,
-  Search,
-} from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { PageHeader } from "@/components/shared/page-header";
+import { useState } from "react"
+import { History, User, Calendar } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select"
+import { PageHeader } from "@/components/shared/page-header"
+import { ErrorState } from "@/components/shared/error-state"
+import { EmptyState } from "@/components/shared/empty-state"
+import { useAudit } from "../hooks/use-audit"
+import type { AuditEntry } from "../api/audit"
 
-const auditEntries = [
-  {
-    id: 1,
-    action: "Product Created",
-    entity: "Mango Juice 1L",
-    field: null,
-    oldValue: null,
-    newValue: "Product created with code PRD-043",
-    user: "Rahul Sharma",
-    date: "2026-06-05T10:30:00",
-  },
-  {
-    id: 2,
-    action: "Price Updated",
-    entity: "Classic Cola 250ml",
-    field: "MRP",
-    oldValue: "₹20.00",
-    newValue: "₹22.00",
-    user: "Priya Mehta",
-    date: "2026-06-04T14:15:00",
-  },
-  {
-    id: 3,
-    action: "Product Updated",
-    entity: "Wheat Biscuits 200g",
-    field: "packSize",
-    oldValue: "10",
-    newValue: "12",
-    user: "Amit Kumar",
-    date: "2026-06-03T09:45:00",
-  },
-  {
-    id: 4,
-    action: "Price Created",
-    entity: "Wheat Biscuits 200g",
-    field: null,
-    oldValue: null,
-    newValue: "Price set at MRP ₹32, PTR ₹30, PTS ₹28",
-    user: "Amit Kumar",
-    date: "2026-06-02T16:20:00",
-  },
-  {
-    id: 5,
-    action: "Bulk Upload",
-    entity: "Products",
-    field: null,
-    oldValue: null,
-    newValue: "15 products uploaded via products_june.xlsx",
-    user: "System",
-    date: "2026-06-01T11:00:00",
-  },
-];
+function AuditDiff({ entry }: { entry: AuditEntry }) {
+  if (!entry.changes?.length) return null
 
-function DiffView({
-  oldValue,
-  newValue,
-}: {
-  oldValue?: string | null;
-  newValue?: string | null;
-}) {
-  if (!oldValue && !newValue) return null;
   return (
-    <div className="mt-3 rounded-lg border bg-muted/30 p-3">
-      {oldValue && newValue ? (
-        <div className="flex items-center gap-3 text-sm">
-          <div className="flex-1 rounded bg-red-50 p-2 text-red-700 line-through dark:bg-red-950/30 dark:text-red-400">
-            {oldValue}
+    <div className="mt-3 space-y-2">
+      {entry.changes.map((change, i) => (
+        <div key={i} className="rounded-lg border bg-muted/30 p-3">
+          <div className="mb-1 text-xs font-medium text-muted-foreground">
+            {change.field}
           </div>
-          <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-          <div className="flex-1 rounded bg-green-50 p-2 text-green-700 dark:bg-green-950/30 dark:text-green-400">
-            {newValue}
+          <div className="flex items-center gap-3 text-sm">
+            <div className="flex-1 rounded bg-red-50 p-2 text-red-700 line-through dark:bg-red-950/30 dark:text-red-400">
+              {String(change.oldValue ?? "")}
+            </div>
+            <span className="text-muted-foreground">&rarr;</span>
+            <div className="flex-1 rounded bg-green-50 p-2 text-green-700 dark:bg-green-950/30 dark:text-green-400">
+              {String(change.newValue ?? "")}
+            </div>
           </div>
         </div>
-      ) : (
-        <div className="text-sm text-muted-foreground">
-          {newValue ?? oldValue}
-        </div>
-      )}
+      ))}
     </div>
-  );
+  )
+}
+
+function AuditTimelineItem({ entry }: { entry: AuditEntry }) {
+  return (
+    <li className="relative pb-8 last:pb-0">
+      <div className="absolute left-0 top-1 flex h-5 w-5 items-center justify-center">
+        <div className="h-2.5 w-2.5 rounded-full border-2 border-primary bg-background" />
+      </div>
+      <div className="ml-8">
+        <Card>
+          <CardContent className="py-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <span className="text-sm font-medium">{entry.user}</span>
+                <span className="mx-1.5 text-sm text-muted-foreground">
+                  {entry.action}
+                </span>
+                {entry.entityName && (
+                  <span className="text-sm font-medium">
+                    {entry.entityName}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <User className="h-3 w-3" />
+                <span>{entry.user}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                <span>{new Date(entry.timestamp).toLocaleString()}</span>
+              </div>
+            </div>
+            <AuditDiff entry={entry} />
+          </CardContent>
+        </Card>
+      </div>
+    </li>
+  )
+}
+
+function AuditTimelineSkeleton() {
+  return (
+    <div className="space-y-4">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="flex gap-4">
+          <Skeleton className="mt-1 h-5 w-5 shrink-0 rounded-full" />
+          <div className="flex-1 space-y-3 rounded-xl border p-4">
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-3 w-1/3" />
+            <Skeleton className="h-16 w-full rounded-lg" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
 }
 
 export function AuditPage() {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState("")
+  const [moduleFilter, setModuleFilter] = useState("")
+  const [fromDate, setFromDate] = useState("")
+  const [toDate, setToDate] = useState("")
+
+  const filters: Record<string, string> = {}
+  if (search) filters.user = search
+  if (moduleFilter) filters.module = moduleFilter
+  if (fromDate) filters.from = fromDate
+  if (toDate) filters.to = toDate
+
+  const { data: entries, isLoading, isError, refetch } = useAudit(
+    Object.keys(filters).length ? filters : undefined,
+  )
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Audit Log"
-        description="Track all changes made across the system"
+        title="Audit Trail"
+        description="Track all changes across the system"
       />
 
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search audit entries..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <Select defaultValue="">
+      <div className="flex flex-wrap items-center gap-3">
+        <Input
+          placeholder="Search by user..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="max-w-xs"
+        />
+        <Select value={moduleFilter} onValueChange={setModuleFilter}>
           <SelectTrigger className="w-36">
             <SelectValue placeholder="Module" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all-modules">All Modules</SelectItem>
-            <SelectItem value="product">Product</SelectItem>
-            <SelectItem value="price">Price</SelectItem>
+            <SelectItem value="Product">Product</SelectItem>
+            <SelectItem value="Price">Price</SelectItem>
+            <SelectItem value="Master">Master</SelectItem>
           </SelectContent>
         </Select>
-        <Select defaultValue="">
-          <SelectTrigger className="w-36">
-            <SelectValue placeholder="User" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all-users">All Users</SelectItem>
-            <SelectItem value="rahul">Rahul Sharma</SelectItem>
-            <SelectItem value="priya">Priya Mehta</SelectItem>
-            <SelectItem value="amit">Amit Kumar</SelectItem>
-          </SelectContent>
-        </Select>
-        <Button variant="outline" size="icon">
-          <Filter className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Input
+            type="date"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            className="w-40"
+          />
+          <span className="text-sm text-muted-foreground">to</span>
+          <Input
+            type="date"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+            className="w-40"
+          />
+        </div>
+        {(search || moduleFilter || fromDate || toDate) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setSearch("")
+              setModuleFilter("")
+              setFromDate("")
+              setToDate("")
+            }}
+          >
+            Clear
+          </Button>
+        )}
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="divide-y">
-            {auditEntries.map((entry) => (
-              <div key={entry.id} className="p-5">
-                <div className="flex items-start gap-4">
-                  <div className="relative flex flex-col items-center">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted">
-                      <Activity className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <div className="mt-1 h-full w-px bg-border" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-sm font-medium">
-                          {entry.action}
-                        </span>
-                        <span className="mx-2 text-sm text-muted-foreground">
-                          on
-                        </span>
-                        <span className="text-sm font-medium">
-                          {entry.entity}
-                        </span>
-                        {entry.field && (
-                          <>
-                            <span className="mx-2 text-sm text-muted-foreground">
-                              (field:
-                            </span>
-                            <code className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono">
-                              {entry.field}
-                            </code>
-                            <span className="text-sm text-muted-foreground">
-                              )
-                            </span>
-                          </>
-                        )}
-                      </div>
-                      <Badge variant="outline" className="text-[10px]">
-                        {entry.action === "Bulk Upload"
-                          ? "UPLOAD"
-                          : entry.action.includes("Product")
-                            ? "PRODUCT"
-                            : "PRICE"}
-                      </Badge>
-                    </div>
-                    <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <User className="h-3 w-3" />
-                        <span>{entry.user}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        <span>{new Date(entry.date).toLocaleString()}</span>
-                      </div>
-                    </div>
-                    <DiffView
-                      oldValue={entry.oldValue}
-                      newValue={entry.newValue}
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {isLoading ? (
+        <AuditTimelineSkeleton />
+      ) : isError ? (
+        <ErrorState onRetry={() => refetch()} />
+      ) : !entries?.length ? (
+        <EmptyState
+          icon={<History className="h-12 w-12" />}
+          title="No audit entries found"
+          description="No changes have been recorded for the selected filters."
+        />
+      ) : (
+        <ol className="border-l border-border pl-4">
+          {entries.map((entry) => (
+            <AuditTimelineItem key={entry.id} entry={entry} />
+          ))}
+        </ol>
+      )}
     </div>
-  );
+  )
 }

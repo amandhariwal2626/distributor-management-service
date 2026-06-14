@@ -1,114 +1,50 @@
 "use client"
 
-import { useFormContext } from "react-hook-form"
-import { useQuery } from "@tanstack/react-query"
-import { apiGet } from "@/lib/api"
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Card, CardContent } from "@/components/ui/card"
-import { useTaxGroups } from "@/hooks/use-master-data"
-
-interface TaxGroupDetail {
-  id: string
-  taxName: string
-  cgst: number
-  sgst: number
-  igst?: number
-  cess?: number
-}
-
-interface TaxGroupResponse {
-  items: TaxGroupDetail[]
-  meta: Record<string, unknown>
-}
+import { useFormContext, useWatch } from "react-hook-form"
+import type { ProductFormValues } from "../../schemas"
+import { Card } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Field } from "./step-1-product-info"
+import { Badge } from "@/components/ui/badge"
+import { CheckCircle2, AlertCircle } from "lucide-react"
 
 export function Step4Tax() {
-  const form = useFormContext()
-  const taxGroupId = form.watch("taxGroupId")
-  const { data: taxGroups, isLoading } = useTaxGroups()
-
-  const { data: rawTaxGroups } = useQuery<TaxGroupResponse>({
-    queryKey: ["master-data", "tax-groups-raw"],
-    queryFn: () => apiGet<TaxGroupResponse>("/tax-groups"),
-    staleTime: 5 * 60 * 1000,
-  })
-
-  const selectedGroup = rawTaxGroups?.items?.find((g) => g.id === taxGroupId)
+  const { register, formState: { errors }, control } = useFormContext<ProductFormValues>()
+  const gst = Number(useWatch({ control, name: "gst" }) ?? 0)
+  const cgst = Number(useWatch({ control, name: "cgst" }) ?? 0)
+  const sgst = Number(useWatch({ control, name: "sgst" }) ?? 0)
+  const igst = Number(useWatch({ control, name: "igst" }) ?? 0)
+  const splitMatches = Math.abs((cgst + sgst) - gst) < 0.01
+  const igstMatches = Math.abs(igst - gst) < 0.01
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium">Tax Configuration</h3>
-        <p className="text-sm text-muted-foreground">Select a tax group for this product</p>
-      </div>
-      <div className="grid gap-6 md:grid-cols-2">
-        <FormField
-          control={form.control}
-          name="taxGroupId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Tax Group</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder={isLoading ? "Loading..." : "Select tax group"} />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {(taxGroups ?? []).map((group) => (
-                    <SelectItem key={group.value} value={group.value}>{group.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+    <Card className="p-6">
+      <h2 className="text-base font-semibold">Tax</h2>
+      <p className="text-sm text-muted-foreground">HSN classification and tax breakdown.</p>
+      <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+        <Field label="HSN Code" error={errors.hsn?.message}><Input {...register("hsn")} /></Field>
+        <Field label="GST %" error={errors.gst?.message}><Input type="number" step="0.01" {...register("gst")} /></Field>
+        <Field label="CGST %" error={errors.cgst?.message}><Input type="number" step="0.01" {...register("cgst")} /></Field>
+        <Field label="SGST %" error={errors.sgst?.message}><Input type="number" step="0.01" {...register("sgst")} /></Field>
+        <Field label="IGST %" error={errors.igst?.message}><Input type="number" step="0.01" {...register("igst")} /></Field>
+        <Field label="CESS %" error={errors.cess?.message}><Input type="number" step="0.01" {...register("cess")} /></Field>
+        <Field label="TDS %" error={errors.tds?.message}><Input type="number" step="0.01" {...register("tds")} /></Field>
+        <Field label="TCS %" error={errors.tcs?.message}><Input type="number" step="0.01" {...register("tcs")} /></Field>
       </div>
 
-      {selectedGroup && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium">{selectedGroup.taxName}</h4>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">CGST</span>
-                  <span className="font-medium">{selectedGroup.cgst}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">SGST</span>
-                  <span className="font-medium">{selectedGroup.sgst}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">IGST</span>
-                  <span className="font-medium">{selectedGroup.igst ?? 0}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">CESS</span>
-                  <span className="font-medium">{selectedGroup.cess ?? 0}%</span>
-                </div>
-                <div className="col-span-2 flex justify-between border-t pt-2">
-                  <span className="text-muted-foreground">Total GST</span>
-                  <span className="font-medium">{selectedGroup.cgst + selectedGroup.sgst}%</span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+      <div className="mt-6 flex flex-wrap gap-2">
+        <ValidationBadge ok={splitMatches} label={`CGST + SGST = GST (${gst}%)`} />
+        <ValidationBadge ok={igstMatches || igst === 0} label={`IGST = GST (${gst}%)`} />
+      </div>
+    </Card>
+  )
+}
+
+function ValidationBadge({ ok, label }: { ok: boolean; label: string }) {
+  return (
+    <Badge variant="outline" className={ok ? "border-emerald-200 text-emerald-700" : "border-amber-200 text-amber-700"}>
+      {ok ? <CheckCircle2 className="mr-1 h-3 w-3" /> : <AlertCircle className="mr-1 h-3 w-3" />}
+      {label}
+    </Badge>
   )
 }

@@ -40,9 +40,9 @@ export const sidebarGroups: SidebarGroup[] = [
     items: [
       { label: "Product Master", href: "/products", icon: Package, permission: "users.read" },
       { label: "Price Master", href: "/prices", icon: DollarSign, permission: "users.read" },
-      { label: "Category Master", href: "#", icon: Tags },
-      { label: "Brand Master", href: "#", icon: Award },
-      { label: "Attribute Master", href: "#", icon: SlidersHorizontal },
+      { label: "Category Master", href: "/categories", icon: Tags },
+      { label: "Brand Master", href: "/brands", icon: Award },
+      { label: "Attribute Master", href: "/attributes", icon: SlidersHorizontal },
     ],
   },
   {

@@ -1,43 +1,38 @@
 "use client"
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { pricesApi } from "../api/prices"
-import type { CreatePricePayload } from "@/modules/products/types"
+import type { ID, Price, PriceFilters } from "../types"
 
-export function usePrices(params?: { page?: number; limit?: number; productId?: string }) {
-  return useQuery({
-    queryKey: ["prices", params],
-    queryFn: () => pricesApi.list(params),
-  })
-}
+export const usePrices = (filters: PriceFilters = {}) =>
+  useQuery({ queryKey: ["prices", filters], queryFn: () => pricesApi.list(filters) })
 
-export function usePrice(id: string) {
-  return useQuery({
-    queryKey: ["prices", id],
-    queryFn: () => pricesApi.getById(id),
-    enabled: !!id,
-  })
-}
+export const usePrice = (id: ID | undefined) =>
+  useQuery({ enabled: !!id, queryKey: ["prices", id!], queryFn: () => pricesApi.get(id!) })
 
-export function useCreatePrice() {
-  const queryClient = useQueryClient()
+export const usePriceHistory = (id: ID | undefined) =>
+  useQuery({ enabled: !!id, queryKey: ["prices", id!, "history"], queryFn: () => pricesApi.history(id!) })
+
+export const useCreatePrice = () => {
+  const qc = useQueryClient()
   return useMutation({
-    mutationFn: (payload: CreatePricePayload) => pricesApi.create(payload),
+    mutationFn: (payload: Partial<Price>) => pricesApi.create(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["prices"] })
-      toast.success("Price created successfully")
+      qc.invalidateQueries({ queryKey: ["prices"] })
+      toast.success("Price created")
     },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to create price")
-    },
+    onError: (e: Error) => toast.error(e.message),
   })
 }
 
-export function useActivePrice(productId: string) {
-  return useQuery({
-    queryKey: ["prices", "active", productId],
-    queryFn: () => pricesApi.getActiveByProduct(productId),
-    enabled: !!productId,
+export const useProductsList = (params?: Record<string, unknown>) =>
+  useQuery({
+    queryKey: ["products", "select", params ?? {}],
+    queryFn: async () => {
+      const { apiGet } = await import("@/lib/api")
+      const res = await apiGet<{ items?: Record<string, unknown>[]; data?: Record<string, unknown>[] }>("/products", { ...params, limit: 200 })
+      const items = (res as { items?: Record<string, unknown>[] }).items ?? (res as { data?: Record<string, unknown>[] }).data ?? []
+      return items.map((p) => ({ id: p.id as string, code: (p.productCode ?? p.code ?? "") as string, name: (p.productName ?? p.name ?? "") as string }))
+    },
   })
-}

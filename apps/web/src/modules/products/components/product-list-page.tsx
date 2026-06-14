@@ -1,255 +1,163 @@
-"use client";
+"use client"
 
-import type { ColumnDef } from "@tanstack/react-table";
-import { useRouter } from "next/navigation";
-import { Plus, Upload, Download, MoreHorizontal } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { useMemo, useState } from "react"
+import { Plus, Upload, Download, MoreHorizontal, Package, CheckCircle2, FileEdit, Clock } from "lucide-react"
+import type { ColumnDef } from "@tanstack/react-table"
+import { PageHeader } from "@/components/shared/page-header"
+import { KpiCard } from "@/components/shared/kpi-card"
+import { DataTable } from "@/components/shared/data-table"
+import { StatusBadge } from "@/components/shared/status-badge"
+import { ErrorState } from "@/components/shared/error-state"
+import { FilterChips, type Chip } from "@/components/shared/filter-chips"
+import { ProductSheet } from "./product-sheet"
+import { SearchableCombobox } from "@/components/shared/searchable-combobox"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { PageHeader } from "@/components/shared/page-header";
-import { KpiCards } from "@/components/shared/kpi-cards";
-import { DataTable } from "@/components/shared/data-table";
-import { FilterBar } from "@/components/shared/filter-bar";
-import { ErrorState } from "@/components/shared/error-state";
-import { useProducts, useDeleteProduct } from "../hooks/use-products";
-import type { ProductListItem, ProductStatus } from "../types";
-
-const statusStyles: Record<ProductStatus, string> = {
-  ACTIVE:
-    "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  DRAFT: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400",
-  INACTIVE: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-};
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { useProducts, useDeleteProduct } from "../hooks/use-products"
+import { useBrands, useCategories } from "../hooks/use-master-data"
+import { toast } from "sonner"
+import type { Product, ProductFilters, ProductStatus } from "../types"
+import { useRouter } from "next/navigation"
 
 export function ProductListPage() {
-  const router = useRouter();
-  const { data, isLoading, isError, refetch } = useProducts();
-  const deleteProduct = useDeleteProduct();
+  const router = useRouter()
+  const [filters, setFilters] = useState<ProductFilters>({ page: 1, pageSize: 25 })
+  const [openId, setOpenId] = useState<string | null>(null)
 
-  const columns: ColumnDef<ProductListItem>[] = [
+  const productsQ = useProducts(filters)
+  const brandsQ = useBrands()
+  const categoriesQ = useCategories()
+  const deleteProduct = useDeleteProduct()
+
+  const rows = productsQ.data?.data ?? []
+
+  const kpis = useMemo(() => {
+    const total = productsQ.data?.total ?? 0
+    const active = rows.filter((r) => r.status === "active").length
+    const draft = rows.filter((r) => r.status === "draft").length
+    const pending = rows.filter((r) => r.status === "pending").length
+    return { total, active, draft, pending }
+  }, [rows, productsQ.data?.total])
+
+  const columns = useMemo<ColumnDef<Product>[]>(() => [
     {
-      id: "select",
-      header: ({ table }) => (
-        <Checkbox
-          checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(v) => table.toggleAllPageRowsSelected(!!v)}
-          aria-label="Select all"
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(v) => row.toggleSelected(!!v)}
-          aria-label="Select row"
-        />
-      ),
-      enableSorting: false,
-      enableHiding: false,
+      id: "code", accessorKey: "code", header: "Product Code",
+      cell: ({ row }) => <span className="font-mono text-xs text-muted-foreground">{row.original.code}</span>,
     },
     {
-      header: "Product Code",
-      accessorKey: "productCode",
+      id: "name", accessorKey: "name", header: "Product Name",
+      cell: ({ row }) => <span className="font-medium text-foreground">{row.original.name}</span>,
+    },
+    { id: "brand", accessorKey: "brandName", header: "Brand", cell: ({ row }) => row.original.brandName ?? "—" },
+    { id: "category", accessorKey: "categoryName", header: "Category", cell: ({ row }) => row.original.categoryName ?? "—" },
+    { id: "variant", accessorKey: "variant", header: "Variant", cell: ({ row }) => row.original.variant ?? "—" },
+    {
+      id: "status", accessorKey: "status", header: "Status",
+      cell: ({ row }) => <StatusBadge value={row.original.status} />,
     },
     {
-      header: "Product Name",
-      accessorKey: "productName",
+      id: "createdAt", accessorKey: "createdAt", header: "Created",
+      cell: ({ row }) => <span className="text-muted-foreground">{new Date(row.original.createdAt).toLocaleDateString()}</span>,
     },
     {
-      header: "Brand",
-      accessorKey: "brand",
-      cell: ({ row }) => row.original.brand?.brandName ?? "-",
-    },
-    {
-      header: "Category",
-      accessorKey: "category",
-      cell: ({ row }) => row.original.category?.categoryName ?? "-",
-    },
-    {
-      header: "SKU Type",
-      accessorKey: "skuType",
-      cell: ({ row }) => {
-        const type = row.original.skuType as string;
-        return (
-          <span className="text-sm">{type.replace(/_/g, " ")}</span>
-        );
-      },
-    },
-    {
-      header: "Status",
-      accessorKey: "status",
-      cell: ({ row }) => {
-        const status = row.original.status as ProductStatus;
-        return (
-          <Badge className={statusStyles[status]} variant="secondary">
-            {status}
-          </Badge>
-        );
-      },
-    },
-    {
-      header: "Created",
-      accessorKey: "createdAt",
-      cell: ({ row }) =>
-        new Date(row.original.createdAt).toLocaleDateString(),
-    },
-    {
-      id: "actions",
+      id: "actions", header: "", size: 40,
       cell: ({ row }) => (
         <DropdownMenu>
-          <DropdownMenuTrigger
-            asChild
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Button variant="ghost" size="icon" className="h-8 w-8">
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => e.stopPropagation()}>
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              onClick={() => router.push(`/products/${row.original.id}`)}
-            >
-              View Details
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => router.push(`/products/${row.original.id}/edit`)}
-            >
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="text-destructive"
-              onClick={() => deleteProduct.mutate(row.original.id)}
-            >
-              Delete
-            </DropdownMenuItem>
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setOpenId(row.original.id) }}>Quick view</DropdownMenuItem>
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/products/${row.original.id}`) }}>Open</DropdownMenuItem>
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); deleteProduct.mutate(row.original.id) }} className="text-destructive">Delete</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       ),
     },
-  ];
+  ], [router, deleteProduct])
 
-  const filterOptions = [
-    {
-      key: "productCode",
-      label: "Product Code",
-      type: "text" as const,
-      placeholder: "Search by code...",
-    },
-    {
-      key: "productName",
-      label: "Product Name",
-      type: "text" as const,
-      placeholder: "Search by name...",
-    },
-    {
-      key: "brandId",
-      label: "Brand",
-      type: "select" as const,
-      placeholder: "Select brand",
-      options: [],
-    },
-    {
-      key: "categoryId",
-      label: "Category",
-      type: "select" as const,
-      placeholder: "Select category",
-      options: [],
-    },
-    {
-      key: "skuType",
-      label: "SKU Type",
-      type: "select" as const,
-      placeholder: "Select type",
-      options: [
-        { label: "Finished Good", value: "FINISHED_GOOD" },
-        { label: "Raw Material", value: "RAW_MATERIAL" },
-        { label: "Service", value: "SERVICE" },
-      ],
-    },
-    {
-      key: "status",
-      label: "Status",
-      type: "select" as const,
-      placeholder: "Select status",
-      options: [
-        { label: "Active", value: "ACTIVE" },
-        { label: "Draft", value: "DRAFT" },
-        { label: "Inactive", value: "INACTIVE" },
-      ],
-    },
-  ];
+  const brandOptions = (brandsQ.data ?? []).map((b) => ({ value: b.id, label: b.name }))
+  const categoryOptions = (categoriesQ.data ?? []).map((c) => ({ value: c.id, label: c.name }))
 
-  if (isError) {
-    return <ErrorState onRetry={() => refetch()} />;
-  }
-
-  const total = data?.total ?? 0;
-  const activeCount =
-    data?.data?.filter((p) => p.status === "ACTIVE").length ?? 0;
-  const draftCount =
-    data?.data?.filter((p) => p.status === "DRAFT").length ?? 0;
-  const inactiveCount =
-    data?.data?.filter((p) => p.status === "INACTIVE").length ?? 0;
+  const chips: Chip[] = []
+  if (filters.code) chips.push({ key: "code", label: "Code", value: filters.code })
+  if (filters.name) chips.push({ key: "name", label: "Name", value: filters.name })
+  if (filters.brandId) chips.push({ key: "brandId", label: "Brand", value: brandOptions.find((b) => b.value === filters.brandId)?.label ?? filters.brandId })
+  if (filters.categoryId) chips.push({ key: "categoryId", label: "Category", value: categoryOptions.find((c) => c.value === filters.categoryId)?.label ?? filters.categoryId })
+  if (filters.status) chips.push({ key: "status", label: "Status", value: filters.status })
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto flex max-w-7xl flex-col gap-6">
       <PageHeader
         title="Product Master"
-        description="Manage products across the organization"
+        description="Manage products across the organization."
         actions={
           <>
-            <Button variant="outline">
-              <Upload className="mr-1 h-4 w-4" />
-              Bulk Upload
+            <Button variant="outline" size="sm" onClick={() => toast.info("Bulk upload coming soon")}>
+              <Upload className="mr-1.5 h-3.5 w-3.5" />Bulk Upload
             </Button>
-            <Button variant="outline">
-              <Download className="mr-1 h-4 w-4" />
-              Export
+            <Button variant="outline" size="sm" onClick={() => toast.info("Export coming soon")}>
+              <Download className="mr-1.5 h-3.5 w-3.5" />Export
             </Button>
-            <Button onClick={() => router.push("/products/create")}>
-              <Plus className="mr-1 h-4 w-4" />
-              Create Product
+            <Button size="sm" onClick={() => router.push("/products/create")}>
+              <Plus className="mr-1.5 h-3.5 w-3.5" />Create Product
             </Button>
           </>
         }
       />
 
-      <KpiCards
-        loading={isLoading}
-        cards={[
-          { label: "Total Products", value: total },
-          {
-            label: "Active Products",
-            value: activeCount,
-            trend: { value: "12%", positive: true },
-          },
-          { label: "Draft Products", value: draftCount },
-          { label: "Inactive Products", value: inactiveCount },
-        ]}
-      />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard label="Total Products" value={kpis.total} icon={Package} loading={productsQ.isLoading} />
+        <KpiCard label="Active" value={kpis.active} icon={CheckCircle2} loading={productsQ.isLoading} />
+        <KpiCard label="Draft" value={kpis.draft} icon={FileEdit} loading={productsQ.isLoading} />
+        <KpiCard label="Pending Approval" value={kpis.pending} icon={Clock} loading={productsQ.isLoading} />
+      </div>
 
-      <FilterBar options={filterOptions} />
+      <div className="rounded-lg border border-border bg-card p-3">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
+          <Input placeholder="Product code" value={filters.code ?? ""} onChange={(e) => setFilters((f) => ({ ...f, code: e.target.value || undefined }))} />
+          <Input placeholder="Product name" value={filters.name ?? ""} onChange={(e) => setFilters((f) => ({ ...f, name: e.target.value || undefined }))} />
+          <SearchableCombobox value={filters.brandId} onChange={(v) => setFilters((f) => ({ ...f, brandId: v || undefined }))} options={brandOptions} placeholder="Brand" loading={brandsQ.isLoading} />
+          <SearchableCombobox value={filters.categoryId} onChange={(v) => setFilters((f) => ({ ...f, categoryId: v || undefined }))} options={categoryOptions} placeholder="Category" loading={categoriesQ.isLoading} />
+          <Select value={filters.status ?? ""} onValueChange={(v) => setFilters((f) => ({ ...f, status: (v || undefined) as ProductStatus | undefined }))}>
+            <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {chips.length > 0 ? (
+          <div className="mt-3">
+            <FilterChips chips={chips} onRemove={(key) => setFilters((f) => ({ ...f, [key]: undefined }))} onClear={() => setFilters({ page: 1, pageSize: 25 })} />
+          </div>
+        ) : null}
+      </div>
 
-      <DataTable
-        columns={columns}
-        data={data?.data ?? []}
-        loading={isLoading}
-        searchKey="productName"
-        searchPlaceholder="Search products..."
-        onRowClick={(row) => router.push(`/products/${row.id}`)}
-        onDeleteRows={(rows) => rows.forEach((r) => deleteProduct.mutate(r.id))}
-        emptyTitle="No products found"
-        emptyDescription="Create your first product to get started."
-        emptyAction={{
-          label: "Create Product",
-          onClick: () => router.push("/products/create"),
-        }}
-      />
+      {productsQ.isError ? (
+        <ErrorState message="Failed to load products." onRetry={() => productsQ.refetch()} />
+      ) : (
+        <DataTable<Product>
+          data={rows}
+          columns={columns}
+          loading={productsQ.isLoading}
+          enableSelection
+          onRowClick={(r) => setOpenId(r.id)}
+          rowKey={(r) => r.id}
+          emptyTitle="No products yet"
+          emptyDescription="Create your first product or run a bulk upload to get started."
+        />
+      )}
+
+      <ProductSheet id={openId} onClose={() => setOpenId(null)} />
     </div>
-  );
+  )
 }

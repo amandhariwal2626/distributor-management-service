@@ -1,137 +1,51 @@
 "use client"
 
 import { useFormContext } from "react-hook-form"
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormDescription,
-  FormMessage,
-} from "@/components/ui/form"
+import type { ProductFormValues } from "../../schemas"
+import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 
-export function Step1ProductInfo() {
-  const form = useFormContext()
-
+export function Step1Info() {
+  const { register, formState: { errors } } = useFormContext<ProductFormValues>()
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium">Product Information</h3>
-        <p className="text-sm text-muted-foreground">Basic product details and identifiers</p>
+    <Card className="p-6">
+      <h2 className="text-base font-semibold">Product Information</h2>
+      <p className="text-sm text-muted-foreground">Basic identifying details for the product.</p>
+      <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+        <Field label="Product Code" error={errors.code?.message}>
+          <Input placeholder="e.g. SKU-001" {...register("code")} />
+        </Field>
+        <Field label="SAP Product Code" error={errors.sapCode?.message}>
+          <Input placeholder="Optional" {...register("sapCode")} />
+        </Field>
+        <Field label="Product Name" error={errors.name?.message} className="md:col-span-2">
+          <Input placeholder="Full product name" {...register("name")} />
+        </Field>
+        <Field label="Short Name" error={errors.shortName?.message}>
+          <Input placeholder="Display name" {...register("shortName")} />
+        </Field>
+        <Field label="Barcode" error={errors.barcode?.message}>
+          <Input {...register("barcode")} />
+        </Field>
+        <Field label="EAN Code" error={errors.eanCode?.message}>
+          <Input {...register("eanCode")} />
+        </Field>
+        <Field label="Description" error={errors.description?.message} className="md:col-span-2">
+          <Textarea rows={3} placeholder="Product description" {...register("description")} />
+        </Field>
       </div>
-      <div className="grid gap-6 md:grid-cols-2">
-        <FormField
-          control={form.control}
-          name="productCode"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Product Code *</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. PRD-001" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="sapProductCode"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>SAP Product Code</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. SAP-12345" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="productName"
-          render={({ field }) => (
-            <FormItem className="md:col-span-2">
-              <FormLabel>Product Name *</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter product name" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="shortName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Short Name</FormLabel>
-              <FormControl>
-                <Input placeholder="Short display name" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="barcode"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Barcode</FormLabel>
-              <FormControl>
-                <Input placeholder="Barcode number" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="hsnCode"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>HSN Code</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. 22021000" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="shelfLifeDays"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Shelf Life (Days)</FormLabel>
-              <FormControl>
-                <Input type="number" min="0" placeholder="e.g. 365" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem className="md:col-span-2">
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Product description"
-                  className="min-h-24 resize-y"
-                  {...field}
-                />
-              </FormControl>
-              <FormDescription>Detailed description of the product</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
+    </Card>
+  )
+}
+
+export function Field({ label, error, children, className }: { label: string; error?: string; children: React.ReactNode; className?: string }) {
+  return (
+    <div className={className}>
+      <Label className="mb-1.5 inline-block text-xs font-medium text-foreground">{label}</Label>
+      {children}
+      {error ? <p className="mt-1 text-xs text-destructive">{error}</p> : null}
     </div>
   )
 }

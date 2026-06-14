@@ -1,81 +1,86 @@
 import { z } from "zod"
 
 export const productInfoSchema = z.object({
-  productCode: z.string().min(1, "Product code is required"),
-  sapProductCode: z.string().optional(),
-  productName: z.string().min(1, "Product name is required"),
-  shortName: z.string().optional(),
-  barcode: z.string().optional(),
-  hsnCode: z.string().optional(),
-  description: z.string().optional(),
-  shelfLifeDays: z.coerce.number().int().positive("Shelf life must be positive").optional(),
+  code: z.string().min(1, "Product code is required").max(50),
+  sapCode: z.string().max(50).optional().or(z.literal("")),
+  name: z.string().min(2, "Product name is required").max(200),
+  shortName: z.string().max(80).optional().or(z.literal("")),
+  barcode: z.string().max(50).optional().or(z.literal("")),
+  eanCode: z.string().max(50).optional().or(z.literal("")),
+  description: z.string().max(2000).optional().or(z.literal("")),
 })
 
-export const hierarchySchema = z.object({
-  categoryId: z.string().optional(),
-  subCategoryId: z.string().optional(),
-  brandId: z.string().optional(),
-  manufacturerId: z.string().optional(),
-  skuType: z.string().optional(),
+export const productHierarchySchema = z.object({
+  businessUnit: z.string().optional().or(z.literal("")),
+  division: z.string().optional().or(z.literal("")),
+  categoryId: z.string().optional().or(z.literal("")),
+  subCategoryId: z.string().optional().or(z.literal("")),
+  brandId: z.string().optional().or(z.literal("")),
+  subBrand: z.string().optional().or(z.literal("")),
+  variant: z.string().optional().or(z.literal("")),
 })
 
-export const packagingSchema = z.object({
-  uomId: z.string().optional(),
-  reorderLevel: z.coerce.number().int().positive("Reorder level must be positive").optional(),
+export const productPackagingSchema = z.object({
+  baseUom: z.string().optional().or(z.literal("")),
+  packSize: z.coerce.number().positive("Must be > 0").optional(),
+  caseQuantity: z.coerce.number().int().positive("Must be > 0").optional(),
+  weight: z.coerce.number().nonnegative().optional(),
+  volume: z.coerce.number().nonnegative().optional(),
+  dimensions: z.object({
+    l: z.coerce.number().nonnegative().optional(),
+    w: z.coerce.number().nonnegative().optional(),
+    h: z.coerce.number().nonnegative().optional(),
+  }).optional(),
   uomConversions: z.array(z.object({
-    fromUom: z.string().min(1, "From UOM is required"),
-    toUom: z.string().min(1, "To UOM is required"),
-    conversionFactor: z.coerce.number().positive("Factor must be positive"),
-  })).optional(),
+    fromUom: z.string().min(1),
+    toUom: z.string().min(1),
+    factor: z.coerce.number().positive(),
+  })).default([]),
 })
 
-export const taxSchema = z.object({
-  taxGroupId: z.string().optional(),
+export const productTaxSchema = z.object({
+  hsn: z.string().optional().or(z.literal("")),
+  gst: z.coerce.number().min(0).max(100).optional(),
+  cgst: z.coerce.number().min(0).max(100).optional(),
+  sgst: z.coerce.number().min(0).max(100).optional(),
+  igst: z.coerce.number().min(0).max(100).optional(),
+  cess: z.coerce.number().min(0).max(100).optional(),
+  tds: z.coerce.number().min(0).max(100).optional(),
+  tcs: z.coerce.number().min(0).max(100).optional(),
 })
 
-export const geographySchema = z.object({
-  states: z.array(z.object({
-    id: z.string(),
-    name: z.string(),
+export const productGeographySchema = z.object({
+  geographies: z.array(z.object({
+    geographyId: z.string(),
+    status: z.enum(["available", "restricted", "launch_pending", "blocked"]),
     launchDate: z.string().optional(),
-  })),
+  })).default([]),
 })
 
-export const attributeSchema = z.object({
+export const productAttributesSchema = z.object({
   attributes: z.array(z.object({
-    attributeDefId: z.string().min(1, "Attribute is required"),
-    attribute: z.string().optional(),
-    type: z.string().optional(),
-    value: z.string().min(1, "Value is required"),
-  })),
+    attributeId: z.string().min(1),
+    value: z.string().min(1),
+  })).default([]),
 })
 
-export const documentSchema = z.object({
+export const productDocumentsSchema = z.object({
   documents: z.array(z.object({
     id: z.string(),
-    file: z.instanceof(File),
-    documentType: z.string().min(1, "Document type is required"),
-  })),
+    name: z.string(),
+    type: z.string(),
+    version: z.string().optional(),
+    url: z.string().optional(),
+    uploadedAt: z.string(),
+  })).default([]),
 })
 
-export const createProductSchema = productInfoSchema
-  .merge(hierarchySchema)
-  .merge(packagingSchema)
-  .merge(taxSchema)
+export const productFullSchema = productInfoSchema
+  .merge(productHierarchySchema)
+  .merge(productPackagingSchema)
+  .merge(productTaxSchema)
+  .merge(productGeographySchema)
+  .merge(productAttributesSchema)
+  .merge(productDocumentsSchema)
 
-export type ProductInfoValues = z.infer<typeof productInfoSchema>
-export type HierarchyValues = z.infer<typeof hierarchySchema>
-export type PackagingValues = z.infer<typeof packagingSchema>
-export type TaxValues = z.infer<typeof taxSchema>
-
-export const priceFormSchema = z.object({
-  productId: z.string().min(1, "Product is required"),
-  mrp: z.coerce.number().positive("MRP must be positive"),
-  ptr: z.coerce.number().positive("PTR must be positive"),
-  pts: z.coerce.number().positive("PTS must be positive"),
-  distributorPrice: z.coerce.number().positive().optional(),
-  effectiveFrom: z.string().min(1, "Effective from date is required"),
-  effectiveTo: z.string().optional(),
-})
-
-export type PriceFormValues = z.infer<typeof priceFormSchema>
+export type ProductFormValues = z.infer<typeof productFullSchema>

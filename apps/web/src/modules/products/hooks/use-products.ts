@@ -1,92 +1,58 @@
 "use client"
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { productsApi } from "../api/products"
-import type { CreateProductPayload, ListProductsParams } from "../types"
+import type { ID, Product, ProductFilters } from "../types"
 
-export function useProducts(params?: ListProductsParams) {
-  return useQuery({
-    queryKey: ["products", params],
-    queryFn: () => productsApi.list(params),
-  })
+export const qk = {
+  products: (f?: ProductFilters) => ["products", f ?? {}] as const,
+  product: (id: ID) => ["products", id] as const,
+  productDocs: (id: ID) => ["products", id, "documents"] as const,
 }
 
-export function useProduct(id: string) {
-  return useQuery({
-    queryKey: ["products", id],
-    queryFn: () => productsApi.getById(id),
-    enabled: !!id,
-  })
-}
+export const useProducts = (filters: ProductFilters = {}) =>
+  useQuery({ queryKey: qk.products(filters), queryFn: () => productsApi.list(filters) })
 
-export function useCreateProduct() {
-  const queryClient = useQueryClient()
+export const useProduct = (id: ID | undefined) =>
+  useQuery({ enabled: !!id, queryKey: qk.product(id!), queryFn: () => productsApi.get(id!) })
+
+export const useProductDocuments = (id: ID | undefined) =>
+  useQuery({ enabled: !!id, queryKey: qk.productDocs(id!), queryFn: () => productsApi.documents(id!) })
+
+export const useCreateProduct = () => {
+  const qc = useQueryClient()
   return useMutation({
-    mutationFn: (payload: CreateProductPayload) => productsApi.create(payload),
+    mutationFn: (payload: Partial<Product>) => productsApi.create(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] })
-      toast.success("Product created successfully")
+      qc.invalidateQueries({ queryKey: ["products"] })
+      toast.success("Product created")
     },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to create product")
-    },
+    onError: (e: Error) => toast.error(e.message),
   })
 }
 
-export function useUpdateProduct(id: string) {
-  const queryClient = useQueryClient()
+export const useUpdateProduct = () => {
+  const qc = useQueryClient()
   return useMutation({
-    mutationFn: (payload: Partial<CreateProductPayload>) => productsApi.update(id, payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] })
-      queryClient.invalidateQueries({ queryKey: ["products", id] })
-      toast.success("Product updated successfully")
+    mutationFn: ({ id, payload }: { id: ID; payload: Partial<Product> }) => productsApi.update(id, payload),
+    onSuccess: (_d, v) => {
+      qc.invalidateQueries({ queryKey: ["products"] })
+      qc.invalidateQueries({ queryKey: qk.product(v.id) })
+      toast.success("Product updated")
     },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to update product")
-    },
+    onError: (e: Error) => toast.error(e.message),
   })
 }
 
-export function useDeleteProduct() {
-  const queryClient = useQueryClient()
+export const useDeleteProduct = () => {
+  const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => productsApi.delete(id),
+    mutationFn: (id: ID) => productsApi.remove(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] })
-      toast.success("Product deleted successfully")
+      qc.invalidateQueries({ queryKey: ["products"] })
+      toast.success("Product deleted")
     },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to delete product")
-    },
-  })
-}
-
-export function useActivateProduct() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (id: string) => productsApi.activate(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] })
-      toast.success("Product activated successfully")
-    },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to activate product")
-    },
-  })
-}
-
-export function useDeactivateProduct() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (id: string) => productsApi.deactivate(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] })
-      toast.success("Product deactivated successfully")
-    },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to deactivate product")
-    },
+    onError: (e: Error) => toast.error(e.message),
   })
 }
