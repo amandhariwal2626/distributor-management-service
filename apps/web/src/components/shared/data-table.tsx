@@ -4,6 +4,7 @@ import { useMemo, useState, type ReactNode } from "react"
 import {
   type ColumnDef,
   type ColumnFiltersState,
+  type OnChangeFn,
   type SortingState,
   type VisibilityState,
   flexRender,
@@ -83,11 +84,11 @@ interface InnerProps<TData> {
   columnVisibility: VisibilityState
   rowSelection: RowSelectionState
   globalFilter: string
-  onSortingChange: (v: SortingState) => void
-  onColumnFiltersChange: (v: ColumnFiltersState) => void
-  onColumnVisibilityChange: (v: VisibilityState) => void
-  onRowSelectionChange: (v: RowSelectionState) => void
-  onGlobalFilterChange: (v: string) => void
+  onSortingChange: OnChangeFn<SortingState>
+  onColumnFiltersChange: OnChangeFn<ColumnFiltersState>
+  onColumnVisibilityChange: OnChangeFn<VisibilityState>
+  onRowSelectionChange: OnChangeFn<RowSelectionState>
+  onGlobalFilterChange: OnChangeFn<string>
   onRowClick?: (row: TData) => void
   onDeleteRows?: (rows: TData[]) => void
   bulkActions?: (selected: TData[]) => ReactNode
