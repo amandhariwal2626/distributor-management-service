@@ -6,13 +6,14 @@ import { ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RoleDetailSkeleton } from "@/modules/rbac/components/rbac/role-detail-skeleton";
 import { useRbacStore } from "@/store/rbac-store";
 import type { Role } from "@/types";
 
 export default function RoleDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const { roles, loadRoles } = useRbacStore();
+  const { roles, loading, loadRoles } = useRbacStore();
 
   useEffect(() => {
     if (roles.length === 0) loadRoles();
@@ -23,7 +24,7 @@ export default function RoleDetailPage() {
     [roles, params.id],
   );
 
-  if (!role) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
+  if (loading || !role) return <RoleDetailSkeleton />;
 
   return (
     <div className="space-y-6">

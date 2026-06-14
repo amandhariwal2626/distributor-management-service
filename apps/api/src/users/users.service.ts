@@ -474,137 +474,142 @@ export class UsersService {
       }
     }
 
-    const result = await this.prisma.$transaction(async (tx) => {
-      if (data.roleIds) {
-        const previous = await tx.userRole.findMany({
-          where: { userId: id },
-          include: { role: true },
-        });
-        oldValue.roleIds = previous.map(
-          (r: { role: { name: string } }) => r.role.name,
-        );
+    const result = await this.prisma.$transaction(
+      async (tx) => {
+        if (data.roleIds) {
+          const previous = await tx.userRole.findMany({
+            where: { userId: id },
+            include: { role: true },
+          });
+          oldValue.roleIds = previous.map(
+            (r: { role: { name: string } }) => r.role.name,
+          );
 
-        await tx.userRole.deleteMany({ where: { userId: id } });
-        await tx.userRole.createMany({
-          data: data.roleIds.map((roleId) => ({
-            roleId,
-            userId: id,
-            createdBy: actorUserId,
-          })),
-          skipDuplicates: true,
-        });
-      }
+          await tx.userRole.deleteMany({ where: { userId: id } });
+          await tx.userRole.createMany({
+            data: data.roleIds.map((roleId) => ({
+              roleId,
+              userId: id,
+              createdBy: actorUserId,
+            })),
+            skipDuplicates: true,
+          });
+        }
 
-      return tx.user.update({
-        where: { id },
-        data: {
-          email: data.email?.toLowerCase(),
-          username: data.username,
-          forcePasswordChange: data.forcePasswordChange,
-          passwordExpiryDays: data.passwordExpiryDays,
-          twoFactorAuth: data.twoFactorAuth,
-          reportingManagerId: data.reportingManagerId,
-          zone: data.zone,
-          region: data.region,
-          area: data.area,
-          territory: data.territory,
-          distributorId: data.distributorId,
-          updatedBy: actorUserId,
-          profile: {
-            upsert: {
-              create: {
-                userCode: data.userCode ?? null,
-                employeeCode: data.employeeCode ?? null,
-                firstName:
-                  data.firstName?.trim() ?? existing.profile?.firstName ?? '',
-                middleName:
-                  data.middleName?.trim() ??
-                  existing.profile?.middleName ??
-                  null,
-                lastName:
-                  data.lastName?.trim() ?? existing.profile?.lastName ?? '',
-                displayName: data.displayName ?? null,
-                fullName: fullName ?? '',
-                gender: data.gender ?? null,
-                dob: data.dob ? new Date(data.dob) : null,
-                mobile: data.mobile ?? null,
-                alternateMobile: data.alternateMobile ?? null,
-                emergencyContact: data.emergencyContact ?? null,
-                addressLine1: data.addressLine1 ?? null,
-                addressLine2: data.addressLine2 ?? null,
-                addressLine3: data.addressLine3 ?? null,
-                country: data.country ?? null,
-                state: data.state ?? null,
-                district: data.district ?? null,
-                city: data.city ?? null,
-                pincode: data.pincode ?? null,
-              },
-              update: {
-                ...(data.userCode !== undefined
-                  ? { userCode: data.userCode }
-                  : {}),
-                ...(data.employeeCode !== undefined
-                  ? { employeeCode: data.employeeCode }
-                  : {}),
-                ...(data.firstName !== undefined
-                  ? { firstName: data.firstName.trim() }
-                  : {}),
-                ...(data.middleName !== undefined
-                  ? { middleName: data.middleName?.trim() }
-                  : {}),
-                ...(data.lastName !== undefined
-                  ? { lastName: data.lastName.trim() }
-                  : {}),
-                ...(data.displayName !== undefined
-                  ? { displayName: data.displayName }
-                  : {}),
-                ...(fullName ? { fullName } : {}),
-                ...(data.gender !== undefined ? { gender: data.gender } : {}),
-                ...(data.dob !== undefined ? { dob: new Date(data.dob) } : {}),
-                ...(data.mobile !== undefined ? { mobile: data.mobile } : {}),
-                ...(data.alternateMobile !== undefined
-                  ? { alternateMobile: data.alternateMobile }
-                  : {}),
-                ...(data.emergencyContact !== undefined
-                  ? { emergencyContact: data.emergencyContact }
-                  : {}),
-                ...(data.addressLine1 !== undefined
-                  ? { addressLine1: data.addressLine1 }
-                  : {}),
-                ...(data.addressLine2 !== undefined
-                  ? { addressLine2: data.addressLine2 }
-                  : {}),
-                ...(data.addressLine3 !== undefined
-                  ? { addressLine3: data.addressLine3 }
-                  : {}),
-                ...(data.country !== undefined
-                  ? { country: data.country }
-                  : {}),
-                ...(data.state !== undefined ? { state: data.state } : {}),
-                ...(data.district !== undefined
-                  ? { district: data.district }
-                  : {}),
-                ...(data.city !== undefined ? { city: data.city } : {}),
-                ...(data.pincode !== undefined
-                  ? { pincode: data.pincode }
-                  : {}),
+        return tx.user.update({
+          where: { id },
+          data: {
+            email: data.email?.toLowerCase(),
+            username: data.username,
+            forcePasswordChange: data.forcePasswordChange,
+            passwordExpiryDays: data.passwordExpiryDays,
+            twoFactorAuth: data.twoFactorAuth,
+            reportingManagerId: data.reportingManagerId,
+            zone: data.zone,
+            region: data.region,
+            area: data.area,
+            territory: data.territory,
+            distributorId: data.distributorId,
+            updatedBy: actorUserId,
+            profile: {
+              upsert: {
+                create: {
+                  userCode: data.userCode ?? null,
+                  employeeCode: data.employeeCode ?? null,
+                  firstName:
+                    data.firstName?.trim() ?? existing.profile?.firstName ?? '',
+                  middleName:
+                    data.middleName?.trim() ??
+                    existing.profile?.middleName ??
+                    null,
+                  lastName:
+                    data.lastName?.trim() ?? existing.profile?.lastName ?? '',
+                  displayName: data.displayName ?? null,
+                  fullName: fullName ?? '',
+                  gender: data.gender ?? null,
+                  dob: data.dob ? new Date(data.dob) : null,
+                  mobile: data.mobile ?? null,
+                  alternateMobile: data.alternateMobile ?? null,
+                  emergencyContact: data.emergencyContact ?? null,
+                  addressLine1: data.addressLine1 ?? null,
+                  addressLine2: data.addressLine2 ?? null,
+                  addressLine3: data.addressLine3 ?? null,
+                  country: data.country ?? null,
+                  state: data.state ?? null,
+                  district: data.district ?? null,
+                  city: data.city ?? null,
+                  pincode: data.pincode ?? null,
+                },
+                update: {
+                  ...(data.userCode !== undefined
+                    ? { userCode: data.userCode }
+                    : {}),
+                  ...(data.employeeCode !== undefined
+                    ? { employeeCode: data.employeeCode }
+                    : {}),
+                  ...(data.firstName !== undefined
+                    ? { firstName: data.firstName.trim() }
+                    : {}),
+                  ...(data.middleName !== undefined
+                    ? { middleName: data.middleName?.trim() }
+                    : {}),
+                  ...(data.lastName !== undefined
+                    ? { lastName: data.lastName.trim() }
+                    : {}),
+                  ...(data.displayName !== undefined
+                    ? { displayName: data.displayName }
+                    : {}),
+                  ...(fullName ? { fullName } : {}),
+                  ...(data.gender !== undefined ? { gender: data.gender } : {}),
+                  ...(data.dob !== undefined
+                    ? { dob: new Date(data.dob) }
+                    : {}),
+                  ...(data.mobile !== undefined ? { mobile: data.mobile } : {}),
+                  ...(data.alternateMobile !== undefined
+                    ? { alternateMobile: data.alternateMobile }
+                    : {}),
+                  ...(data.emergencyContact !== undefined
+                    ? { emergencyContact: data.emergencyContact }
+                    : {}),
+                  ...(data.addressLine1 !== undefined
+                    ? { addressLine1: data.addressLine1 }
+                    : {}),
+                  ...(data.addressLine2 !== undefined
+                    ? { addressLine2: data.addressLine2 }
+                    : {}),
+                  ...(data.addressLine3 !== undefined
+                    ? { addressLine3: data.addressLine3 }
+                    : {}),
+                  ...(data.country !== undefined
+                    ? { country: data.country }
+                    : {}),
+                  ...(data.state !== undefined ? { state: data.state } : {}),
+                  ...(data.district !== undefined
+                    ? { district: data.district }
+                    : {}),
+                  ...(data.city !== undefined ? { city: data.city } : {}),
+                  ...(data.pincode !== undefined
+                    ? { pincode: data.pincode }
+                    : {}),
+                },
               },
             },
           },
-        },
-        include: {
-          roles: { include: { role: true } },
-          profile: true,
-          reportingManager: {
-            select: {
-              id: true,
-              profile: { select: { fullName: true } },
-              email: true,
+          include: {
+            roles: { include: { role: true } },
+            profile: true,
+            reportingManager: {
+              select: {
+                id: true,
+                profile: { select: { fullName: true } },
+                email: true,
+              },
             },
           },
-        },
-      });
-    });
+        });
+      },
+      { timeout: 30000 },
+    );
 
     const newValue: Record<string, unknown> = {};
     const resultRecord = result as Record<string, unknown>;

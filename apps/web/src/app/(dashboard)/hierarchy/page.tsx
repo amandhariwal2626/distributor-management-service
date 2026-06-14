@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { RoleGuard } from "@/modules/rbac/components/guards/role-guard";
 import { HierarchyTree } from "@/components/hierarchy/hierarchy-tree";
+import { HierarchySkeleton } from "@/components/hierarchy/hierarchy-skeleton";
 import { useRbacStore } from "@/store/rbac-store";
 import type { TreeNode as TreeNodeType } from "@/types";
 
@@ -17,13 +18,11 @@ export default function HierarchyPage() {
       .finally(() => setLoading(false));
   }, [getHierarchyTree]);
 
-  if (loading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
-
   return (
     <RoleGuard permission="hierarchy.view">
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">Hierarchy</h2>
-        <HierarchyTree nodes={nodes} />
+        {loading ? <HierarchySkeleton /> : <HierarchyTree nodes={nodes} />}
       </div>
     </RoleGuard>
   );

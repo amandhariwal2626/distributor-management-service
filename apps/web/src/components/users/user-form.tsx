@@ -23,13 +23,11 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RoleBadge } from "@/components/shared/role-badge";
 import { DatePicker } from "@/components/ui/date-picker";
+import { UserFormSkeleton } from "@/components/users/user-form-skeleton";
+import { formatDate } from "@/utils/common";
 import { toast } from "sonner";
 import { useRbacStore } from "@/store/rbac-store";
-import type {
-  CreateOptionsResponse,
-  CreateUserPayload,
-  User,
-} from "@/types";
+import type { CreateOptionsResponse, CreateUserPayload, User } from "@/types";
 
 const schema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -87,13 +85,6 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-function formatDate(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
-
 interface UserFormProps {
   initial?: User;
   mode: "create" | "edit";
@@ -103,7 +94,13 @@ interface UserFormProps {
 
 function toDefaultValues(user?: User): FormValues {
   if (!user) {
-    return { firstName: "", lastName: "", email: "", password: "", roleIds: [] };
+    return {
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      roleIds: [],
+    };
   }
   return {
     userCode: user.profile.userCode ?? "",
@@ -142,7 +139,10 @@ function toDefaultValues(user?: User): FormValues {
 
 export function UserForm({ initial, mode, onSubmit, onCancel }: UserFormProps) {
   const getCreateOptions = useRbacStore((s) => s.getCreateOptions);
-  const [options, setOptions] = useState<CreateOptionsResponse>({ roles: [], managers: [] });
+  const [options, setOptions] = useState<CreateOptionsResponse>({
+    roles: [],
+    managers: [],
+  });
   const [submitting, setSubmitting] = useState(false);
 
   const form = useForm({
@@ -151,8 +151,14 @@ export function UserForm({ initial, mode, onSubmit, onCancel }: UserFormProps) {
   });
 
   useEffect(() => {
-    getCreateOptions().then(setOptions).catch(() => undefined);
+    getCreateOptions()
+      .then(setOptions)
+      .catch(() => undefined);
   }, [getCreateOptions]);
+
+  if (options.roles.length === 0) {
+    return <UserFormSkeleton />;
+  }
 
   async function handleFormSubmit(values: z.infer<typeof schema>) {
     if (mode === "create" && !values.password) {
@@ -169,9 +175,18 @@ export function UserForm({ initial, mode, onSubmit, onCancel }: UserFormProps) {
         roleIds: values.roleIds,
       };
 
-      const entries = Object.entries(values) as [keyof CreateUserPayload, unknown][];
+      const entries = Object.entries(values) as [
+        keyof CreateUserPayload,
+        unknown,
+      ][];
       for (const [key, v] of entries) {
-        if (key === "firstName" || key === "lastName" || key === "email" || key === "roleIds") continue;
+        if (
+          key === "firstName" ||
+          key === "lastName" ||
+          key === "email" ||
+          key === "roleIds"
+        )
+          continue;
         if (v !== "" && v !== undefined && v !== null) {
           (payload as unknown as Record<string, unknown>)[key] = v;
         }
@@ -187,7 +202,10 @@ export function UserForm({ initial, mode, onSubmit, onCancel }: UserFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
+      <form
+        onSubmit={form.handleSubmit(handleFormSubmit)}
+        className="space-y-6"
+      >
         <Card>
           <CardHeader>
             <CardTitle>Basic Information</CardTitle>
@@ -198,7 +216,9 @@ export function UserForm({ initial, mode, onSubmit, onCancel }: UserFormProps) {
               name="firstName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>First Name <span className="text-destructive">*</span></FormLabel>
+                  <FormLabel>
+                    First Name <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -224,7 +244,9 @@ export function UserForm({ initial, mode, onSubmit, onCancel }: UserFormProps) {
               name="lastName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Last Name <span className="text-destructive">*</span></FormLabel>
+                  <FormLabel>
+                    Last Name <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -305,7 +327,9 @@ export function UserForm({ initial, mode, onSubmit, onCancel }: UserFormProps) {
                   <FormControl>
                     <DatePicker
                       value={field.value ? new Date(field.value) : undefined}
-                      onChange={(date) => field.onChange(date ? formatDate(date) : undefined)}
+                      onChange={(date) =>
+                        field.onChange(date ? formatDate(date) : undefined)
+                      }
                     />
                   </FormControl>
                   <FormMessage />
@@ -325,7 +349,9 @@ export function UserForm({ initial, mode, onSubmit, onCancel }: UserFormProps) {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email <span className="text-destructive">*</span></FormLabel>
+                  <FormLabel>
+                    Email <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input {...field} type="email" disabled={mode === "edit"} />
                   </FormControl>
@@ -510,7 +536,9 @@ export function UserForm({ initial, mode, onSubmit, onCancel }: UserFormProps) {
               name="roleIds"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Roles <span className="text-destructive">*</span></FormLabel>
+                  <FormLabel>
+                    Roles <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
                     <div className="flex flex-wrap gap-2">
                       {options.roles.map((role) => {
@@ -656,9 +684,15 @@ export function UserForm({ initial, mode, onSubmit, onCancel }: UserFormProps) {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password <span className="text-destructive">*</span></FormLabel>
+                    <FormLabel>
+                      Password <span className="text-destructive">*</span>
+                    </FormLabel>
                     <FormControl>
-                      <Input {...field} type="password" placeholder="Min 8 characters" />
+                      <Input
+                        {...field}
+                        type="password"
+                        placeholder="Min 8 characters"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -676,7 +710,9 @@ export function UserForm({ initial, mode, onSubmit, onCancel }: UserFormProps) {
                       onCheckedChange={field.onChange}
                     />
                   </FormControl>
-                  <FormLabel className="mb-0">Force password change on next login</FormLabel>
+                  <FormLabel className="mb-0">
+                    Force password change on next login
+                  </FormLabel>
                 </FormItem>
               )}
             />
@@ -691,7 +727,9 @@ export function UserForm({ initial, mode, onSubmit, onCancel }: UserFormProps) {
                       onCheckedChange={field.onChange}
                     />
                   </FormControl>
-                  <FormLabel className="mb-0">Enable two-factor authentication</FormLabel>
+                  <FormLabel className="mb-0">
+                    Enable two-factor authentication
+                  </FormLabel>
                 </FormItem>
               )}
             />
@@ -705,7 +743,11 @@ export function UserForm({ initial, mode, onSubmit, onCancel }: UserFormProps) {
             </Button>
           )}
           <Button type="submit" disabled={submitting}>
-            {submitting ? "Saving..." : mode === "create" ? "Create User" : "Save Changes"}
+            {submitting
+              ? "Saving..."
+              : mode === "create"
+                ? "Create User"
+                : "Save Changes"}
           </Button>
         </div>
       </form>

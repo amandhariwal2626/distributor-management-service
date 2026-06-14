@@ -91,6 +91,7 @@ Login: username, passwordHash, forcePasswordChange, passwordExpiryDays, twoFacto
 - **One Component Per File**: Each file should contain exactly one component. Do not define multiple components in a single file.
 - **Strict Types**: Always define proper TypeScript interfaces and types. Never use `any`.
 - **File Organization**: Keep types in `types/<feature>` if feature-specific or in `types/` if shared across features. Keep utility functions in `utils/<feature>` if feature-specific or in `utils/` if shared. Apply the same convention for configs (`config/<feature>` or `config/`).
+- **Loading Skeletons**: Every page/component that makes an API call must display a **shadcn `<Skeleton />`** loading state instead of plain text like `"Loading..."`. Create skeleton components per domain (e.g., `components/users/users-table-skeleton.tsx`) that mirror the layout of the actual component. Use `animate-pulse rounded-md bg-accent` via the `<Skeleton>` component. For list pages, read the `loading` state from the Zustand store and show skeleton when `loading && data.length === 0`. For detail pages, show skeleton while the async fetch is in progress.
 
 ---
 

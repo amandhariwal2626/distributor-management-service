@@ -4,6 +4,7 @@ import { useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { RoleGuard } from "@/modules/rbac/components/guards/role-guard";
 import { UsersTable } from "@/components/users/users-table";
+import { UsersTableSkeleton } from "@/components/users/users-table-skeleton";
 import { useRbacStore } from "@/store/rbac-store";
 import type { UserStatus } from "@/types";
 
@@ -16,6 +17,7 @@ export default function UsersPage() {
     usersLimit,
     usersPages,
     roles,
+    loading,
     loadUsers,
     loadRoles,
   } = useRbacStore();
@@ -43,19 +45,23 @@ export default function UsersPage() {
     <RoleGuard permission="users.read">
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">Users</h2>
-        <UsersTable
-          users={users}
-          total={totalUsers}
-          page={usersPage}
-          limit={usersLimit}
-          pages={usersPages}
-          roles={roles}
-          onPageChange={handlePageChange}
-          onFiltersChange={handleFiltersChange}
-          onView={(user) => router.push(`/users/${user.id}`)}
-          onEdit={(user) => router.push(`/users/${user.id}/edit`)}
-          onCreate={() => router.push("/users/create")}
-        />
+        {loading && users.length === 0 ? (
+          <UsersTableSkeleton />
+        ) : (
+          <UsersTable
+            users={users}
+            total={totalUsers}
+            page={usersPage}
+            limit={usersLimit}
+            pages={usersPages}
+            roles={roles}
+            onPageChange={handlePageChange}
+            onFiltersChange={handleFiltersChange}
+            onView={(user) => router.push(`/users/${user.id}`)}
+            onEdit={(user) => router.push(`/users/${user.id}/edit`)}
+            onCreate={() => router.push("/users/create")}
+          />
+        )}
       </div>
     </RoleGuard>
   );
