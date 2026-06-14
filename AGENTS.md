@@ -8,6 +8,7 @@ This file provides system context, architecture boundaries, conventions, and ins
 
 - **Never modify `.env` files without asking the user first.** Env files contain credentials and configuration that must not be changed without explicit approval.
 - **Every API endpoint must return specific, descriptive error messages.** Never use generic messages like `'Invalid credentials'`, `'Forbidden'`, `'Not found'`, or `'Bad request'` without describing what specifically went wrong. Include contextual details (e.g., which field conflicts, how many attempts remain, why access was denied) so the frontend can display a meaningful message to the user. For security-sensitive endpoints (e.g., forgot-password), return the same generic response for both found and not-found cases to prevent enumeration.
+- **All generated code will be reviewed by Codex** before being merged. Ensure all output follows the conventions in this document, is properly typed, and includes appropriate error handling.
 
 ## 1. Stack Architecture & Folder Structure
 
