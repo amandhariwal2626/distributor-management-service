@@ -1,5 +1,22 @@
-import { Body, Controller, Delete, Get, Headers, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Headers,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { PermissionsGuard } from '../guards/permissions.guard';
@@ -28,9 +45,14 @@ export class GeographyController {
   createCountry(
     @Req() req: Request & { user: { sub: string } },
     @Headers('x-organization-id') organizationId: string,
-    @Body() body: { code: string; name: string; isoCode?: string; currency?: string },
+    @Body()
+    body: { code: string; name: string; isoCode?: string; currency?: string },
   ) {
-    return this.geographyService.createCountry(organizationId, body, req.user.sub);
+    return this.geographyService.createCountry(
+      organizationId,
+      body,
+      req.user.sub,
+    );
   }
 
   @Patch('countries/:id')
@@ -42,7 +64,12 @@ export class GeographyController {
     @Headers('x-organization-id') organizationId: string,
     @Body() body: { name?: string; isoCode?: string; currency?: string },
   ) {
-    return this.geographyService.updateCountry(organizationId, id, body, req.user.sub);
+    return this.geographyService.updateCountry(
+      organizationId,
+      id,
+      body,
+      req.user.sub,
+    );
   }
 
   @Delete('countries/:id')
@@ -53,7 +80,11 @@ export class GeographyController {
     @Req() req: Request & { user: { sub: string } },
     @Headers('x-organization-id') organizationId: string,
   ) {
-    return this.geographyService.deleteCountry(organizationId, id, req.user.sub);
+    return this.geographyService.deleteCountry(
+      organizationId,
+      id,
+      req.user.sub,
+    );
   }
 
   // ── States ─────────────────────────────────────────────────────
@@ -75,9 +106,14 @@ export class GeographyController {
   createState(
     @Req() req: Request & { user: { sub: string } },
     @Headers('x-organization-id') organizationId: string,
-    @Body() body: { countryId: string; code: string; name: string; gstCode?: string },
+    @Body()
+    body: { countryId: string; code: string; name: string; gstCode?: string },
   ) {
-    return this.geographyService.createState(organizationId, body, req.user.sub);
+    return this.geographyService.createState(
+      organizationId,
+      body,
+      req.user.sub,
+    );
   }
 
   @Patch('states/:id')
@@ -89,7 +125,12 @@ export class GeographyController {
     @Headers('x-organization-id') organizationId: string,
     @Body() body: { name?: string; gstCode?: string },
   ) {
-    return this.geographyService.updateState(organizationId, id, body, req.user.sub);
+    return this.geographyService.updateState(
+      organizationId,
+      id,
+      body,
+      req.user.sub,
+    );
   }
 
   @Delete('states/:id')
@@ -136,7 +177,12 @@ export class GeographyController {
     @Headers('x-organization-id') organizationId: string,
     @Body() body: { name?: string },
   ) {
-    return this.geographyService.updateZone(organizationId, id, body, req.user.sub);
+    return this.geographyService.updateZone(
+      organizationId,
+      id,
+      body,
+      req.user.sub,
+    );
   }
 
   @Delete('zones/:id')
@@ -171,7 +217,11 @@ export class GeographyController {
     @Headers('x-organization-id') organizationId: string,
     @Body() body: { zoneId: string; code: string; name: string },
   ) {
-    return this.geographyService.createRegion(organizationId, body, req.user.sub);
+    return this.geographyService.createRegion(
+      organizationId,
+      body,
+      req.user.sub,
+    );
   }
 
   @Patch('regions/:id')
@@ -183,7 +233,12 @@ export class GeographyController {
     @Headers('x-organization-id') organizationId: string,
     @Body() body: { name?: string },
   ) {
-    return this.geographyService.updateRegion(organizationId, id, body, req.user.sub);
+    return this.geographyService.updateRegion(
+      organizationId,
+      id,
+      body,
+      req.user.sub,
+    );
   }
 
   @Delete('regions/:id')
@@ -216,9 +271,21 @@ export class GeographyController {
   createDepot(
     @Req() req: Request & { user: { sub: string } },
     @Headers('x-organization-id') organizationId: string,
-    @Body() body: { regionId: string; code: string; name: string; address?: string; city?: string; pincode?: string },
+    @Body()
+    body: {
+      regionId: string;
+      code: string;
+      name: string;
+      address?: string;
+      city?: string;
+      pincode?: string;
+    },
   ) {
-    return this.geographyService.createDepot(organizationId, body, req.user.sub);
+    return this.geographyService.createDepot(
+      organizationId,
+      body,
+      req.user.sub,
+    );
   }
 
   @Patch('depots/:id')
@@ -228,9 +295,15 @@ export class GeographyController {
     @Param('id') id: string,
     @Req() req: Request & { user: { sub: string } },
     @Headers('x-organization-id') organizationId: string,
-    @Body() body: { name?: string; address?: string; city?: string; pincode?: string },
+    @Body()
+    body: { name?: string; address?: string; city?: string; pincode?: string },
   ) {
-    return this.geographyService.updateDepot(organizationId, id, body, req.user.sub);
+    return this.geographyService.updateDepot(
+      organizationId,
+      id,
+      body,
+      req.user.sub,
+    );
   }
 
   @Delete('depots/:id')
@@ -261,9 +334,23 @@ export class GeographyController {
   createMapping(
     @Req() req: Request & { user: { sub: string } },
     @Headers('x-organization-id') organizationId: string,
-    @Body() body: { productId: string; countryId?: string; stateId?: string; zoneId?: string; regionId?: string; depotId?: string; availabilityStatus?: string; launchDate?: string },
+    @Body()
+    body: {
+      productId: string;
+      countryId?: string;
+      stateId?: string;
+      zoneId?: string;
+      regionId?: string;
+      depotId?: string;
+      availabilityStatus?: string;
+      launchDate?: string;
+    },
   ) {
-    return this.geographyService.createMapping(organizationId, body, req.user.sub);
+    return this.geographyService.createMapping(
+      organizationId,
+      body,
+      req.user.sub,
+    );
   }
 
   @Patch('map/:id')
@@ -275,7 +362,12 @@ export class GeographyController {
     @Headers('x-organization-id') organizationId: string,
     @Body() body: { availabilityStatus?: string; launchDate?: string },
   ) {
-    return this.geographyService.updateMapping(organizationId, id, body, req.user.sub);
+    return this.geographyService.updateMapping(
+      organizationId,
+      id,
+      body,
+      req.user.sub,
+    );
   }
 
   @Delete('map/:id')
@@ -286,7 +378,11 @@ export class GeographyController {
     @Req() req: Request & { user: { sub: string } },
     @Headers('x-organization-id') organizationId: string,
   ) {
-    return this.geographyService.deleteMapping(organizationId, id, req.user.sub);
+    return this.geographyService.deleteMapping(
+      organizationId,
+      id,
+      req.user.sub,
+    );
   }
 
   @Get('product/:productId')
@@ -313,7 +409,12 @@ export class GeographyController {
     @Query('regionId') regionId?: string,
     @Query('depotId') depotId?: string,
   ) {
-    return this.geographyService.getAvailableProducts(organizationId, { stateId, zoneId, regionId, depotId });
+    return this.geographyService.getAvailableProducts(organizationId, {
+      stateId,
+      zoneId,
+      regionId,
+      depotId,
+    });
   }
 
   @Post('activate-launched')

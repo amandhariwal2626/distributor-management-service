@@ -374,7 +374,11 @@ export class HierarchyService {
 
   // ── Business Units ────────────────────────────────────────────
 
-  async createBusinessUnit(userId: string, organizationId: string, dto: CreateBusinessUnitDto) {
+  async createBusinessUnit(
+    userId: string,
+    organizationId: string,
+    dto: CreateBusinessUnitDto,
+  ) {
     await this.ensureUniqueCode('businessUnit', dto.code);
     return this.prisma.businessUnit.create({
       data: {
@@ -400,7 +404,11 @@ export class HierarchyService {
     return entity;
   }
 
-  async updateBusinessUnit(id: string, userId: string, dto: UpdateBusinessUnitDto) {
+  async updateBusinessUnit(
+    id: string,
+    userId: string,
+    dto: UpdateBusinessUnitDto,
+  ) {
     const existing = await this.findBusinessUnitOrFail(id);
     if (dto.code && dto.code !== existing.code) {
       await this.ensureUniqueCode('businessUnit', dto.code, id);
@@ -424,14 +432,20 @@ export class HierarchyService {
       where: { id, deletedAt: null },
     });
     if (!entity) {
-      throw new NotFoundException(`Business unit not found. The specified ID (${id}) does not exist or has been removed.`);
+      throw new NotFoundException(
+        `Business unit not found. The specified ID (${id}) does not exist or has been removed.`,
+      );
     }
     return entity;
   }
 
   // ── Divisions ─────────────────────────────────────────────────
 
-  async createDivision(userId: string, organizationId: string, dto: CreateDivisionDto) {
+  async createDivision(
+    userId: string,
+    organizationId: string,
+    dto: CreateDivisionDto,
+  ) {
     await this.ensureUniqueCode('division', dto.code);
     await this.findBusinessUnitOrFail(dto.businessUnitId);
     return this.prisma.division.create({
@@ -488,14 +502,20 @@ export class HierarchyService {
       where: { id, deletedAt: null },
     });
     if (!entity) {
-      throw new NotFoundException(`Division not found. The specified ID (${id}) does not exist or has been removed.`);
+      throw new NotFoundException(
+        `Division not found. The specified ID (${id}) does not exist or has been removed.`,
+      );
     }
     return entity;
   }
 
   // ── Sub-Brands ────────────────────────────────────────────────
 
-  async createSubBrand(userId: string, organizationId: string, dto: CreateSubBrandDto) {
+  async createSubBrand(
+    userId: string,
+    organizationId: string,
+    dto: CreateSubBrandDto,
+  ) {
     await this.ensureUniqueCode('subBrand', dto.code);
     await this.findBrandOrFail(dto.brandId);
     return this.prisma.subBrand.create({
@@ -552,7 +572,9 @@ export class HierarchyService {
       where: { id, deletedAt: null },
     });
     if (!entity) {
-      throw new NotFoundException(`Sub-brand not found. The specified ID (${id}) does not exist or has been removed.`);
+      throw new NotFoundException(
+        `Sub-brand not found. The specified ID (${id}) does not exist or has been removed.`,
+      );
     }
     return entity;
   }

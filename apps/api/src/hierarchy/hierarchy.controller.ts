@@ -319,7 +319,11 @@ export class HierarchyController {
     @Body() dto: CreateBusinessUnitDto,
     @Headers('x-organization-id') organizationId: string,
   ) {
-    return this.hierarchyService.createBusinessUnit(req.user.sub, organizationId, dto);
+    return this.hierarchyService.createBusinessUnit(
+      req.user.sub,
+      organizationId,
+      dto,
+    );
   }
 
   @Get('business-units')
@@ -367,7 +371,11 @@ export class HierarchyController {
     @Body() dto: CreateDivisionDto,
     @Headers('x-organization-id') organizationId: string,
   ) {
-    return this.hierarchyService.createDivision(req.user.sub, organizationId, dto);
+    return this.hierarchyService.createDivision(
+      req.user.sub,
+      organizationId,
+      dto,
+    );
   }
 
   @Get('divisions')
@@ -415,7 +423,11 @@ export class HierarchyController {
     @Body() dto: CreateSubBrandDto,
     @Headers('x-organization-id') organizationId: string,
   ) {
-    return this.hierarchyService.createSubBrand(req.user.sub, organizationId, dto);
+    return this.hierarchyService.createSubBrand(
+      req.user.sub,
+      organizationId,
+      dto,
+    );
   }
 
   @Get('sub-brands')
