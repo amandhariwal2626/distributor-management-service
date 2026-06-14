@@ -8,6 +8,7 @@ This file provides system context, architecture boundaries, conventions, and ins
 
 - **Never modify `.env` files without asking the user first.** Env files contain credentials and configuration that must not be changed without explicit approval.
 - **Every API endpoint must return specific, descriptive error messages.** Never use generic messages like `'Invalid credentials'`, `'Forbidden'`, `'Not found'`, or `'Bad request'` without describing what specifically went wrong. Include contextual details (e.g., which field conflicts, how many attempts remain, why access was denied) so the frontend can display a meaningful message to the user. For security-sensitive endpoints (e.g., forgot-password), return the same generic response for both found and not-found cases to prevent enumeration.
+- **All generated code will be reviewed by Codex** before being merged. Ensure all output follows the conventions in this document, is properly typed, and includes appropriate error handling.
 
 ## 1. Stack Architecture & Folder Structure
 
@@ -211,7 +212,21 @@ All 11 roles are seeded with their hierarchy levels and appropriate permission p
   - Next.js development container uses `WATCHPACK_POLLING=true` to detect host filesystem updates in container environments.
   - Use `docker compose up -d -V --build` to force rebuilds when dependencies inside `package.json` are modified, which updates the anonymous volumes.
 
-## 10. External Services
+## 10. Postman Collection Management
+
+- **Source of Truth**: The Postman collection lives at `postman_collection.json` in the project root.
+- **Every API change must update the collection.** When adding, modifying, or removing any API endpoint in any controller:
+  1. Add/update the corresponding request in `postman_collection.json`.
+  2. Include example request bodies for all POST/PATCH/PUT endpoints with realistic sample data.
+  3. For endpoints with path params (e.g., `:id`), use Postman collection variables (e.g., `{{productId}}`).
+  4. For list endpoints, include all query parameters as optional query params with examples.
+  5. Add event scripts where appropriate to auto-set collection variables from responses (e.g., set `productId` after `POST /products`).
+  6. Group endpoints by module into folders matching the controller structure.
+  7. Include ALL endpoints: public, authenticated, and permission-gated.
+- The collection has 177 endpoints across 21 controller files. Maintain this completeness.
+- See `postman_collection.json` for the reference format.
+
+## 11. External Services
 
 - **UI Generation**: Lovable (lovable.dev) — feed `docs/UI-SPECS-FOR-LOVABLE.md` specs for new UI components
 - **Frontend Hosting**: Vercel

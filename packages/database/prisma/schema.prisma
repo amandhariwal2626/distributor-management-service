@@ -8,10 +8,16 @@ generator client {
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
+// ============================================================
+// ENUMS
+// ============================================================
+
 enum SessionStatus {
   ACTIVE
   REVOKED
   EXPIRED
+
+  @@map("session_status_enum")
 }
 
 enum UserStatus {
@@ -19,21 +25,30 @@ enum UserStatus {
   INACTIVE
   LOCKED
   SUSPENDED
+
+  @@map("user_status_enum")
 }
 
 enum Gender {
   MALE
   FEMALE
   OTHER
+
+  @@map("gender_enum")
 }
+
+// ============================================================
+// ORGANIZATION & USER (EXISTING)
+// ============================================================
 
 model Organization {
   id          String   @id @default(uuid())
   code        String   @unique
   name        String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
   users       User[]
   roles       Role[]
   permissions Permission[]
@@ -41,28 +56,62 @@ model Organization {
   invites     InviteToken[]
   auditLogs   UserAuditLog[]
 
+  distributorMasters      DistributorMaster[]
+  auditEntries            AuditLog[]
+  securityEvents          SecurityEvent[]
+
+  // Product Master V2 relations
+  productCategories       ProductCategory[]
+  productSubCategories    ProductSubCategory[]
+  brands                  Brand[]
+  manufacturers           Manufacturer[]
+  uoms                    Uom[]
+  taxGroups               TaxGroup[]
+  products                Product[]
+  productUomConversions   ProductUomConversion[]
+  productPrices           ProductPrice[]
+  productImages           ProductImage[]
+  productDocuments        ProdDocument[]
+  attributeDefinitions    AttributeDefinition[]
+  productAttributeValues  ProductAttributeValue[]
+  productTags             ProductTag[]
+  productTagMappings      ProductTagMapping[]
+  productWarehouses       ProductWarehouse[]
+  productApprovals        ProductApproval[]
+  productAuditLogs        ProductAuditLog[]
+  businessUnits           BusinessUnit[]
+  divisions               Division[]
+  subBrands               SubBrand[]
+  countries               Country[]
+  states                  State[]
+  zones                   Zone[]
+  regions                 Region[]
+  depots                  Depot[]
+  productGeographyMappings ProductGeographyMapping[]
+
   @@index([deletedAt])
+  @@map("organizations")
 }
 
 model UserProfile {
   id              String    @id @default(uuid())
-  userId          String    @unique
+  userId          String    @unique @map("user_id")
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userCode        String?
-  employeeCode    String?
-  firstName       String
-  middleName      String?
-  lastName        String
-  displayName     String?
-  fullName        String
+  userCode        String? @map("user_code")
+  employeeCode    String? @map("employee_code")
+  firstName       String @map("first_name")
+  middleName      String? @map("middle_name")
+  lastName        String @map("last_name")
+  displayName     String? @map("display_name")
+  fullName        String @map("full_name")
   gender          Gender?
   dob             DateTime?
   mobile          String?
-  alternateMobile String?
-  emergencyContact String?
-  addressLine1    String?
-  addressLine2    String?
-  addressLine3    String?
+  alternateMobile String? @map("alternate_mobile")
+  emergencyContact String? @map("emergency_contact")
+  addressLine1    String? @map("address_line1")
+  addressLine2    String? @map("address_line2")
+  addressLine3    String? @map("address_line3")
   country         String?
   state           String?
   district        String?
@@ -70,40 +119,41 @@ model UserProfile {
   pincode         String?
 
   @@index([fullName])
+  @@map("user_profiles")
 }
 
 model User {
   id                    String              @id @default(uuid())
-  organizationId        String
+  organizationId        String @map("organization_id")
   organization          Organization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   profile               UserProfile?
   email                 String
   username              String?
-  passwordHash          String?
+  passwordHash          String? @map("password_hash")
   status                UserStatus          @default(ACTIVE)
-  forcePasswordChange   Boolean             @default(false)
-  passwordExpiryDays    Int?
-  twoFactorAuth         Boolean             @default(false)
-  failedLoginAttempts   Int                 @default(0)
-  lockedUntil           DateTime?
-  lastLoginAt           DateTime?
-  reportingManagerId    String?
+  forcePasswordChange   Boolean             @default(false) @map("force_password_change")
+  passwordExpiryDays    Int? @map("password_expiry_days")
+  twoFactorAuth         Boolean             @default(false) @map("two_factor_auth")
+  failedLoginAttempts   Int                 @default(0) @map("failed_login_attempts")
+  lockedUntil           DateTime? @map("locked_until")
+  lastLoginAt           DateTime? @map("last_login_at")
+  reportingManagerId    String? @map("reporting_manager_id")
   reportingManager      User?               @relation("UserReportsTo", fields: [reportingManagerId], references: [id], onDelete: SetNull)
   subordinates          User[]              @relation("UserReportsTo")
   zone                  String?
   region                String?
   area                  String?
   territory             String?
-  distributorId         String?
+  distributorId         String? @map("distributor_id")
   distributor           User?               @relation("DistributorMapping", fields: [distributorId], references: [id], onDelete: SetNull)
   distributorTeam       User[]              @relation("DistributorMapping")
-  deactivatedAt         DateTime?
-  deactivatedBy         String?
-  deletedAt             DateTime?
-  createdBy             String?
-  updatedBy             String?
-  createdAt             DateTime            @default(now())
-  updatedAt             DateTime            @updatedAt
+  deactivatedAt         DateTime? @map("deactivated_at")
+  deactivatedBy         String? @map("deactivated_by")
+  deletedAt             DateTime? @map("deleted_at")
+  createdBy             String? @map("created_by")
+  updatedBy             String? @map("updated_by")
+  createdAt             DateTime            @default(now()) @map("created_at")
+  updatedAt             DateTime            @updatedAt @map("updated_at")
   roles                 UserRole[]
   sessions              Session[]
   resetTokens           PasswordResetToken[]
@@ -113,171 +163,1046 @@ model User {
   permissionOverrides   UserPermission[]
   auditLogs             UserAuditLog[]
 
+  auditEntries             AuditLog[]                @relation("auditActor")
+
+  // Product Master V2 relations
+  productCategoriesCreated ProductCategory[]         @relation("ProductCategoryCreator")
+  productCategoriesUpdated ProductCategory[]         @relation("ProductCategoryUpdater")
+  brandsCreated            Brand[]                   @relation("BrandCreator")
+  brandsUpdated            Brand[]                   @relation("BrandUpdater")
+  v2ProductsCreated        Product[]                 @relation("ProductCreator")
+  v2ProductsUpdated        Product[]                 @relation("ProductUpdater")
+
   @@unique([organizationId, email])
   @@unique([organizationId, username])
   @@index([organizationId, status])
   @@index([organizationId, reportingManagerId])
   @@index([organizationId, distributorId])
   @@index([deletedAt])
+  @@map("users")
 }
 
 model Role {
   id              String           @id @default(uuid())
-  organizationId  String
+  organizationId  String @map("organization_id")
   organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   name            String
   description     String?
   level           Int              @default(0)
-  isSystem        Boolean          @default(false)
-  deletedAt       DateTime?
-  createdBy       String?
-  updatedBy       String?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  isSystem        Boolean          @default(false) @map("is_system")
+  deletedAt       DateTime? @map("deleted_at")
+  createdBy       String? @map("created_by")
+  updatedBy       String? @map("updated_by")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
   users           UserRole[]
   permissions     RolePermission[]
 
   @@unique([organizationId, name])
   @@index([organizationId])
   @@index([deletedAt])
+  @@map("roles")
 }
 
 model Permission {
   id              String           @id @default(uuid())
-  organizationId  String
+  organizationId  String @map("organization_id")
   organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   code            String
   name            String
   description     String?
-  deletedAt       DateTime?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  deletedAt       DateTime? @map("deleted_at")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
   roles           RolePermission[]
   userOverrides   UserPermission[]
 
   @@unique([organizationId, code])
   @@index([organizationId])
   @@index([deletedAt])
+  @@map("permissions")
 }
 
 model UserRole {
   id        String   @id @default(uuid())
-  userId    String
-  roleId    String
-  createdAt DateTime @default(now())
-  createdBy String?
+  userId    String @map("user_id")
+  roleId    String @map("role_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String? @map("created_by")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@unique([userId, roleId])
   @@index([roleId])
+  @@map("user_roles")
 }
 
 model RolePermission {
   id           String     @id @default(uuid())
-  roleId       String
-  permissionId String
-  createdAt    DateTime   @default(now())
-  createdBy    String?
+  roleId       String @map("role_id")
+  permissionId String @map("permission_id")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  createdBy    String? @map("created_by")
   role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
   permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
   @@unique([roleId, permissionId])
   @@index([permissionId])
+  @@map("role_permissions")
 }
 
 model Session {
   id                String         @id @default(uuid())
-  organizationId    String
-  userId            String
-  refreshTokenHash  String
-  userAgent         String?
-  ipAddress         String?
-  expiresAt         DateTime
-  lastActivityAt    DateTime       @default(now())
-  revokedAt         DateTime?
+  organizationId    String @map("organization_id")
+  userId            String @map("user_id")
+  refreshTokenHash  String @map("refresh_token_hash")
+  userAgent         String? @map("user_agent")
+  ipAddress         String? @map("ip_address")
+  expiresAt         DateTime @map("expires_at")
+  lastActivityAt    DateTime       @default(now()) @map("last_activity_at")
+  revokedAt         DateTime? @map("revoked_at")
   status            SessionStatus  @default(ACTIVE)
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
   organization      Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, status])
   @@index([organizationId, status])
   @@index([expiresAt])
+  @@map("sessions")
 }
 
 model PasswordResetToken {
   id        String   @id @default(uuid())
-  userId    String
-  tokenHash String
-  expiresAt DateTime
-  usedAt    DateTime?
-  createdAt DateTime @default(now())
+  userId    String @map("user_id")
+  tokenHash String @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime @default(now()) @map("created_at")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, expiresAt])
+  @@map("password_reset_tokens")
 }
 
 model RevokedToken {
   id        String   @id @default(uuid())
-  userId    String
-  tokenJti  String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+  userId    String @map("user_id")
+  tokenJti  String @map("token_jti")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([tokenJti])
   @@index([userId, expiresAt])
+  @@map("revoked_tokens")
 }
 
 model InviteToken {
   id              String        @id @default(uuid())
-  organizationId  String
-  userId          String
-  tokenHash       String
-  invitedEmail    String
-  expiresAt       DateTime
-  acceptedAt      DateTime?
-  revokedAt       DateTime?
-  inviteSentBy    String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  organizationId  String @map("organization_id")
+  userId          String @map("user_id")
+  tokenHash       String @map("token_hash")
+  invitedEmail    String @map("invited_email")
+  expiresAt       DateTime @map("expires_at")
+  acceptedAt      DateTime? @map("accepted_at")
+  revokedAt       DateTime? @map("revoked_at")
+  inviteSentBy    String? @map("invite_sent_by")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
   organization    Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   user            User          @relation("inviteUser", fields: [userId], references: [id], onDelete: Cascade)
-  sentByUser      User?         @relation("inviteCreator", fields: [inviteSentBy], references: [id], onDelete: SetNull)
+  sentByUser      User?          @relation("inviteCreator", fields: [inviteSentBy], references: [id], onDelete: SetNull)
 
   @@index([organizationId, invitedEmail])
   @@index([expiresAt])
+  @@map("invite_tokens")
 }
 
 model UserPermission {
   id           String      @id @default(uuid())
-  userId       String
-  permissionId String
-  createdAt    DateTime    @default(now())
+  userId       String @map("user_id")
+  permissionId String @map("permission_id")
+  granted      Boolean     @default(true)
+  createdAt    DateTime    @default(now()) @map("created_at")
   user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   permission   Permission  @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
   @@unique([userId, permissionId])
   @@index([permissionId])
+  @@map("user_permissions")
 }
 
 model UserAuditLog {
   id              String        @id @default(uuid())
-  organizationId  String
-  actorId         String?
+  organizationId  String @map("organization_id")
+  actorId         String? @map("actor_id")
   action          String
-  entityType      String?
-  entityId        String?
-  oldValue        Json?
-  newValue        Json?
-  ipAddress       String?
-  createdAt       DateTime      @default(now())
+  entityType      String? @map("entity_type")
+  entityId        String? @map("entity_id")
+  oldValue        Json? @map("old_value")
+  newValue        Json? @map("new_value")
+  ipAddress       String? @map("ip_address")
+  createdAt       DateTime      @default(now()) @map("created_at")
   organization    Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   actor           User?         @relation(fields: [actorId], references: [id], onDelete: SetNull)
 
   @@index([organizationId, createdAt])
   @@index([entityType, entityId])
   @@index([actorId])
+  @@map("user_audit_logs")
+}
+
+// ============================================================
+// AUDIT & SECURITY
+// ============================================================
+
+model AuditLog {
+  id              String        @id @default(uuid())
+  companyId       String @map("company_id")
+  organization    Organization  @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  entityType      String @map("entity_type")
+  entityId        String @map("entity_id")
+  action          String        // CREATE, UPDATE, DELETE, ACTIVATE, DEACTIVATE, APPROVE, REJECT, etc.
+  field           String?       // Changed field name (for updates)
+  oldValue        String? @map("old_value") // Previous value
+  newValue        String? @map("new_value") // New value
+  reason          String?
+  actorId         String? @map("actor_id")
+  actor           User?         @relation("auditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  ipAddress       String? @map("ip_address")
+  userAgent       String? @map("user_agent")
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  @@index([companyId, createdAt])
+  @@index([entityType, entityId])
+  @@index([actorId])
+  @@index([action])
+  @@map("audit_logs")
+}
+
+model SecurityEvent {
+  id              String        @id @default(uuid())
+  companyId       String @map("company_id")
+  organization    Organization  @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  eventType       String @map("event_type") // UNAUTHORIZED_ACCESS, RATE_LIMIT_EXCEEDED, INVALID_TOKEN, FILE_UPLOAD_ABUSE, PERMISSION_DENIED
+  severity        String        // LOW, MEDIUM, HIGH, CRITICAL
+  actorId         String? @map("actor_id")
+  ipAddress       String? @map("ip_address")
+  resource        String?       // Which endpoint or resource
+  details         Json?
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  @@index([companyId, createdAt])
+  @@index([eventType])
+  @@index([actorId])
+  @@index([severity])
+  @@map("security_events")
+}
+
+// ============================================================
+// DISTRIBUTOR MASTER (LIGHTWEIGHT)
+// ============================================================
+
+model DistributorMaster {
+  id              String       @id @default(uuid())
+  companyId       String @map("company_id")
+  organization    Organization @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  code            String
+  name            String
+  gstNumber       String? @map("gst_number")
+  address         String?
+  city            String?
+  state           String?
+  pincode         String?
+  contactPerson   String? @map("contact_person")
+  contactNumber   String? @map("contact_number")
+  email           String?
+  isActive        Boolean      @default(true) @map("is_active")
+  createdBy       String? @map("created_by")
+  updatedBy       String? @map("updated_by")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+  isDeleted       Boolean      @default(false) @map("is_deleted")
+  deletedBy       String? @map("deleted_by")
+  deletedAt       DateTime? @map("deleted_at")
+
+  @@unique([companyId, code])
+  @@index([companyId])
+  @@index([isDeleted])
+  @@map("distributor_masters")
+}
+
+// ============================================================
+// PRODUCT MASTER MODULE V2 — NEW ENUMS
+// ============================================================
+
+enum ProductLifecycleStatus {
+  @@map("product_status_enum")
+  DRAFT    @map("draft")
+  ACTIVE   @map("active")
+  INACTIVE @map("inactive")
+}
+
+enum ProductSkuType {
+  @@map("product_type_enum")
+  FINISHED_GOOD    @map("finished_good")
+  RAW_MATERIAL     @map("raw_material")
+  SERVICE          @map("service")
+}
+
+enum ApprovalStatus {
+  @@map("approval_status_enum")
+  PENDING  @map("pending")
+  APPROVED @map("approved")
+  REJECTED @map("rejected")
+}
+
+enum AttributeDataType {
+  @@map("attribute_data_type_enum")
+  TEXT     @map("text")
+  NUMBER   @map("number")
+  BOOLEAN  @map("boolean")
+  DATE     @map("date")
+  DROPDOWN @map("dropdown")
+}
+
+enum AuditAction {
+  @@map("audit_action_enum")
+  CREATE      @map("create")
+  UPDATE      @map("update")
+  SOFT_DELETE @map("soft_delete")
+  RESTORE     @map("restore")
+}
+
+// ============================================================
+// PRODUCT MASTER MODULE V2 — 18 MULTI-TENANT MODELS
+// company_id is mandatory in every table for tenant isolation.
+// All uniqueness is scoped by company_id.
+// All queries must filter by company_id AND deleted_at IS NULL.
+// ============================================================
+
+// 1. Product Categories
+model ProductCategory {
+  id           String    @id @default(uuid())
+  companyId    String    @map("company_id")
+  categoryCode String    @map("category_code")
+  categoryName String    @map("category_name")
+  description  String?
+  status       Boolean   @default(true)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  createdBy    String?   @map("created_by")
+  updatedBy    String?   @map("updated_by")
+  deletedAt    DateTime? @map("deleted_at")
+  deletedBy    String?   @map("deleted_by")
+
+  organization  Organization          @relation(fields: [companyId], references: [id])
+  creator       User?                 @relation("ProductCategoryCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  updater       User?                 @relation("ProductCategoryUpdater", fields: [updatedBy], references: [id], onDelete: SetNull)
+  subCategories ProductSubCategory[]
+  products      Product[]
+
+  @@unique([companyId, categoryCode], map: "ux_product_categories_company_code")
+  @@index([companyId, categoryName])
+  @@index([companyId, status])
+  @@index([companyId])
+  @@map("product_categories")
+}
+
+// 2. Product Sub Categories
+model ProductSubCategory {
+  id              String   @id @default(uuid())
+  companyId       String   @map("company_id")
+  categoryId      String   @map("category_id")
+  subCategoryCode String   @map("sub_category_code")
+  subCategoryName String   @map("sub_category_name")
+  description     String?
+  status          Boolean  @default(true)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdBy       String?  @map("created_by")
+  updatedBy       String?  @map("updated_by")
+  deletedAt       DateTime? @map("deleted_at")
+  deletedBy       String?  @map("deleted_by")
+
+  organization Organization       @relation(fields: [companyId], references: [id])
+  category     ProductCategory    @relation(fields: [categoryId], references: [id])
+  products     Product[]
+
+  @@unique([companyId, subCategoryCode], map: "ux_product_sub_categories_company_code")
+  @@index([companyId, categoryId])
+  @@index([companyId, subCategoryName])
+  @@index([companyId])
+  @@map("product_sub_categories")
+}
+
+// 3. Brands
+model Brand {
+  id          String   @id @default(uuid())
+  companyId   String   @map("company_id")
+  brandCode   String   @map("brand_code")
+  brandName   String   @map("brand_name")
+  description String?
+  status      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdBy   String?  @map("created_by")
+  updatedBy   String?  @map("updated_by")
+  deletedAt   DateTime? @map("deleted_at")
+  deletedBy   String?  @map("deleted_by")
+
+  organization Organization @relation(fields: [companyId], references: [id])
+  creator      User?        @relation("BrandCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  updater      User?        @relation("BrandUpdater", fields: [updatedBy], references: [id], onDelete: SetNull)
+  products     Product[]
+  subBrands    SubBrand[]
+
+  @@unique([companyId, brandCode], map: "ux_brands_company_code")
+  @@index([companyId, brandName])
+  @@index([companyId, status])
+  @@index([companyId])
+  @@map("brands")
+}
+
+// 4. Manufacturers
+model Manufacturer {
+  id               String   @id @default(uuid())
+  companyId        String   @map("company_id")
+  manufacturerCode String   @map("manufacturer_code")
+  manufacturerName String   @map("manufacturer_name")
+  gstNumber        String?  @map("gst_number")
+  contactPerson    String?  @map("contact_person")
+  email            String?
+  phone            String?
+  address          String?
+  status           Boolean  @default(true)
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  createdBy        String?  @map("created_by")
+  updatedBy        String?  @map("updated_by")
+  deletedAt        DateTime? @map("deleted_at")
+  deletedBy        String?  @map("deleted_by")
+
+  organization Organization @relation(fields: [companyId], references: [id])
+  products     Product[]
+
+  @@unique([companyId, manufacturerCode], map: "ux_manufacturers_company_code")
+  @@index([companyId, manufacturerName])
+  @@index([companyId, status])
+  @@index([companyId])
+  @@map("manufacturers")
+}
+
+// 5. Units of Measure
+model Uom {
+  id          String   @id @default(uuid())
+  companyId   String   @map("company_id")
+  uomCode     String   @map("uom_code")
+  uomName     String   @map("uom_name")
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdBy   String?  @map("created_by")
+  updatedBy   String?  @map("updated_by")
+  deletedAt   DateTime? @map("deleted_at")
+  deletedBy   String?  @map("deleted_by")
+
+  organization    Organization            @relation(fields: [companyId], references: [id])
+  products        Product[]
+  fromConversions ProductUomConversion[]  @relation("UomFromConversion")
+  toConversions   ProductUomConversion[]  @relation("UomToConversion")
+
+  @@unique([companyId, uomCode], map: "ux_uoms_company_code")
+  @@index([companyId, uomName])
+  @@index([companyId])
+  @@map("uoms")
+}
+
+// 6. Tax Groups
+model TaxGroup {
+  id       String   @id @default(uuid())
+  companyId String  @map("company_id")
+  taxCode  String   @map("tax_code")
+  taxName  String   @map("tax_name")
+  cgst     Decimal  @db.Decimal(5, 2)
+  sgst     Decimal  @db.Decimal(5, 2)
+  igst     Decimal  @db.Decimal(5, 2)
+  cess     Decimal  @db.Decimal(5, 2)
+  status   Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy String?  @map("created_by")
+  updatedBy String?  @map("updated_by")
+  deletedAt DateTime? @map("deleted_at")
+  deletedBy String?  @map("deleted_by")
+
+  organization Organization @relation(fields: [companyId], references: [id])
+  products     Product[]
+
+  @@unique([companyId, taxCode], map: "ux_tax_groups_company_code")
+  @@index([companyId, taxName])
+  @@index([companyId, status])
+  @@index([companyId])
+  @@map("tax_groups")
+}
+
+// 7. Products (Core)
+model Product {
+  id             String               @id @default(uuid())
+  companyId      String               @map("company_id")
+  productCode    String               @map("product_code")
+  productName    String               @map("product_name")
+  shortName      String?              @map("short_name")
+  description    String?
+  categoryId     String?              @map("category_id")
+  subCategoryId  String?              @map("sub_category_id")
+  brandId        String?              @map("brand_id")
+  manufacturerId String?              @map("manufacturer_id")
+  uomId          String               @map("uom_id")
+  taxGroupId     String?              @map("tax_group_id")
+  barcode        String?
+  hsnCode        String?              @map("hsn_code")
+  skuType        ProductSkuType       @map("sku_type")
+  shelfLifeDays  Int?                 @map("shelf_life_days")
+  reorderLevel   Int?                 @map("reorder_level")
+  imageUrl       String?              @map("image_url")
+  status         ProductLifecycleStatus
+  createdAt      DateTime             @default(now()) @map("created_at")
+  updatedAt      DateTime             @updatedAt @map("updated_at")
+  createdBy      String?              @map("created_by")
+  updatedBy      String?              @map("updated_by")
+  deletedAt      DateTime?            @map("deleted_at")
+  deletedBy      String?              @map("deleted_by")
+
+  organization    Organization             @relation(fields: [companyId], references: [id])
+  category        ProductCategory?         @relation(fields: [categoryId], references: [id])
+  subCategory     ProductSubCategory?      @relation(fields: [subCategoryId], references: [id])
+  brand           Brand?                   @relation(fields: [brandId], references: [id])
+  manufacturer    Manufacturer?            @relation(fields: [manufacturerId], references: [id])
+  uom             Uom                      @relation(fields: [uomId], references: [id])
+  taxGroup        TaxGroup?                @relation(fields: [taxGroupId], references: [id])
+  creator         User?                    @relation("ProductCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  updater         User?                    @relation("ProductUpdater", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  uomConversions  ProductUomConversion[]
+  prices          ProductPrice[]
+  images          ProductImage[]
+  documents       ProdDocument[]
+  attributeValues ProductAttributeValue[]
+  tagMappings     ProductTagMapping[]
+  warehouses      ProductWarehouse[]
+  approvals       ProductApproval[]
+  geographyMappings ProductGeographyMapping[]
+
+  @@unique([companyId, productCode], map: "ux_products_company_code")
+  @@index([companyId, productName])
+  @@index([companyId, categoryId])
+  @@index([companyId, brandId])
+  @@index([companyId, manufacturerId])
+  @@index([companyId, uomId])
+  @@index([companyId, hsnCode])
+  @@index([companyId, barcode])
+  @@index([companyId, status])
+  @@index([companyId, skuType])
+  @@index([companyId])
+  @@map("products")
+}
+
+// 8. Product UOM Conversions
+model ProductUomConversion {
+  id               String          @id @default(uuid())
+  companyId        String          @map("company_id")
+  productId        String          @map("product_id")
+  fromUomId        String          @map("from_uom_id")
+  toUomId          String          @map("to_uom_id")
+  conversionFactor Decimal         @db.Decimal(18, 6) @map("conversion_factor")
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+  createdBy        String?         @map("created_by")
+  updatedBy        String?         @map("updated_by")
+  deletedAt        DateTime?       @map("deleted_at")
+  deletedBy        String?         @map("deleted_by")
+
+  organization Organization @relation(fields: [companyId], references: [id])
+  product      Product      @relation(fields: [productId], references: [id])
+  fromUom      Uom          @relation("UomFromConversion", fields: [fromUomId], references: [id])
+  toUom        Uom          @relation("UomToConversion", fields: [toUomId], references: [id])
+
+  @@unique([companyId, productId, fromUomId, toUomId], map: "ux_product_uom_conversions_company")
+  @@index([companyId, productId])
+  @@index([companyId])
+  @@map("product_uom_conversions")
+}
+
+// 9. Product Prices
+model ProductPrice {
+  id               String   @id @default(uuid())
+  companyId        String   @map("company_id")
+  productId        String   @map("product_id")
+  mrp              Decimal  @db.Decimal(18, 2)
+  ptr              Decimal  @db.Decimal(18, 2)
+  pts              Decimal  @db.Decimal(18, 2)
+  distributorPrice Decimal  @db.Decimal(18, 2) @map("distributor_price")
+  effectiveFrom    DateTime @map("effective_from")
+  effectiveTo      DateTime? @map("effective_to")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  createdBy        String?  @map("created_by")
+  updatedBy        String?  @map("updated_by")
+  deletedAt        DateTime? @map("deleted_at")
+  deletedBy        String?  @map("deleted_by")
+
+  organization Organization @relation(fields: [companyId], references: [id])
+  product      Product      @relation(fields: [productId], references: [id])
+
+  @@index([companyId, productId])
+  @@index([companyId, effectiveFrom])
+  @@index([companyId])
+  @@map("product_prices")
+}
+
+// 10. Product Images
+model ProductImage {
+  id        String   @id @default(uuid())
+  companyId String   @map("company_id")
+  productId String   @map("product_id")
+  fileName  String?  @map("file_name")
+  filePath  String   @map("file_path")
+  isPrimary Boolean  @default(false) @map("is_primary")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy String?  @map("created_by")
+  updatedBy String?  @map("updated_by")
+  deletedAt DateTime? @map("deleted_at")
+  deletedBy String?  @map("deleted_by")
+
+  organization Organization @relation(fields: [companyId], references: [id])
+  product      Product      @relation(fields: [productId], references: [id])
+
+  @@index([companyId, productId])
+  @@index([companyId, isPrimary])
+  @@index([companyId])
+  @@map("product_images")
+}
+
+// 11. Product Documents (avoid name conflict with existing ProductDocument)
+model ProdDocument {
+  id           String   @id @default(uuid())
+  companyId    String   @map("company_id")
+  productId    String   @map("product_id")
+  documentType String   @map("document_type")
+  fileName     String?  @map("file_name")
+  filePath     String   @map("file_path")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdBy    String?  @map("created_by")
+  updatedBy    String?  @map("updated_by")
+  deletedAt    DateTime? @map("deleted_at")
+  deletedBy    String?  @map("deleted_by")
+
+  organization Organization @relation(fields: [companyId], references: [id])
+  product      Product      @relation(fields: [productId], references: [id])
+
+  @@index([companyId, productId])
+  @@index([companyId, documentType])
+  @@index([companyId])
+  @@map("product_documents")
+}
+
+// 12. Attribute Definitions
+model AttributeDefinition {
+  id            String            @id @default(uuid())
+  companyId     String            @map("company_id")
+  attributeName String            @map("attribute_name")
+  attributeCode String            @map("attribute_code")
+  dataType      AttributeDataType @map("data_type")
+  mandatory     Boolean           @default(false)
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
+  createdBy     String?           @map("created_by")
+  updatedBy     String?           @map("updated_by")
+  deletedAt     DateTime?         @map("deleted_at")
+  deletedBy     String?           @map("deleted_by")
+
+  organization  Organization            @relation(fields: [companyId], references: [id])
+  productValues ProductAttributeValue[]
+
+  @@unique([companyId, attributeCode], map: "ux_attribute_definitions_company_code")
+  @@index([companyId, dataType])
+  @@index([companyId])
+  @@map("attribute_definitions")
+}
+
+// 13. Product Attribute Values
+model ProductAttributeValue {
+  id          String   @id @default(uuid())
+  companyId   String   @map("company_id")
+  productId   String   @map("product_id")
+  attributeId String   @map("attribute_id")
+  value       String
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdBy   String?  @map("created_by")
+  updatedBy   String?  @map("updated_by")
+  deletedAt   DateTime? @map("deleted_at")
+  deletedBy   String?  @map("deleted_by")
+
+  organization Organization         @relation(fields: [companyId], references: [id])
+  product      Product              @relation(fields: [productId], references: [id])
+  attribute    AttributeDefinition @relation(fields: [attributeId], references: [id])
+
+  @@unique([companyId, productId, attributeId], map: "ux_product_attribute_values_company")
+  @@index([companyId, productId])
+  @@index([companyId])
+  @@map("product_attribute_values")
+}
+
+// 14. Product Tags
+model ProductTag {
+  id        String   @id @default(uuid())
+  companyId String   @map("company_id")
+  tagName   String   @map("tag_name")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy String?  @map("created_by")
+  updatedBy String?  @map("updated_by")
+  deletedAt DateTime? @map("deleted_at")
+  deletedBy String?  @map("deleted_by")
+
+  organization Organization    @relation(fields: [companyId], references: [id])
+  mappings     ProductTagMapping[]
+
+  @@unique([companyId, tagName], map: "ux_product_tags_company_name")
+  @@index([companyId])
+  @@map("product_tags")
+}
+
+// 15. Product Tag Mappings
+model ProductTagMapping {
+  id        String   @id @default(uuid())
+  companyId String   @map("company_id")
+  productId String   @map("product_id")
+  tagId     String   @map("tag_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy String?  @map("created_by")
+  updatedBy String?  @map("updated_by")
+  deletedAt DateTime? @map("deleted_at")
+  deletedBy String?  @map("deleted_by")
+
+  organization Organization @relation(fields: [companyId], references: [id])
+  product      Product      @relation(fields: [productId], references: [id])
+  tag          ProductTag   @relation(fields: [tagId], references: [id])
+
+  @@unique([companyId, productId, tagId], map: "ux_product_tag_mappings_company")
+  @@index([companyId, productId])
+  @@index([companyId])
+  @@map("product_tag_mappings")
+}
+
+// 16. Product Warehouses
+model ProductWarehouse {
+  id           String   @id @default(uuid())
+  companyId    String   @map("company_id")
+  productId    String   @map("product_id")
+  warehouseId  String   @map("warehouse_id")
+  minStock     Int      @map("min_stock")
+  maxStock     Int      @map("max_stock")
+  reorderLevel Int      @map("reorder_level")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdBy    String?  @map("created_by")
+  updatedBy    String?  @map("updated_by")
+  deletedAt    DateTime? @map("deleted_at")
+  deletedBy    String?  @map("deleted_by")
+
+  organization Organization @relation(fields: [companyId], references: [id])
+  product      Product      @relation(fields: [productId], references: [id])
+
+  @@unique([companyId, productId, warehouseId], map: "ux_product_warehouses_company")
+  @@index([companyId, productId])
+  @@index([companyId, warehouseId])
+  @@index([companyId])
+  @@map("product_warehouses")
+}
+
+// 17. Product Audit Logs (immutable — no soft delete)
+model ProductAuditLog {
+  id        String      @id @default(uuid())
+  companyId String      @map("company_id")
+  tableName String      @map("table_name")
+  recordId  String      @map("record_id")
+  action    AuditAction
+  oldData   Json?       @map("old_data")
+  newData   Json?       @map("new_data")
+  changedBy String?     @map("changed_by")
+  changedAt DateTime    @default(now()) @map("changed_at")
+
+  organization Organization @relation(fields: [companyId], references: [id])
+
+  @@index([companyId, changedAt])
+  @@index([companyId, tableName, recordId])
+  @@index([companyId])
+  @@map("product_audit_logs")
+}
+
+// ── Geography Models ─────────────────────────────────────────
+
+model Country {
+  id          String   @id @default(uuid())
+  companyId   String   @map("company_id")
+  code        String
+  name        String
+  isoCode     String?  @map("iso_code")
+  currency    String?
+  status      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdBy   String?  @map("created_by")
+  updatedBy   String?  @map("updated_by")
+  deletedAt   DateTime? @map("deleted_at")
+  deletedBy   String?  @map("deleted_by")
+
+  organization           Organization @relation(fields: [companyId], references: [id])
+  states                 State[]
+  productGeographyMappings ProductGeographyMapping[]
+
+  @@unique([companyId, code])
+  @@index([companyId])
+  @@map("countries")
+}
+
+model State {
+  id          String   @id @default(uuid())
+  companyId   String   @map("company_id")
+  countryId   String   @map("country_id")
+  code        String
+  name        String
+  gstCode     String?  @map("gst_code")
+  status      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdBy   String?  @map("created_by")
+  updatedBy   String?  @map("updated_by")
+  deletedAt   DateTime? @map("deleted_at")
+  deletedBy   String?  @map("deleted_by")
+
+  organization Organization @relation(fields: [companyId], references: [id])
+  country      Country      @relation(fields: [countryId], references: [id])
+  zones        Zone[]
+  productGeographyMappings ProductGeographyMapping[]
+
+  @@unique([companyId, code])
+  @@index([companyId, countryId])
+  @@index([companyId])
+  @@map("states")
+}
+
+model Zone {
+  id          String   @id @default(uuid())
+  companyId   String   @map("company_id")
+  stateId     String   @map("state_id")
+  code        String
+  name        String
+  status      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdBy   String?  @map("created_by")
+  updatedBy   String?  @map("updated_by")
+  deletedAt   DateTime? @map("deleted_at")
+  deletedBy   String?  @map("deleted_by")
+
+  organization Organization @relation(fields: [companyId], references: [id])
+  state        State        @relation(fields: [stateId], references: [id])
+  regions      Region[]
+  productGeographyMappings ProductGeographyMapping[]
+
+  @@unique([companyId, code])
+  @@index([companyId, stateId])
+  @@index([companyId])
+  @@map("zones")
+}
+
+model Region {
+  id          String   @id @default(uuid())
+  companyId   String   @map("company_id")
+  zoneId      String   @map("zone_id")
+  code        String
+  name        String
+  status      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdBy   String?  @map("created_by")
+  updatedBy   String?  @map("updated_by")
+  deletedAt   DateTime? @map("deleted_at")
+  deletedBy   String?  @map("deleted_by")
+
+  organization Organization @relation(fields: [companyId], references: [id])
+  zone         Zone         @relation(fields: [zoneId], references: [id])
+  depots       Depot[]
+  productGeographyMappings ProductGeographyMapping[]
+
+  @@unique([companyId, code])
+  @@index([companyId, zoneId])
+  @@index([companyId])
+  @@map("regions")
+}
+
+model Depot {
+  id          String   @id @default(uuid())
+  companyId   String   @map("company_id")
+  regionId    String   @map("region_id")
+  code        String
+  name        String
+  address     String?
+  city        String?
+  pincode     String?
+  status      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdBy   String?  @map("created_by")
+  updatedBy   String?  @map("updated_by")
+  deletedAt   DateTime? @map("deleted_at")
+  deletedBy   String?  @map("deleted_by")
+
+  organization Organization @relation(fields: [companyId], references: [id])
+  region       Region       @relation(fields: [regionId], references: [id])
+  productGeographyMappings ProductGeographyMapping[]
+
+  @@unique([companyId, code])
+  @@index([companyId, regionId])
+  @@index([companyId])
+  @@map("depots")
+}
+
+model ProductGeographyMapping {
+  id                 String   @id @default(uuid())
+  companyId          String   @map("company_id")
+  productId          String   @map("product_id")
+  countryId          String?  @map("country_id")
+  stateId            String?  @map("state_id")
+  zoneId             String?  @map("zone_id")
+  regionId           String?  @map("region_id")
+  depotId            String?  @map("depot_id")
+  availabilityStatus String   @default("AVAILABLE") @map("availability_status")
+  launchDate         DateTime? @map("launch_date")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+  createdBy          String?  @map("created_by")
+  updatedBy          String?  @map("updated_by")
+  deletedAt          DateTime? @map("deleted_at")
+  deletedBy          String?  @map("deleted_by")
+
+  organization Organization         @relation(fields: [companyId], references: [id])
+  product      Product              @relation(fields: [productId], references: [id])
+  country      Country?             @relation(fields: [countryId], references: [id])
+  state        State?               @relation(fields: [stateId], references: [id])
+  zone         Zone?                @relation(fields: [zoneId], references: [id])
+  region       Region?              @relation(fields: [regionId], references: [id])
+  depot        Depot?               @relation(fields: [depotId], references: [id])
+
+  @@unique([companyId, productId, countryId, stateId, zoneId, regionId, depotId])
+  @@index([companyId, productId])
+  @@index([companyId])
+  @@map("product_geography_mappings")
+}
+
+// ── Business Units, Divisions, Sub-Brands (for FE masters) ──
+
+model BusinessUnit {
+  id          String   @id @default(uuid())
+  companyId   String   @map("company_id")
+  code        String
+  name        String
+  description String?
+  status      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdBy   String?  @map("created_by")
+  updatedBy   String?  @map("updated_by")
+  deletedAt   DateTime? @map("deleted_at")
+  deletedBy   String?  @map("deleted_by")
+
+  organization Organization @relation(fields: [companyId], references: [id])
+  divisions    Division[]
+
+  @@unique([companyId, code])
+  @@index([companyId])
+  @@map("business_units")
+}
+
+model Division {
+  id              String   @id @default(uuid())
+  companyId       String   @map("company_id")
+  businessUnitId  String   @map("business_unit_id")
+  code            String
+  name            String
+  description     String?
+  status          Boolean  @default(true)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdBy       String?  @map("created_by")
+  updatedBy       String?  @map("updated_by")
+  deletedAt       DateTime? @map("deleted_at")
+  deletedBy       String?  @map("deleted_by")
+
+  organization  Organization  @relation(fields: [companyId], references: [id])
+  businessUnit  BusinessUnit  @relation(fields: [businessUnitId], references: [id])
+
+  @@unique([companyId, code])
+  @@index([companyId, businessUnitId])
+  @@index([companyId])
+  @@map("divisions")
+}
+
+model SubBrand {
+  id          String   @id @default(uuid())
+  companyId   String   @map("company_id")
+  brandId     String   @map("brand_id")
+  code        String
+  name        String
+  description String?
+  status      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdBy   String?  @map("created_by")
+  updatedBy   String?  @map("updated_by")
+  deletedAt   DateTime? @map("deleted_at")
+  deletedBy   String?  @map("deleted_by")
+
+  organization Organization @relation(fields: [companyId], references: [id])
+  brand        Brand        @relation(fields: [brandId], references: [id])
+
+  @@unique([companyId, code])
+  @@index([companyId, brandId])
+  @@index([companyId])
+  @@map("sub_brands")
+}
+
+// 18. Product Approvals
+model ProductApproval {
+  id             String         @id @default(uuid())
+  companyId      String         @map("company_id")
+  productId      String         @map("product_id")
+  workflowId     String?        @map("workflow_id")
+  approvalStatus ApprovalStatus @map("approval_status")
+  approvedBy     String?        @map("approved_by")
+  approvedAt     DateTime?      @map("approved_at")
+  remarks        String?
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+  createdBy      String?        @map("created_by")
+  updatedBy      String?        @map("updated_by")
+  deletedAt      DateTime?      @map("deleted_at")
+  deletedBy      String?        @map("deleted_by")
+
+  organization Organization @relation(fields: [companyId], references: [id])
+  product      Product      @relation(fields: [productId], references: [id])
+
+  @@index([companyId, productId])
+  @@index([companyId, approvalStatus])
+  @@index([companyId])
+  @@map("product_approvals")
 }

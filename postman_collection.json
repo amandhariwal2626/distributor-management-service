@@ -1,0 +1,2397 @@
+{
+  "info": {
+    "name": "FMCG DMS - Product Master & Price Master API",
+    "description": "Enterprise FMCG Distributor Management System - Complete API Collection\n\n## Authentication\nMost endpoints require JWT Bearer token in Authorization header.\nAll endpoints require `x-organization-id` header for multi-tenant isolation.\n\n## Workflow\nAfter login, set:\n- `authToken` variable from login response.accessToken\n- `orgId` variable from user's organizationId\n\n## Collection Variables\n- `baseUrl`: http://localhost:3001\n- `authToken`: JWT access token (set after login)\n- `orgId`: Organization UUID (set after login)\n- `userId`: User UUID\n- `productId`: Product UUID\n- `priceId`: Price UUID\n- `uploadId`: Upload job UUID\n- `workflowId`: Workflow UUID\n- `roleId`: Role UUID\n- `permissionId`: Permission UUID\n- `countryId`: Country UUID\n- `stateId`: State UUID\n- `zoneId`: Zone UUID\n- `regionId`: Region UUID\n- `depotId`: Depot UUID\n- `categoryId`: Category UUID\n- `brandId`: Brand UUID\n- `attributeId`: Attribute UUID\n- `documentId`: Document UUID\n- `bundleId`: Bundle UUID\n- `substitutionId`: Substitution UUID\n- `hsnId`: HSN code UUID\n- `gstSlabId`: GST slab UUID\n- `productTaxId`: Product tax UUID",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3001", "type": "string" },
+    { "key": "authToken", "value": "", "type": "string" },
+    { "key": "orgId", "value": "", "type": "string" },
+    { "key": "userId", "value": "", "type": "string" },
+    { "key": "productId", "value": "", "type": "string" },
+    { "key": "priceId", "value": "", "type": "string" },
+    { "key": "uploadId", "value": "", "type": "string" },
+    { "key": "workflowId", "value": "", "type": "string" },
+    { "key": "roleId", "value": "", "type": "string" },
+    { "key": "permissionId", "value": "", "type": "string" },
+    { "key": "countryId", "value": "", "type": "string" },
+    { "key": "stateId", "value": "", "type": "string" },
+    { "key": "zoneId", "value": "", "type": "string" },
+    { "key": "regionId", "value": "", "type": "string" },
+    { "key": "depotId", "value": "", "type": "string" },
+    { "key": "categoryId", "value": "", "type": "string" },
+    { "key": "brandId", "value": "", "type": "string" },
+    { "key": "attributeId", "value": "", "type": "string" },
+    { "key": "documentId", "value": "", "type": "string" },
+    { "key": "bundleId", "value": "", "type": "string" },
+    { "key": "substitutionId", "value": "", "type": "string" },
+    { "key": "hsnId", "value": "", "type": "string" },
+    { "key": "gstSlabId", "value": "", "type": "string" },
+    { "key": "productTaxId", "value": "", "type": "string" },
+    { "key": "subcategoryId", "value": "", "type": "string" },
+    { "key": "manufacturerId", "value": "", "type": "string" },
+    { "key": "uomId", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Authentication endpoints - public and authenticated",
+      "item": [
+        {
+          "name": "POST Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.accessToken) {",
+                  "  pm.collectionVariables.set('authToken', jsonData.data.accessToken);",
+                  "  pm.collectionVariables.set('orgId', jsonData.data.user.organizationId);",
+                  "  pm.collectionVariables.set('userId', jsonData.data.user.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenantCode\": \"default\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"Admin@12345\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "POST Signup",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"New Company\",\n  \"tenantCode\": \"newco\",\n  \"email\": \"admin@newco.com\",\n  \"password\": \"SecurePass@123\",\n  \"firstName\": \"Admin\",\n  \"lastName\": \"User\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/signup",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "signup"]
+            }
+          }
+        },
+        {
+          "name": "POST Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "refresh"]
+            }
+          }
+        },
+        {
+          "name": "POST Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "logout"]
+            }
+          }
+        },
+        {
+          "name": "POST Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"tenantCode\": \"default\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/forgot-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "forgot-password"]
+            }
+          }
+        },
+        {
+          "name": "POST Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"reset-token-from-email\",\n  \"password\": \"NewPassword@123\",\n  \"confirmPassword\": \"NewPassword@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/reset-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "reset-password"]
+            }
+          }
+        },
+        {
+          "name": "GET Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "description": "User management endpoints",
+      "item": [
+        {
+          "name": "GET List Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "status", "value": "", "disabled": true },
+                { "key": "roleId", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET Create Options",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/create-options",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "create-options"]
+            }
+          }
+        },
+        {
+          "name": "GET Hierarchy Tree",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/hierarchy/tree",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "hierarchy", "tree"]
+            }
+          }
+        },
+        {
+          "name": "POST Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newuser@example.com\",\n  \"firstName\": \"New\",\n  \"lastName\": \"User\",\n  \"roleName\": \"Salesman\",\n  \"reportingManagerId\": \"{{userId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"]
+            }
+          }
+        },
+        {
+          "name": "GET User By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "PATCH Update User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Updated\",\n  \"lastName\": \"Name\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "DELETE Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "PATCH Deactivate User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}/deactivate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userId}}", "deactivate"]
+            }
+          }
+        },
+        {
+          "name": "PATCH Reactivate User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}/reactivate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userId}}", "reactivate"]
+            }
+          }
+        },
+        {
+          "name": "PATCH Lock User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}/lock",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userId}}", "lock"]
+            }
+          }
+        },
+        {
+          "name": "PATCH Unlock User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}/unlock",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userId}}", "unlock"]
+            }
+          }
+        },
+        {
+          "name": "PATCH Suspend User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}/suspend",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userId}}", "suspend"]
+            }
+          }
+        },
+        {
+          "name": "POST Reset User Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newPassword\": \"NewPass@12345\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}/reset-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userId}}", "reset-password"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roles",
+      "description": "Role management endpoints",
+      "item": [
+        {
+          "name": "GET List Roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles"]
+            }
+          }
+        },
+        {
+          "name": "POST Create Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New Role\",\n  \"description\": \"Custom role\",\n  \"level\": 5,\n  \"permissionIds\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles"]
+            }
+          }
+        },
+        {
+          "name": "PATCH Update Role",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated description\",\n  \"permissionIds\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/{{roleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", "{{roleId}}"]
+            }
+          }
+        },
+        {
+          "name": "DELETE Delete Role",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/{{roleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", "{{roleId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Permissions",
+      "item": [
+        {
+          "name": "GET List Permissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "permissions"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Invites",
+      "item": [
+        {
+          "name": "POST Create Invite",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"invitee@example.com\",\n  \"roleName\": \"Salesman\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/invites",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "invites"]
+            }
+          }
+        },
+        {
+          "name": "POST Resend Invite",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"invitee@example.com\",\n  \"roleName\": \"Salesman\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/invites/resend",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "invites", "resend"]
+            }
+          }
+        },
+        {
+          "name": "POST Accept Invite",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"invite-token-string\",\n  \"password\": \"MyPassword@123\",\n  \"firstName\": \"Invited\",\n  \"lastName\": \"User\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/invites/accept",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "invites", "accept"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Audit Logs",
+      "item": [
+        {
+          "name": "GET List Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/audit-logs?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "audit-logs"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "action", "value": "", "disabled": true },
+                { "key": "entityType", "value": "", "disabled": true },
+                { "key": "entityId", "value": "", "disabled": true },
+                { "key": "actorId", "value": "", "disabled": true },
+                { "key": "from", "value": "", "disabled": true },
+                { "key": "to", "value": "", "disabled": true }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "description": "Product Master CRUD and status management",
+      "item": [
+        {
+          "name": "POST Create Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productCode\": \"PROD-001\",\n  \"productName\": \"Premium Basmati Rice 5kg\",\n  \"shortName\": \"Basmati Rice 5kg\",\n  \"description\": \"Premium quality basmati rice 5kg pack\",\n  \"categoryId\": null,\n  \"subCategoryId\": null,\n  \"brandId\": null,\n  \"manufacturerId\": null,\n  \"uomId\": \"{{uomId}}\",\n  \"barcode\": \"8901234567890\",\n  \"hsnCode\": \"10063020\",\n  \"skuType\": \"FINISHED_GOOD\",\n  \"shelfLifeDays\": 365,\n  \"reorderLevel\": 50\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.id) {",
+                  "  pm.collectionVariables.set('productId', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET List Products",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/products?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "sortBy", "value": "createdAt" },
+                { "key": "sortOrder", "value": "desc" },
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "status", "value": "", "disabled": true },
+                { "key": "categoryId", "value": "", "disabled": true },
+                { "key": "brandId", "value": "", "disabled": true },
+                { "key": "skuType", "value": "", "disabled": true },
+                { "key": "includeDeleted", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET Product By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "{{productId}}"]
+            }
+          }
+        },
+        {
+          "name": "PATCH Update Product",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productName\": \"Updated Product Name\",\n  \"description\": \"Updated description\",\n  \"shortName\": \"Updated Short Name\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "{{productId}}"]
+            }
+          }
+        },
+        {
+          "name": "DELETE Delete Product",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "{{productId}}"]
+            }
+          }
+        },
+        {
+          "name": "PATCH Activate Product",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{productId}}/activate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "{{productId}}", "activate"]
+            }
+          }
+        },
+        {
+          "name": "PATCH Deactivate Product",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{productId}}/deactivate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "{{productId}}", "deactivate"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Prices",
+      "description": "Price Master CRUD, approval workflow, and history",
+      "item": [
+        {
+          "name": "POST Create Price",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"priceType\": \"MRP\",\n  \"currency\": \"INR\",\n  \"unitPrice\": 500.00,\n  \"mrp\": 525.00,\n  \"ptr\": 475.00,\n  \"pts\": 450.00,\n  \"purchasePrice\": 400.00,\n  \"effectiveFrom\": \"2026-06-01T00:00:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/prices",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "prices"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.id) {",
+                  "  pm.collectionVariables.set('priceId', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET List Prices",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/prices?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "prices"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "productId", "value": "", "disabled": true },
+                { "key": "priceType", "value": "", "disabled": true },
+                { "key": "status", "value": "", "disabled": true },
+                { "key": "isActive", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET Price By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/prices/{{priceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "prices", "{{priceId}}"]
+            }
+          }
+        },
+        {
+          "name": "PATCH Update Price",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"unitPrice\": 510.00,\n  \"mrp\": 535.00\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/prices/{{priceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "prices", "{{priceId}}"]
+            }
+          }
+        },
+        {
+          "name": "POST Submit Price for Approval",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/prices/{{priceId}}/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "prices", "{{priceId}}", "submit"]
+            }
+          }
+        },
+        {
+          "name": "POST Approve Price",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/prices/{{priceId}}/approve",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "prices", "{{priceId}}", "approve"]
+            }
+          }
+        },
+        {
+          "name": "POST Reject Price",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Price exceeds market standards\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/prices/{{priceId}}/reject",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "prices", "{{priceId}}", "reject"]
+            }
+          }
+        },
+        {
+          "name": "GET Price History",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/prices/{{priceId}}/history",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "prices", "{{priceId}}", "history"]
+            }
+          }
+        },
+        {
+          "name": "GET Active Price for Product",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/prices/product/{{productId}}/active?priceType=MRP",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "prices", "product", "{{productId}}", "active"],
+              "query": [
+                { "key": "priceType", "value": "MRP" },
+                { "key": "effectiveDate", "value": "", "disabled": true }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hierarchy",
+      "description": "Product hierarchy - Business Unit, Division, Category, Brand, Variant",
+      "item": [
+        {
+          "name": "Business Units",
+          "item": [
+            { "name": "POST Create", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"code\": \"BU-01\",\n  \"name\": \"Food & Beverages\"\n}" }, "url": { "raw": "{{baseUrl}}/api/hierarchy/business-units", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "business-units"] } } },
+            { "name": "GET List", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/business-units", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "business-units"] } } },
+            { "name": "PATCH Update", "request": { "method": "PATCH", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Updated Business Unit\"\n}" }, "url": { "raw": "{{baseUrl}}/api/hierarchy/business-units/{{buId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "business-units", "{{buId}}"] } } },
+            { "name": "DELETE Delete", "request": { "method": "DELETE", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/business-units/{{buId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "business-units", "{{buId}}"] } } }
+          ]
+        },
+        {
+          "name": "Divisions",
+          "item": [
+            { "name": "POST Create", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"businessUnitId\": \"{{buId}}\",\n  \"code\": \"DIV-01\",\n  \"name\": \"Packaged Foods\"\n}" }, "url": { "raw": "{{baseUrl}}/api/hierarchy/divisions", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "divisions"] } } },
+            { "name": "GET List", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/divisions?businessUnitId={{buId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "divisions"], "query": [{"key":"businessUnitId","value":"{{buId}}","disabled":true}] } } },
+            { "name": "PATCH Update", "request": { "method": "PATCH", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Updated Division\"\n}" }, "url": { "raw": "{{baseUrl}}/api/hierarchy/divisions/{{divId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "divisions", "{{divId}}"] } } },
+            { "name": "DELETE Delete", "request": { "method": "DELETE", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/divisions/{{divId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "divisions", "{{divId}}"] } } }
+          ]
+        },
+        {
+          "name": "Categories",
+          "item": [
+            { "name": "POST Create", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"categoryCode\": \"CAT-01\",\n  \"categoryName\": \"Food Grains\",\n  \"description\": \"Rice, wheat, and other grains\"\n}" }, "url": { "raw": "{{baseUrl}}/api/hierarchy/categories", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "categories"] } }, "event": [ { "listen": "test", "script": { "exec": [ "var jsonData = pm.response.json();", "if (jsonData.data && jsonData.data.id) {", "  pm.collectionVariables.set('categoryId', jsonData.data.id);", "}" ], "type": "text/javascript" } } ] },
+            { "name": "GET List", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/categories", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "categories"] } } },
+            { "name": "GET By ID", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/categories/{{categoryId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "categories", "{{categoryId}}"] } } },
+            { "name": "PATCH Update", "request": { "method": "PATCH", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"categoryName\": \"Updated Category Name\",\n  \"description\": \"Updated description\"\n}" }, "url": { "raw": "{{baseUrl}}/api/hierarchy/categories/{{categoryId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "categories", "{{categoryId}}"] } } },
+            { "name": "DELETE Delete", "request": { "method": "DELETE", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/categories/{{categoryId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "categories", "{{categoryId}}"] } } }
+          ]
+        },
+        {
+          "name": "Subcategories",
+          "item": [
+            { "name": "POST Create", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"categoryId\": \"{{categoryId}}\",\n  \"subCategoryCode\": \"SUB-01\",\n  \"subCategoryName\": \"Basmati Rice\",\n  \"description\": \"Premium basmati rice varieties\"\n}" }, "url": { "raw": "{{baseUrl}}/api/hierarchy/subcategories", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "subcategories"] } }, "event": [ { "listen": "test", "script": { "exec": [ "var jsonData = pm.response.json();", "if (jsonData.data && jsonData.data.id) {", "  pm.collectionVariables.set('subcategoryId', jsonData.data.id);", "}" ], "type": "text/javascript" } } ] },
+            { "name": "GET List", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/subcategories?categoryId={{categoryId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "subcategories"], "query": [{"key":"categoryId","value":"{{categoryId}}"}] } } },
+            { "name": "GET By Category (Nested)", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/categories/{{categoryId}}/sub-categories", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "categories", "{{categoryId}}", "sub-categories"] } } },
+            { "name": "GET By ID", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/subcategories/{{subcategoryId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "subcategories", "{{subcategoryId}}"] } } },
+            { "name": "PATCH Update", "request": { "method": "PATCH", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"subCategoryName\": \"Updated Subcategory\",\n  \"description\": \"Updated description\"\n}" }, "url": { "raw": "{{baseUrl}}/api/hierarchy/subcategories/{{subcategoryId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "subcategories", "{{subcategoryId}}"] } } },
+            { "name": "DELETE Delete", "request": { "method": "DELETE", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/subcategories/{{subcategoryId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "subcategories", "{{subcategoryId}}"] } } }
+          ]
+        },
+        {
+          "name": "Brands",
+          "item": [
+            { "name": "POST Create", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"brandCode\": \"BR-01\",\n  \"brandName\": \"Premium Harvest\",\n  \"description\": \"Premium quality food products\"\n}" }, "url": { "raw": "{{baseUrl}}/api/hierarchy/brands", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "brands"] } }, "event": [ { "listen": "test", "script": { "exec": [ "var jsonData = pm.response.json();", "if (jsonData.data && jsonData.data.id) {", "  pm.collectionVariables.set('brandId', jsonData.data.id);", "}" ], "type": "text/javascript" } } ] },
+            { "name": "GET List", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/brands", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "brands"] } } },
+            { "name": "GET By ID", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/brands/{{brandId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "brands", "{{brandId}}"] } } },
+            { "name": "PATCH Update", "request": { "method": "PATCH", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"brandName\": \"Updated Brand\",\n  \"description\": \"Updated description\"\n}" }, "url": { "raw": "{{baseUrl}}/api/hierarchy/brands/{{brandId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "brands", "{{brandId}}"] } } },
+            { "name": "DELETE Delete", "request": { "method": "DELETE", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/brands/{{brandId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "brands", "{{brandId}}"] } } }
+          ]
+        },
+        {
+          "name": "Sub-Brands",
+          "item": [
+            { "name": "POST Create", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"brandId\": \"{{brandId}}\",\n  \"code\": \"SB-01\",\n  \"name\": \"Premium Harvest Gold\"\n}" }, "url": { "raw": "{{baseUrl}}/api/hierarchy/sub-brands", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "sub-brands"] } } },
+             { "name": "GET List", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/sub-brands?brandId={{brandId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "sub-brands"], "query": [{"key":"brandId","value":"{{brandId}}"}] } } },
+             { "name": "GET By Brand ID", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/brands/{{brandId}}/sub-brands", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "brands", "{{brandId}}", "sub-brands"] } } },
+             { "name": "PATCH Update", "request": { "method": "PATCH", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Updated Sub-Brand\"\n}" }, "url": { "raw": "{{baseUrl}}/api/hierarchy/sub-brands/{{subbrandId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "sub-brands", "{{subbrandId}}"] } } },
+             { "name": "DELETE Delete", "request": { "method": "DELETE", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/sub-brands/{{subbrandId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "sub-brands", "{{subbrandId}}"] } } }
+          ]
+        },
+        {
+          "name": "Variants",
+          "item": [
+            { "name": "POST Create", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"subbrandId\": \"{{subbrandId}}\",\n  \"code\": \"VAR-01\",\n  \"name\": \"5kg Pack\"\n}" }, "url": { "raw": "{{baseUrl}}/api/hierarchy/variants", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "variants"] } } },
+            { "name": "GET List", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/variants?subbrandId={{subbrandId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "variants"], "query": [{"key":"subbrandId","value":"{{subbrandId}}"}] } } },
+            { "name": "PATCH Update", "request": { "method": "PATCH", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Updated Variant\"\n}" }, "url": { "raw": "{{baseUrl}}/api/hierarchy/variants/{{variantId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "variants", "{{variantId}}"] } } },
+            { "name": "DELETE Delete", "request": { "method": "DELETE", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/variants/{{variantId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "variants", "{{variantId}}"] } } }
+          ]
+        },
+        {
+          "name": "Manufacturers",
+          "item": [
+            { "name": "POST Create", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"manufacturerCode\": \"MFR-01\",\n  \"manufacturerName\": \"ABC Foods Ltd\",\n  \"gstNumber\": \"27AABCA1234B1Z1\",\n  \"contactPerson\": \"Rajesh Mehta\",\n  \"email\": \"rajesh@abcfoods.in\",\n  \"phone\": \"9876543210\",\n  \"address\": \"Mumbai, Maharashtra\"\n}" }, "url": { "raw": "{{baseUrl}}/api/hierarchy/manufacturers", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "manufacturers"] } }, "event": [ { "listen": "test", "script": { "exec": [ "var jsonData = pm.response.json();", "if (jsonData.data && jsonData.data.id) {", "  pm.collectionVariables.set('manufacturerId', jsonData.data.id);", "}" ], "type": "text/javascript" } } ] },
+            { "name": "GET List", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/manufacturers", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "manufacturers"] } } },
+            { "name": "GET By ID", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/manufacturers/{{manufacturerId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "manufacturers", "{{manufacturerId}}"] } } },
+            { "name": "PATCH Update", "request": { "method": "PATCH", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"manufacturerName\": \"Updated Manufacturer\",\n  \"gstNumber\": \"27ABCDE1234F1Z5\",\n  \"contactPerson\": \"Updated Person\",\n  \"email\": \"contact@updated.in\",\n  \"phone\": \"9876543215\",\n  \"address\": \"Updated Address\"\n}" }, "url": { "raw": "{{baseUrl}}/api/hierarchy/manufacturers/{{manufacturerId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "manufacturers", "{{manufacturerId}}"] } } },
+            { "name": "DELETE Delete", "request": { "method": "DELETE", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/manufacturers/{{manufacturerId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "manufacturers", "{{manufacturerId}}"] } } }
+          ]
+        },
+        {
+          "name": "UOMs",
+          "item": [
+            { "name": "POST Create", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"uomCode\": \"UOM-KG\",\n  \"uomName\": \"Kilogram\",\n  \"description\": \"Weight in kilograms\"\n}" }, "url": { "raw": "{{baseUrl}}/api/hierarchy/uoms", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "uoms"] } }, "event": [ { "listen": "test", "script": { "exec": [ "var jsonData = pm.response.json();", "if (jsonData.data && jsonData.data.id) {", "  pm.collectionVariables.set('uomId', jsonData.data.id);", "}" ], "type": "text/javascript" } } ] },
+            { "name": "GET List", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/uoms", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "uoms"] } } },
+            { "name": "GET By ID", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/uoms/{{uomId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "uoms", "{{uomId}}"] } } },
+            { "name": "PATCH Update", "request": { "method": "PATCH", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"uomName\": \"Updated UOM\",\n  \"description\": \"Updated description\"\n}" }, "url": { "raw": "{{baseUrl}}/api/hierarchy/uoms/{{uomId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "uoms", "{{uomId}}"] } } },
+            { "name": "DELETE Delete", "request": { "method": "DELETE", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/uoms/{{uomId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "uoms", "{{uomId}}"] } } }
+          ]
+        },
+        {
+          "name": "GET Full Hierarchy Tree",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/hierarchy/tree",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hierarchy", "tree"]
+            }
+          }
+        },
+        {
+          "name": "GET Search Hierarchy",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/hierarchy/search?q=rice",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hierarchy", "search"],
+              "query": [
+                { "key": "q", "value": "rice" },
+                { "key": "level", "value": "", "disabled": true }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Geography",
+      "description": "Geography master data and product-geography mapping",
+      "item": [
+        {
+          "name": "Countries",
+          "item": [
+            { "name": "POST Create", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"code\": \"IN\",\n  \"name\": \"India\",\n  \"isoCode\": \"IND\",\n  \"currency\": \"INR\"\n}" }, "url": { "raw": "{{baseUrl}}/api/geography/countries", "host": ["{{baseUrl}}"], "path": ["api", "geography", "countries"] } } },
+            { "name": "GET List", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/geography/countries", "host": ["{{baseUrl}}"], "path": ["api", "geography", "countries"] } } },
+            { "name": "PATCH Update", "request": { "method": "PATCH", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Republic of India\"\n}" }, "url": { "raw": "{{baseUrl}}/api/geography/countries/{{countryId}}", "host": ["{{baseUrl}}"], "path": ["api", "geography", "countries", "{{countryId}}"] } } },
+            { "name": "DELETE Delete", "request": { "method": "DELETE", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/geography/countries/{{countryId}}", "host": ["{{baseUrl}}"], "path": ["api", "geography", "countries", "{{countryId}}"] } } }
+          ]
+        },
+        {
+          "name": "States",
+          "item": [
+            { "name": "POST Create", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"countryId\": \"{{countryId}}\",\n  \"code\": \"MH\",\n  \"name\": \"Maharashtra\",\n  \"gstCode\": \"27\"\n}" }, "url": { "raw": "{{baseUrl}}/api/geography/states", "host": ["{{baseUrl}}"], "path": ["api", "geography", "states"] } } },
+            { "name": "GET List", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/geography/states?countryId={{countryId}}", "host": ["{{baseUrl}}"], "path": ["api", "geography", "states"], "query": [{"key":"countryId","value":"{{countryId}}"}] } } },
+            { "name": "PATCH Update", "request": { "method": "PATCH", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Updated State\"\n}" }, "url": { "raw": "{{baseUrl}}/api/geography/states/{{stateId}}", "host": ["{{baseUrl}}"], "path": ["api", "geography", "states", "{{stateId}}"] } } },
+            { "name": "DELETE Delete", "request": { "method": "DELETE", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/geography/states/{{stateId}}", "host": ["{{baseUrl}}"], "path": ["api", "geography", "states", "{{stateId}}"] } } }
+          ]
+        },
+        {
+          "name": "Zones",
+          "item": [
+            { "name": "POST Create", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"stateId\": \"{{stateId}}\",\n  \"code\": \"WEST-1\",\n  \"name\": \"Western Zone\"\n}" }, "url": { "raw": "{{baseUrl}}/api/geography/zones", "host": ["{{baseUrl}}"], "path": ["api", "geography", "zones"] } } },
+            { "name": "GET List", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/geography/zones?stateId={{stateId}}", "host": ["{{baseUrl}}"], "path": ["api", "geography", "zones"], "query": [{"key":"stateId","value":"{{stateId}}"}] } } },
+            { "name": "PATCH Update", "request": { "method": "PATCH", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Updated Zone\"\n}" }, "url": { "raw": "{{baseUrl}}/api/geography/zones/{{zoneId}}", "host": ["{{baseUrl}}"], "path": ["api", "geography", "zones", "{{zoneId}}"] } } },
+            { "name": "DELETE Delete", "request": { "method": "DELETE", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/geography/zones/{{zoneId}}", "host": ["{{baseUrl}}"], "path": ["api", "geography", "zones", "{{zoneId}}"] } } }
+          ]
+        },
+        {
+          "name": "Regions",
+          "item": [
+            { "name": "POST Create", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"zoneId\": \"{{zoneId}}\",\n  \"code\": \"MUM-1\",\n  \"name\": \"Mumbai Region\"\n}" }, "url": { "raw": "{{baseUrl}}/api/geography/regions", "host": ["{{baseUrl}}"], "path": ["api", "geography", "regions"] } } },
+            { "name": "GET List", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/geography/regions?zoneId={{zoneId}}", "host": ["{{baseUrl}}"], "path": ["api", "geography", "regions"], "query": [{"key":"zoneId","value":"{{zoneId}}"}] } } },
+            { "name": "PATCH Update", "request": { "method": "PATCH", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Updated Region\"\n}" }, "url": { "raw": "{{baseUrl}}/api/geography/regions/{{regionId}}", "host": ["{{baseUrl}}"], "path": ["api", "geography", "regions", "{{regionId}}"] } } },
+            { "name": "DELETE Delete", "request": { "method": "DELETE", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/geography/regions/{{regionId}}", "host": ["{{baseUrl}}"], "path": ["api", "geography", "regions", "{{regionId}}"] } } }
+          ]
+        },
+        {
+          "name": "Depots",
+          "item": [
+            { "name": "POST Create", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"regionId\": \"{{regionId}}\",\n  \"code\": \"DEP-MUM-01\",\n  \"name\": \"Mumbai Central Depot\",\n  \"city\": \"Mumbai\"\n}" }, "url": { "raw": "{{baseUrl}}/api/geography/depots", "host": ["{{baseUrl}}"], "path": ["api", "geography", "depots"] } } },
+            { "name": "GET List", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/geography/depots?regionId={{regionId}}", "host": ["{{baseUrl}}"], "path": ["api", "geography", "depots"], "query": [{"key":"regionId","value":"{{regionId}}"}] } } },
+            { "name": "PATCH Update", "request": { "method": "PATCH", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Updated Depot\"\n}" }, "url": { "raw": "{{baseUrl}}/api/geography/depots/{{depotId}}", "host": ["{{baseUrl}}"], "path": ["api", "geography", "depots", "{{depotId}}"] } } },
+            { "name": "DELETE Delete", "request": { "method": "DELETE", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/geography/depots/{{depotId}}", "host": ["{{baseUrl}}"], "path": ["api", "geography", "depots", "{{depotId}}"] } } }
+          ]
+        },
+        {
+          "name": "POST Map Product to Geography",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"stateId\": \"{{stateId}}\",\n  \"availabilityStatus\": \"AVAILABLE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/geography/map",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "geography", "map"]
+            }
+          }
+        },
+        {
+          "name": "DELETE Unmap Product from Geography",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/geography/map/{{mappingId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "geography", "map", "{{mappingId}}"]
+            }
+          }
+        },
+        {
+          "name": "GET Product Geography",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/geography/product/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "geography", "product", "{{productId}}"]
+            }
+          }
+        },
+        {
+          "name": "GET Available Products for Geography",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/geography/available-products?stateId={{stateId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "geography", "available-products"],
+              "query": [
+                { "key": "stateId", "value": "{{stateId}}" },
+                { "key": "zoneId", "value": "", "disabled": true },
+                { "key": "regionId", "value": "", "disabled": true },
+                { "key": "depotId", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST Activate Launched Products",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/geography/activate-launched",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "geography", "activate-launched"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Masters Lookups",
+      "description": "Read-only lookup endpoints for FE dropdowns",
+      "item": [
+        {
+          "name": "Business Units (FE)",
+          "item": [
+            { "name": "GET List", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/masters/business-units", "host": ["{{baseUrl}}"], "path": ["api", "masters", "business-units"] } } }
+          ]
+        },
+        {
+          "name": "Divisions (FE)",
+          "item": [
+            { "name": "GET List", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/masters/divisions?buId={{buId}}", "host": ["{{baseUrl}}"], "path": ["api", "masters", "divisions"], "query": [{"key":"buId","value":"{{buId}}"}] } } }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tax",
+      "description": "HSN codes, GST slabs, and product tax configuration",
+      "item": [
+        {
+          "name": "HSN Codes",
+          "item": [
+            { "name": "POST Create", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"code\": \"1006\",\n  \"description\": \"Rice\"\n}" }, "url": { "raw": "{{baseUrl}}/api/tax/hsn", "host": ["{{baseUrl}}"], "path": ["api", "tax", "hsn"] } } },
+            { "name": "GET List", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/tax/hsn?page=1&limit=20", "host": ["{{baseUrl}}"], "path": ["api", "tax", "hsn"], "query": [{"key":"page","value":"1"},{"key":"limit","value":"20"}] } } },
+            { "name": "GET By ID", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/tax/hsn/{{hsnId}}", "host": ["{{baseUrl}}"], "path": ["api", "tax", "hsn", "{{hsnId}}"] } } },
+            { "name": "PATCH Update", "request": { "method": "PATCH", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"description\": \"Updated description\"\n}" }, "url": { "raw": "{{baseUrl}}/api/tax/hsn/{{hsnId}}", "host": ["{{baseUrl}}"], "path": ["api", "tax", "hsn", "{{hsnId}}"] } } },
+            { "name": "DELETE Delete", "request": { "method": "DELETE", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/tax/hsn/{{hsnId}}", "host": ["{{baseUrl}}"], "path": ["api", "tax", "hsn", "{{hsnId}}"] } } }
+          ]
+        },
+        {
+          "name": "GST Slabs",
+          "item": [
+            { "name": "POST Create", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"name\": \"GST 5%\",\n  \"gstRate\": 5.0,\n  \"cgstRate\": 2.5,\n  \"sgstRate\": 2.5,\n  \"igstRate\": 5.0,\n  \"cessRate\": 0,\n  \"effectiveFrom\": \"2026-06-01T00:00:00.000Z\"\n}" }, "url": { "raw": "{{baseUrl}}/api/tax/gst-slabs", "host": ["{{baseUrl}}"], "path": ["api", "tax", "gst-slabs"] } } },
+            { "name": "GET List", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/tax/gst-slabs", "host": ["{{baseUrl}}"], "path": ["api", "tax", "gst-slabs"] } } },
+            { "name": "GET By ID", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/tax/gst-slabs/{{gstSlabId}}", "host": ["{{baseUrl}}"], "path": ["api", "tax", "gst-slabs", "{{gstSlabId}}"] } } },
+            { "name": "PATCH Update", "request": { "method": "PATCH", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"gstRate\": 12.0,\n  \"cgstRate\": 6.0,\n  \"sgstRate\": 6.0,\n  \"igstRate\": 12.0\n}" }, "url": { "raw": "{{baseUrl}}/api/tax/gst-slabs/{{gstSlabId}}", "host": ["{{baseUrl}}"], "path": ["api", "tax", "gst-slabs", "{{gstSlabId}}"] } } },
+            { "name": "DELETE Delete", "request": { "method": "DELETE", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/tax/gst-slabs/{{gstSlabId}}", "host": ["{{baseUrl}}"], "path": ["api", "tax", "gst-slabs", "{{gstSlabId}}"] } } }
+          ]
+        },
+        {
+          "name": "Product Tax",
+          "item": [
+            { "name": "POST Create", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"hsnId\": \"{{hsnId}}\",\n  \"gstSlabId\": \"{{gstSlabId}}\",\n  \"taxType\": \"GST\",\n  \"gstRate\": 5.0,\n  \"cgstRate\": 2.5,\n  \"sgstRate\": 2.5,\n  \"igstRate\": 5.0,\n  \"isReverseCharge\": false\n}" }, "url": { "raw": "{{baseUrl}}/api/tax/product-tax", "host": ["{{baseUrl}}"], "path": ["api", "tax", "product-tax"] } } },
+            { "name": "GET List", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/tax/product-tax?productId={{productId}}", "host": ["{{baseUrl}}"], "path": ["api", "tax", "product-tax"], "query": [{"key":"productId","value":"{{productId}}"}] } } },
+            { "name": "GET By ID", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/tax/product-tax/{{productTaxId}}", "host": ["{{baseUrl}}"], "path": ["api", "tax", "product-tax", "{{productTaxId}}"] } } },
+            { "name": "GET By Product", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/tax/product/{{productId}}", "host": ["{{baseUrl}}"], "path": ["api", "tax", "product", "{{productId}}"] } } },
+            { "name": "PATCH Update", "request": { "method": "PATCH", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"gstRate\": 12.0,\n  \"cgstRate\": 6.0,\n  \"sgstRate\": 6.0,\n  \"igstRate\": 12.0\n}" }, "url": { "raw": "{{baseUrl}}/api/tax/product-tax/{{productTaxId}}", "host": ["{{baseUrl}}"], "path": ["api", "tax", "product-tax", "{{productTaxId}}"] } } },
+            { "name": "DELETE Delete", "request": { "method": "DELETE", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/tax/product-tax/{{productTaxId}}", "host": ["{{baseUrl}}"], "path": ["api", "tax", "product-tax", "{{productTaxId}}"] } } }
+          ]
+        },
+        {
+          "name": "POST Validate Tax Configuration",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"gstRate\": 5.0,\n  \"cgstRate\": 2.5,\n  \"sgstRate\": 2.5,\n  \"igstRate\": 5.0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tax/validate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tax", "validate"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Attributes",
+      "description": "Dynamic attribute management",
+      "item": [
+        {
+          "name": "POST Create Attribute",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"FLAVOR\",\n  \"name\": \"Flavor\",\n  \"attributeType\": \"DROPDOWN\",\n  \"isRequired\": true,\n  \"isFilterable\": true,\n  \"validationRules\": {\n    \"options\": [\"Mango\",\"Orange\",\"Apple\",\"Grape\"]\n  },\n  \"sortOrder\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/attributes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "attributes"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.id) {",
+                  "  pm.collectionVariables.set('attributeId', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET List Attributes",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/attributes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "attributes"]
+            }
+          }
+        },
+        {
+          "name": "GET Attribute By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/attributes/{{attributeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "attributes", "{{attributeId}}"]
+            }
+          }
+        },
+        {
+          "name": "PATCH Update Attribute",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Flavor\",\n  \"validationRules\": {\n    \"options\": [\"Mango\",\"Orange\",\"Apple\",\"Grape\",\"Pineapple\"]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/attributes/{{attributeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "attributes", "{{attributeId}}"]
+            }
+          }
+        },
+        {
+          "name": "DELETE Delete Attribute",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/attributes/{{attributeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "attributes", "{{attributeId}}"]
+            }
+          }
+        },
+        {
+          "name": "POST Assign Attributes to Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"attributes\": [\n    {\n      \"attributeId\": \"{{attributeId}}\",\n      \"value\": \"Mango\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/attributes/assign",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "attributes", "assign"]
+            }
+          }
+        },
+        {
+          "name": "GET Product Attributes",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/attributes/product/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "attributes", "product", "{{productId}}"]
+            }
+          }
+        },
+        {
+          "name": "DELETE Remove Attribute Mapping",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/attributes/product/{{productId}}/{{attributeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "attributes", "product", "{{productId}}", "{{attributeId}}"]
+            }
+          }
+        },
+        {
+          "name": "POST Search Products by Attributes",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attributes\": {\n    \"FLAVOR\": \"Mango\"\n  },\n  \"page\": 1,\n  \"limit\": 20\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/attributes/search",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "attributes", "search"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Documents",
+      "description": "Product document management with versioning",
+      "item": [
+        {
+          "name": "POST Upload Document",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "" },
+                { "key": "productId", "value": "{{productId}}" },
+                { "key": "category", "value": "PRODUCT_IMAGE" },
+                { "key": "title", "value": "Product Front View" },
+                { "key": "isPrimary", "value": "true" }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "documents", "upload"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.id) {",
+                  "  pm.collectionVariables.set('documentId', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET Documents for Product",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/product/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "documents", "product", "{{productId}}"]
+            }
+          }
+        },
+        {
+          "name": "GET Document By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/{{documentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "documents", "{{documentId}}"]
+            }
+          }
+        },
+        {
+          "name": "PATCH Update Document Metadata",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Title\",\n  \"description\": \"Updated description\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/{{documentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "documents", "{{documentId}}"]
+            }
+          }
+        },
+        {
+          "name": "POST Upload New Version",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "" },
+                { "key": "changeNotes", "value": "Updated version with corrections" }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/{{documentId}}/version",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "documents", "{{documentId}}", "version"]
+            }
+          }
+        },
+        {
+          "name": "DELETE Delete Document",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/{{documentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "documents", "{{documentId}}"]
+            }
+          }
+        },
+        {
+          "name": "POST Set Document as Primary",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/{{documentId}}/primary",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "documents", "{{documentId}}", "primary"]
+            }
+          }
+        },
+        {
+          "name": "GET Download Document",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/{{documentId}}/download",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "documents", "{{documentId}}", "download"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bundles",
+      "description": "Product bundle management",
+      "item": [
+        {
+          "name": "POST Create Bundle",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bundleProductId\": \"{{productId}}\",\n  \"bundleType\": \"FIXED\",\n  \"name\": \"Festival Special Combo\",\n  \"description\": \"Rice 5kg + Oil 1L + Spices Combo\",\n  \"bundlePrice\": 650.00,\n  \"bundleMrp\": 699.00,\n  \"isActive\": true,\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"quantity\": 1,\n      \"isMandatory\": true\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bundles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bundles"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.id) {",
+                  "  pm.collectionVariables.set('bundleId', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET List Bundles",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/bundles?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bundles"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "bundleType", "value": "", "disabled": true },
+                { "key": "isActive", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET Bundle By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/bundles/{{bundleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bundles", "{{bundleId}}"]
+            }
+          }
+        },
+        {
+          "name": "GET Bundles for Product",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/bundles/product/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bundles", "product", "{{productId}}"]
+            }
+          }
+        },
+        {
+          "name": "PATCH Update Bundle",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bundlePrice\": 625.00,\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bundles/{{bundleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bundles", "{{bundleId}}"]
+            }
+          }
+        },
+        {
+          "name": "DELETE Delete Bundle",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/bundles/{{bundleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bundles", "{{bundleId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Substitutions",
+      "description": "Product substitution management",
+      "item": [
+        {
+          "name": "POST Create Substitution",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"substituteId\": \"{{productId}}\",\n  \"substitutionType\": \"EXACT\",\n  \"priority\": 1,\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/substitutions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "substitutions"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.id) {",
+                  "  pm.collectionVariables.set('substitutionId', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET List Substitutions",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/substitutions?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "substitutions"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "productId", "value": "", "disabled": true },
+                { "key": "substitutionType", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET Substitution By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/substitutions/{{substitutionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "substitutions", "{{substitutionId}}"]
+            }
+          }
+        },
+        {
+          "name": "GET Substitutes for Product",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/substitutions/product/{{productId}}/substitutes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "substitutions", "product", "{{productId}}", "substitutes"]
+            }
+          }
+        },
+        {
+          "name": "GET Original Products for Substitute",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/substitutions/product/{{productId}}/originals",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "substitutions", "product", "{{productId}}", "originals"]
+            }
+          }
+        },
+        {
+          "name": "PATCH Update Substitution",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"priority\": 2,\n  \"substitutionType\": \"SIMILAR\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/substitutions/{{substitutionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "substitutions", "{{substitutionId}}"]
+            }
+          }
+        },
+        {
+          "name": "DELETE Delete Substitution",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/substitutions/{{substitutionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "substitutions", "{{substitutionId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Uploads",
+      "description": "Bulk upload framework for products, prices, and hierarchy",
+      "item": [
+        {
+          "name": "POST Upload File",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "" },
+                { "key": "uploadType", "value": "PRODUCT_UPLOAD" }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/uploads/upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "uploads", "upload"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.id) {",
+                  "  pm.collectionVariables.set('uploadId', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST Validate Upload",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/uploads/{{uploadId}}/validate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "uploads", "{{uploadId}}", "validate"]
+            }
+          }
+        },
+        {
+          "name": "POST Approve Upload",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/uploads/{{uploadId}}/approve",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "uploads", "{{uploadId}}", "approve"]
+            }
+          }
+        },
+        {
+          "name": "POST Reject Upload",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Data quality issues found\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/uploads/{{uploadId}}/reject",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "uploads", "{{uploadId}}", "reject"]
+            }
+          }
+        },
+        {
+          "name": "GET List Uploads",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/uploads?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "uploads"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "uploadType", "value": "", "disabled": true },
+                { "key": "status", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET Upload Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/uploads/{{uploadId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "uploads", "{{uploadId}}"]
+            }
+          }
+        },
+        {
+          "name": "GET Upload Errors",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/uploads/{{uploadId}}/errors",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "uploads", "{{uploadId}}", "errors"]
+            }
+          }
+        },
+        {
+          "name": "GET Download Error Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/uploads/{{uploadId}}/error-report",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "uploads", "{{uploadId}}", "error-report"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Workflows",
+      "description": "Workflow engine - maker-checker approval flow",
+      "item": [
+        {
+          "name": "POST Create Workflow",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"entityType\": \"PRODUCT_CREATE\",\n  \"entityId\": \"{{productId}}\",\n  \"payload\": {\n    \"productCode\": \"PROD-001\",\n    \"name\": \"Premium Basmati Rice 5kg\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/workflows",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "workflows"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.id) {",
+                  "  pm.collectionVariables.set('workflowId', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST Submit Workflow",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/workflows/{{workflowId}}/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "workflows", "{{workflowId}}", "submit"]
+            }
+          }
+        },
+        {
+          "name": "POST Review Workflow",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comment\": \"Reviewing the submission\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/workflows/{{workflowId}}/review",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "workflows", "{{workflowId}}", "review"]
+            }
+          }
+        },
+        {
+          "name": "POST Approve Workflow",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comment\": \"Approved after verification\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/workflows/{{workflowId}}/approve",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "workflows", "{{workflowId}}", "approve"]
+            }
+          }
+        },
+        {
+          "name": "POST Reject Workflow",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comment\": \"Does not meet quality standards\",\n  \"action\": \"REJECT\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/workflows/{{workflowId}}/reject",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "workflows", "{{workflowId}}", "reject"]
+            }
+          }
+        },
+        {
+          "name": "POST Publish Workflow",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/workflows/{{workflowId}}/publish",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "workflows", "{{workflowId}}", "publish"]
+            }
+          }
+        },
+        {
+          "name": "GET Pending Workflows",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/workflows/pending",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "workflows", "pending"]
+            }
+          }
+        },
+        {
+          "name": "GET Workflow History",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/workflows/{{workflowId}}/history",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "workflows", "{{workflowId}}", "history"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RBAC",
+      "description": "Role-based access control management",
+      "item": [
+        {
+          "name": "GET All Permissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/rbac/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "rbac", "permissions"]
+            }
+          }
+        },
+        {
+          "name": "GET User Permissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/rbac/users/{{userId}}/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "rbac", "users", "{{userId}}", "permissions"]
+            }
+          }
+        },
+        {
+          "name": "GET User Permission Overrides",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/rbac/users/{{userId}}/overrides",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "rbac", "users", "{{userId}}", "overrides"]
+            }
+          }
+        },
+        {
+          "name": "POST Set Permission Override",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissionId\": \"{{permissionId}}\",\n  \"granted\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/rbac/users/{{userId}}/overrides",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "rbac", "users", "{{userId}}", "overrides"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "description": "Reporting and dashboard APIs",
+      "item": [
+        {
+          "name": "GET Product Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/products?status=ACTIVE",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reports", "products"],
+              "query": [
+                { "key": "status", "value": "ACTIVE", "disabled": true },
+                { "key": "categoryId", "value": "", "disabled": true },
+                { "key": "fromDate", "value": "", "disabled": true },
+                { "key": "toDate", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET Price Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/prices",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reports", "prices"],
+              "query": [
+                { "key": "productId", "value": "", "disabled": true },
+                { "key": "status", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET Audit Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/audit?entityType=product",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reports", "audit"],
+              "query": [
+                { "key": "entityType", "value": "product", "disabled": true },
+                { "key": "action", "value": "", "disabled": true },
+                { "key": "fromDate", "value": "", "disabled": true },
+                { "key": "toDate", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET Upload Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/uploads?uploadType=PRODUCT_UPLOAD",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reports", "uploads"],
+              "query": [
+                { "key": "uploadType", "value": "PRODUCT_UPLOAD", "disabled": true },
+                { "key": "status", "value": "", "disabled": true },
+                { "key": "fromDate", "value": "", "disabled": true },
+                { "key": "toDate", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET Dashboard Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reports", "dashboard"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Audit",
+      "description": "Entity audit log querying",
+      "item": [
+        {
+          "name": "GET List Audit Entries",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/audit?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "audit"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "entityType", "value": "", "disabled": true },
+                { "key": "entityId", "value": "", "disabled": true },
+                { "key": "action", "value": "", "disabled": true },
+                { "key": "actorId", "value": "", "disabled": true },
+                { "key": "fromDate", "value": "", "disabled": true },
+                { "key": "toDate", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET Audit History for Entity",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "x-organization-id", "value": "{{orgId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/audit/product/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "audit", "product", "{{productId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

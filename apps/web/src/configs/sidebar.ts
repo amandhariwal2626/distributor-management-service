@@ -3,7 +3,15 @@ import {
   Users,
   Shield,
   Network,
-  ScrollText,
+  Package,
+  DollarSign,
+  Tags,
+  Award,
+  SlidersHorizontal,
+  Upload,
+  CheckCircle2,
+  FileBarChart,
+  Settings,
   type LucideIcon,
 } from "lucide-react";
 import type { SidebarItem as OldSidebarItem } from "@/types/sidebar";
@@ -22,23 +30,36 @@ export interface SidebarGroup {
 
 export const sidebarGroups: SidebarGroup[] = [
   {
-    label: "Overview",
+    label: "Dashboard",
     items: [
-      { label: "Dashboard", href: "/", icon: LayoutDashboard },
+      { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     ],
   },
   {
-    label: "User Management",
+    label: "Masters",
+    items: [
+      { label: "Product Master", href: "/products", icon: Package, permission: "users.read" },
+      { label: "Price Master", href: "/prices", icon: DollarSign, permission: "users.read" },
+      { label: "Category Master", href: "/categories", icon: Tags },
+      { label: "Brand Master", href: "/brands", icon: Award },
+      { label: "Attribute Master", href: "/attributes", icon: SlidersHorizontal },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      { label: "Approvals", href: "/approvals", icon: CheckCircle2 },
+      { label: "Uploads", href: "/uploads", icon: Upload },
+      { label: "Audit", href: "/audit", icon: FileBarChart },
+    ],
+  },
+  {
+    label: "Administration",
     items: [
       { label: "Users", href: "/users", icon: Users, permission: "users.read" },
       { label: "Roles", href: "/roles", icon: Shield, permission: "roles.read" },
       { label: "Hierarchy", href: "/hierarchy", icon: Network, permission: "hierarchy.view" },
-    ],
-  },
-  {
-    label: "Activity",
-    items: [
-      { label: "Audit Logs", href: "/audit-logs", icon: ScrollText, permission: "audit.read" },
+      { label: "Settings", href: "#", icon: Settings },
     ],
   },
 ];

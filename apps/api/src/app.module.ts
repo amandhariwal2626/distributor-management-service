@@ -12,6 +12,18 @@ import { PermissionsModule } from './permissions/permissions.module';
 import { AuthModule } from './auth/auth.module';
 import { InvitesModule } from './invites/invites.module';
 import { AuditLogsModule } from './audit-logs/audit-logs.module';
+import { EventsModule } from './events/events.module';
+import { AuditModule } from './audit/audit.module';
+import { StorageModule } from './storage/storage.module';
+import { ProductModule } from './product/product.module';
+import { PriceModule } from './price/price.module';
+import { HierarchyModule } from './hierarchy/hierarchy.module';
+import { TaxModule } from './tax/tax.module';
+import { AttributeModule } from './attribute/attribute.module';
+import { DocumentModule } from './document/document.module';
+import { RbacModule } from './rbac/rbac.module';
+import { ReportingModule } from './reporting/reporting.module';
+import { GeographyModule } from './geography/geography.module';
 
 @Module({
   imports: [
@@ -27,6 +39,18 @@ import { AuditLogsModule } from './audit-logs/audit-logs.module';
     UsersModule,
     InvitesModule,
     AuditLogsModule,
+    EventsModule,
+    AuditModule,
+    StorageModule,
+    ProductModule,
+    PriceModule,
+    HierarchyModule,
+    TaxModule,
+    AttributeModule,
+    DocumentModule,
+    RbacModule,
+    ReportingModule,
+    GeographyModule,
   ],
   controllers: [AppController],
   providers: [

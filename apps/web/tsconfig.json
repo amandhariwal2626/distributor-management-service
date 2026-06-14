@@ -1,6 +1,7 @@
 {
   "extends": "@dms/typescript-config/nextjs.json",
   "compilerOptions": {
+    "skipLibCheck": true,
     "allowJs": true,
     "resolveJsonModule": true,
     "paths": {
