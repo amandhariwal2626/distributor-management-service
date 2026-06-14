@@ -210,7 +210,21 @@ All 11 roles are seeded with their hierarchy levels and appropriate permission p
   - Next.js development container uses `WATCHPACK_POLLING=true` to detect host filesystem updates in container environments.
   - Use `docker compose up -d -V --build` to force rebuilds when dependencies inside `package.json` are modified, which updates the anonymous volumes.
 
-## 10. External Services
+## 10. Postman Collection Management
+
+- **Source of Truth**: The Postman collection lives at `postman_collection.json` in the project root.
+- **Every API change must update the collection.** When adding, modifying, or removing any API endpoint in any controller:
+  1. Add/update the corresponding request in `postman_collection.json`.
+  2. Include example request bodies for all POST/PATCH/PUT endpoints with realistic sample data.
+  3. For endpoints with path params (e.g., `:id`), use Postman collection variables (e.g., `{{productId}}`).
+  4. For list endpoints, include all query parameters as optional query params with examples.
+  5. Add event scripts where appropriate to auto-set collection variables from responses (e.g., set `productId` after `POST /products`).
+  6. Group endpoints by module into folders matching the controller structure.
+  7. Include ALL endpoints: public, authenticated, and permission-gated.
+- The collection has 177 endpoints across 21 controller files. Maintain this completeness.
+- See `postman_collection.json` for the reference format.
+
+## 11. External Services
 
 - **UI Generation**: Lovable (lovable.dev) — feed `docs/UI-SPECS-FOR-LOVABLE.md` specs for new UI components
 - **Frontend Hosting**: Vercel

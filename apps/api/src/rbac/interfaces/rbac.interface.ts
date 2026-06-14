@@ -1,0 +1,30 @@
+export const PRODUCT_PERMISSIONS = {
+  PRODUCT_READ: 'product.read',
+  PRODUCT_CREATE: 'product.create',
+  PRODUCT_EDIT: 'product.edit',
+  PRODUCT_DELETE: 'product.delete',
+  PRODUCT_APPROVE: 'product.approve',
+  PRICE_READ: 'price.read',
+  PRICE_CREATE: 'price.create',
+  PRICE_EDIT: 'price.edit',
+  PRICE_APPROVE: 'price.approve',
+  HIERARCHY_READ: 'hierarchy.read',
+  HIERARCHY_CREATE: 'hierarchy.create',
+  UPLOAD_READ: 'upload.read',
+  UPLOAD_CREATE: 'upload.create',
+  UPLOAD_PUBLISH: 'upload.publish',
+  WORKFLOW_READ: 'workflow.read',
+  WORKFLOW_CREATE: 'workflow.create',
+  WORKFLOW_APPROVE: 'workflow.approve',
+  AUDIT_VIEW: 'audit.view',
+  REPORT_READ: 'report.read',
+  REPORT_EXPORT: 'report.export',
+  ATTRIBUTE_READ: 'attribute.read',
+  ATTRIBUTE_CREATE: 'attribute.create',
+  DOCUMENT_READ: 'document.read',
+  DOCUMENT_CREATE: 'document.create',
+  DOCUMENT_DELETE: 'document.delete',
+} as const;
+
+export type ProductPermission =
+  (typeof PRODUCT_PERMISSIONS)[keyof typeof PRODUCT_PERMISSIONS];

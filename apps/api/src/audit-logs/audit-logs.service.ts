@@ -13,6 +13,7 @@ export class AuditLogService {
     action: string;
     entityType?: string;
     entityId?: string;
+    field?: string;
     oldValue?: Record<string, unknown>;
     newValue?: Record<string, unknown>;
     ipAddress?: string;

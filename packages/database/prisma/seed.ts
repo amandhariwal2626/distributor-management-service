@@ -23,7 +23,9 @@ const ROLES: RoleSeed[] = [
       'roles.read', 'roles.create', 'roles.update', 'roles.delete',
       'roles.assign', 'roles.manage',
       'hierarchy.view', 'hierarchy.export',
+      'hierarchy.read', 'hierarchy.create',
       'audit.read', 'audit.export',
+      'audit.view',
       'documents.read', 'documents.create', 'documents.update', 'documents.delete', 'documents.share',
       'folders.read', 'folders.create', 'folders.update', 'folders.delete',
       'approvals.read', 'approvals.approve', 'approvals.reject',
@@ -31,7 +33,14 @@ const ROLES: RoleSeed[] = [
       'inventory.read', 'inventory.manage',
       'payments.read', 'payments.manage',
       'reports.read', 'reports.export',
+      'report.read', 'report.export',
       'settings.read', 'settings.manage', 'settings.owner',
+      'product.read', 'product.create', 'product.edit', 'product.delete', 'product.approve',
+      'price.read', 'price.create', 'price.edit', 'price.approve',
+      'upload.read', 'upload.create', 'upload.publish',
+      'workflow.read', 'workflow.create', 'workflow.approve',
+      'attribute.read', 'attribute.create',
+      'document.read', 'document.create', 'document.delete',
     ],
   },
   {
@@ -42,7 +51,11 @@ const ROLES: RoleSeed[] = [
     permissionCodes: [
       'users.read',
       'hierarchy.view', 'hierarchy.export',
+      'hierarchy.read',
       'reports.read', 'reports.export',
+      'report.read', 'report.export',
+      'product.read',
+      'price.read',
     ],
   },
   {
@@ -53,7 +66,11 @@ const ROLES: RoleSeed[] = [
     permissionCodes: [
       'users.read',
       'hierarchy.view', 'hierarchy.export',
+      'hierarchy.read',
       'reports.read', 'reports.export',
+      'report.read', 'report.export',
+      'product.read',
+      'price.read',
     ],
   },
   {
@@ -64,7 +81,11 @@ const ROLES: RoleSeed[] = [
     permissionCodes: [
       'users.read',
       'hierarchy.view', 'hierarchy.export',
+      'hierarchy.read',
       'reports.read', 'reports.export',
+      'report.read', 'report.export',
+      'product.read',
+      'price.read',
     ],
   },
   {
@@ -75,7 +96,11 @@ const ROLES: RoleSeed[] = [
     permissionCodes: [
       'users.read',
       'hierarchy.view', 'hierarchy.export',
+      'hierarchy.read',
       'reports.read', 'reports.export',
+      'report.read', 'report.export',
+      'product.read',
+      'price.read',
     ],
   },
   {
@@ -86,6 +111,9 @@ const ROLES: RoleSeed[] = [
     permissionCodes: [
       'users.read',
       'hierarchy.view',
+      'hierarchy.read',
+      'product.read',
+      'price.read',
     ],
   },
   {
@@ -99,6 +127,11 @@ const ROLES: RoleSeed[] = [
       'users.update',
       'users.reset_password',
       'hierarchy.view',
+      'hierarchy.read',
+      'product.read',
+      'price.read',
+      'upload.read',
+      'upload.create',
     ],
   },
   {
@@ -267,6 +300,218 @@ async function main() {
       await prisma.userRole.upsert({
         where: { userId_roleId: { userId, roleId: role.id } },
         create: { userId, roleId: role.id },
+        update: {},
+      });
+    }
+  }
+
+  // ── Product Master Seed Data ──────────────────────────────────
+
+  const categoryData = [
+    { categoryCode: 'CAT-FG', categoryName: 'Food Grains', description: 'Rice, wheat, and other grains' },
+    { categoryCode: 'CAT-BEV', categoryName: 'Beverages', description: 'Soft drinks, juices, and other beverages' },
+    { categoryCode: 'CAT-SNC', categoryName: 'Snacks & Confectionery', description: 'Biscuits, chips, candies' },
+    { categoryCode: 'CAT-DRY', categoryName: 'Dairy & Chilled', description: 'Milk, yogurt, cheese' },
+    { categoryCode: 'CAT-PHC', categoryName: 'Personal & Home Care', description: 'Soaps, detergents, toiletries' },
+  ];
+
+  interface SeedCategory {
+    id: string;
+    categoryCode: string;
+    categoryName: string;
+  }
+
+  const createdCategories: SeedCategory[] = [];
+
+  for (const cat of categoryData) {
+    const record = await prisma.productCategory.upsert({
+      where: { companyId_categoryCode: { companyId: organization.id, categoryCode: cat.categoryCode } },
+      create: { companyId: organization.id, ...cat },
+      update: {},
+    });
+    createdCategories.push({ id: record.id, categoryCode: record.categoryCode, categoryName: record.categoryName });
+  }
+
+  function findCategory(code: string): SeedCategory {
+    const c = createdCategories.find((c) => c.categoryCode === code);
+    if (!c) throw new Error(`Category not found: ${code}`);
+    return c;
+  }
+
+  const subCategoryData = [
+    { subCategoryCode: 'SCT-RICE', subCategoryName: 'Rice', description: 'All varieties of rice', categoryCode: 'CAT-FG' },
+    { subCategoryCode: 'SCT-WHEAT', subCategoryName: 'Wheat & Atta', description: 'Wheat flour products', categoryCode: 'CAT-FG' },
+    { subCategoryCode: 'SCT-OIL', subCategoryName: 'Cooking Oils', description: 'Edible oils', categoryCode: 'CAT-FG' },
+    { subCategoryCode: 'SCT-CARB', subCategoryName: 'Carbonated Drinks', description: 'Soft drinks', categoryCode: 'CAT-BEV' },
+    { subCategoryCode: 'SCT-JUICE', subCategoryName: 'Juices', description: 'Fruit juices', categoryCode: 'CAT-BEV' },
+    { subCategoryCode: 'SCT-BISCUIT', subCategoryName: 'Biscuits', description: 'Biscuits and cookies', categoryCode: 'CAT-SNC' },
+    { subCategoryCode: 'SCT-CHIPS', subCategoryName: 'Chips', description: 'Potato chips and extruded snacks', categoryCode: 'CAT-SNC' },
+    { subCategoryCode: 'SCT-MILK', subCategoryName: 'Milk', description: 'Fresh and packaged milk', categoryCode: 'CAT-DRY' },
+    { subCategoryCode: 'SCT-SOAP', subCategoryName: 'Soaps', description: 'Bath and hand soaps', categoryCode: 'CAT-PHC' },
+  ];
+
+  interface SeedSubCategory {
+    id: string;
+    subCategoryCode: string;
+    subCategoryName: string;
+  }
+
+  const createdSubCategories: SeedSubCategory[] = [];
+
+  for (const sc of subCategoryData) {
+    const categoryId = findCategory(sc.categoryCode).id;
+    const record = await prisma.productSubCategory.upsert({
+      where: { companyId_subCategoryCode: { companyId: organization.id, subCategoryCode: sc.subCategoryCode } },
+      create: { companyId: organization.id, categoryId, subCategoryCode: sc.subCategoryCode, subCategoryName: sc.subCategoryName, description: sc.description },
+      update: {},
+    });
+    createdSubCategories.push({ id: record.id, subCategoryCode: record.subCategoryCode, subCategoryName: record.subCategoryName });
+  }
+
+  const brandData = [
+    { brandCode: 'BRD-PH', brandName: 'Premium Harvest', description: 'Premium quality food products' },
+    { brandCode: 'BRD-NF', brandName: 'Nature\'s Fresh', description: 'Natural and organic products' },
+    { brandCode: 'BRD-CF', brandName: 'Cool Fizz', description: 'Refreshing beverages' },
+    { brandCode: 'BRD-CB', brandName: 'Crunchy Bites', description: 'Delicious snacks' },
+    { brandCode: 'BRD-DF', brandName: 'Daily Fresh', description: 'Daily household essentials' },
+  ];
+
+  interface SeedBrand {
+    id: string;
+    brandCode: string;
+    brandName: string;
+  }
+
+  const createdBrands: SeedBrand[] = [];
+
+  for (const b of brandData) {
+    const record = await prisma.brand.upsert({
+      where: { companyId_brandCode: { companyId: organization.id, brandCode: b.brandCode } },
+      create: { companyId: organization.id, ...b },
+      update: {},
+    });
+    createdBrands.push({ id: record.id, brandCode: record.brandCode, brandName: record.brandName });
+  }
+
+  const manufacturerData = [
+    { manufacturerCode: 'MFR-ABC', manufacturerName: 'ABC Foods Ltd', gstNumber: '27AABCA1234B1Z1', contactPerson: 'Rajesh Mehta', email: 'rajesh@abcfoods.in', phone: '9876543210', address: 'Mumbai, Maharashtra' },
+    { manufacturerCode: 'MFR-XYZ', manufacturerName: 'XYZ Beverages Pvt Ltd', gstNumber: '27XYZB5678C1Z1', contactPerson: 'Priya Sharma', email: 'priya@xyzbeverages.in', phone: '9876543211', address: 'Pune, Maharashtra' },
+    { manufacturerCode: 'MFR-FDI', manufacturerName: 'Fresh Dairy Industries', gstNumber: '27FRSC9012D1Z1', contactPerson: 'Amit Singh', email: 'amit@freshdairy.in', phone: '9876543212', address: 'Nagpur, Maharashtra' },
+  ];
+
+  interface SeedManufacturer {
+    id: string;
+    manufacturerCode: string;
+    manufacturerName: string;
+  }
+
+  const createdManufacturers: SeedManufacturer[] = [];
+
+  for (const m of manufacturerData) {
+    const record = await prisma.manufacturer.upsert({
+      where: { companyId_manufacturerCode: { companyId: organization.id, manufacturerCode: m.manufacturerCode } },
+      create: { companyId: organization.id, ...m },
+      update: {},
+    });
+    createdManufacturers.push({ id: record.id, manufacturerCode: record.manufacturerCode, manufacturerName: record.manufacturerName });
+  }
+
+  const uomData = [
+    { uomCode: 'UOM-KG', uomName: 'Kilogram', description: 'Weight in kilograms' },
+    { uomCode: 'UOM-GM', uomName: 'Gram', description: 'Weight in grams' },
+    { uomCode: 'UOM-LTR', uomName: 'Litre', description: 'Volume in litres' },
+    { uomCode: 'UOM-ML', uomName: 'Millilitre', description: 'Volume in millilitres' },
+    { uomCode: 'UOM-PCS', uomName: 'Piece', description: 'Individual piece/unit' },
+    { uomCode: 'UOM-BOX', uomName: 'Box', description: 'Box of items' },
+    { uomCode: 'UOM-DZ', uomName: 'Dozen', description: '12 pieces' },
+    { uomCode: 'UOM-PK', uomName: 'Pack', description: 'Pack of items' },
+  ];
+
+  interface SeedUom {
+    id: string;
+    uomCode: string;
+    uomName: string;
+  }
+
+  const createdUoms: SeedUom[] = [];
+
+  for (const u of uomData) {
+    const record = await prisma.uom.upsert({
+      where: { companyId_uomCode: { companyId: organization.id, uomCode: u.uomCode } },
+      create: { companyId: organization.id, ...u },
+      update: {},
+    });
+    createdUoms.push({ id: record.id, uomCode: record.uomCode, uomName: record.uomName });
+  }
+
+  const adminUser = await prisma.user.findUnique({
+    where: { organizationId_email: { organizationId: organization.id, email: 'admin@example.com' } },
+  });
+
+  if (adminUser) {
+    const productSeedData = [
+      {
+        productCode: 'PROD-001',
+        productName: 'Premium Basmati Rice 5kg',
+        shortName: 'Basmati Rice 5kg',
+        description: 'Premium quality basmati rice 5kg pack',
+        categoryCode: 'CAT-FG',
+        subCategoryCode: 'SCT-RICE',
+        brandCode: 'BRD-PH',
+        manufacturerCode: 'MFR-ABC',
+        uomCode: 'UOM-KG',
+        barcode: '8901234567890',
+        hsnCode: '10063020',
+        skuType: 'FINISHED_GOOD' as const,
+        shelfLifeDays: 365,
+        reorderLevel: 50,
+      },
+      {
+        productCode: 'PROD-002',
+        productName: 'Cold Pressed Coconut Oil 1L',
+        shortName: 'Coconut Oil 1L',
+        description: 'Pure cold pressed coconut oil 1 litre bottle',
+        categoryCode: 'CAT-FG',
+        subCategoryCode: 'SCT-OIL',
+        brandCode: 'BRD-NF',
+        manufacturerCode: 'MFR-ABC',
+        uomCode: 'UOM-LTR',
+        barcode: '8901234567891',
+        hsnCode: '15131100',
+        skuType: 'FINISHED_GOOD' as const,
+        shelfLifeDays: 730,
+        reorderLevel: 30,
+      },
+    ];
+
+    for (const p of productSeedData) {
+      const category = createdCategories.find((c) => c.categoryCode === p.categoryCode);
+      const subCategory = createdSubCategories.find((sc) => sc.subCategoryCode === p.subCategoryCode);
+      const brand = createdBrands.find((b) => b.brandCode === p.brandCode);
+      const manufacturer = createdManufacturers.find((m) => m.manufacturerCode === p.manufacturerCode);
+      const uom = createdUoms.find((u) => u.uomCode === p.uomCode);
+
+      await prisma.product.upsert({
+        where: { companyId_productCode: { companyId: organization.id, productCode: p.productCode } },
+        create: {
+          companyId: organization.id,
+          productCode: p.productCode,
+          productName: p.productName,
+          shortName: p.shortName,
+          description: p.description,
+          categoryId: category?.id,
+          subCategoryId: subCategory?.id,
+          brandId: brand?.id,
+          manufacturerId: manufacturer?.id,
+          uomId: uom!.id,
+          barcode: p.barcode,
+          hsnCode: p.hsnCode,
+          skuType: p.skuType,
+          shelfLifeDays: p.shelfLifeDays,
+          reorderLevel: p.reorderLevel,
+          status: 'ACTIVE',
+          createdBy: adminUser.id,
+        },
         update: {},
       });
     }

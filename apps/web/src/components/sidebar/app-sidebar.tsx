@@ -2,14 +2,7 @@
 
 import * as React from "react";
 import { NavMain } from "@/components/sidebar/nav-main";
-import { NavUser } from "@/components/sidebar/nav-user";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarRail,
-} from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarRail } from "@/components/ui/sidebar";
 import { filterSidebarByPermissions } from "@/utils/sidebar";
 import { navMain } from "@/configs/sidebar";
 import { useAuthStore } from "@/store/auth-store";
@@ -17,26 +10,16 @@ import { useAuthStore } from "@/store/auth-store";
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const user = useAuthStore((state) => state.user);
   const permissions = user?.permissions ?? [];
-  const filteredSidebar = filterSidebarByPermissions(
-    navMain,
-    permissions,
-  );
+  const filteredSidebar = filterSidebarByPermissions(navMain, permissions);
   return (
-    <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
-        <h1>DMS</h1>
-      </SidebarHeader>
+    <Sidebar
+      collapsible="icon"
+      className="top-(--header-height) h-[calc(100svh-var(--header-height))]!"
+      {...props}
+    >
       <SidebarContent>
         <NavMain items={filteredSidebar} />
       </SidebarContent>
-      <SidebarFooter>
-        <NavUser
-          user={{
-            name: user?.fullName || "",
-            email: user?.email || "",
-          }}
-        />
-      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );
