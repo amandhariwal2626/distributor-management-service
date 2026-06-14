@@ -83,7 +83,7 @@ function TrendSkeleton() {
     <div>
       <div className="flex items-end gap-1" style={{ height: 100 }}>
         {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="flex-1 rounded-sm" style={{ height: `${20 + Math.random() * 60}%` }} />
+          <Skeleton key={i} className="flex-1 rounded-sm" style={{ height: `${25 + (i * 11) % 55}%` }} />
         ))}
       </div>
       <div className="mt-1 flex gap-1">

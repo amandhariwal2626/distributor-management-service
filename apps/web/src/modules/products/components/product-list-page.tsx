@@ -54,7 +54,7 @@ export function ProductListPage() {
   const categoriesQ = useCategories();
   const deleteProduct = useDeleteProduct();
 
-  const rows = productsQ.data?.data ?? [];
+  const rows = useMemo(() => productsQ.data?.data ?? [], [productsQ.data?.data]);
 
   const kpis = useMemo(() => {
     const total = productsQ.data?.total ?? 0;

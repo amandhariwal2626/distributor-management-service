@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import { FormProvider, useForm, type Resolver } from "react-hook-form";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { FormProvider, useForm, useWatch, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   productFullSchema,
@@ -65,10 +65,28 @@ const stepSchemas: Array<ZodSchema | null> = [
 
 const STORAGE_KEY = "dms.product-draft";
 
+function AutoSaveDraft({ storageKey }: { storageKey: string }) {
+  const values = useWatch();
+  const prevJsonRef = useRef("");
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
+
+  useEffect(() => {
+    const json = JSON.stringify(values);
+    if (json === prevJsonRef.current) return;
+    prevJsonRef.current = json;
+    if (typeof window !== "undefined") {
+      localStorage.setItem(storageKey, json);
+    }
+    setSavedAt(new Date());
+  }, [storageKey, values]);
+
+  if (!savedAt) return null;
+  return <span>Saved {savedAt.toLocaleTimeString()}</span>;
+}
+
 export function ProductCreatePage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
-  const [savedAt, setSavedAt] = useState<Date | null>(null);
 
   const methods = useForm<ProductFormValues>({
     resolver: zodResolver(
@@ -120,16 +138,6 @@ export function ProductCreatePage() {
         /* ignore */
       }
     }
-  }, [methods]);
-
-  useEffect(() => {
-    const sub = methods.watch((value) => {
-      if (typeof window !== "undefined") {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
-        setSavedAt(new Date());
-      }
-    });
-    return () => sub.unsubscribe();
   }, [methods]);
 
   const createMut = useCreateProduct();
@@ -226,9 +234,7 @@ export function ProductCreatePage() {
                 <span>
                   Step {step + 1} of {STEPS.length}
                 </span>
-                {savedAt ? (
-                  <span>Saved {savedAt.toLocaleTimeString()}</span>
-                ) : null}
+                <AutoSaveDraft storageKey={STORAGE_KEY} />
               </div>
             </div>
             <Stepper steps={STEPS} current={step} onStepClick={setStep} />

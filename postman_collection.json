@@ -948,6 +948,7 @@
           "item": [
             { "name": "POST Create", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"categoryId\": \"{{categoryId}}\",\n  \"subCategoryCode\": \"SUB-01\",\n  \"subCategoryName\": \"Basmati Rice\",\n  \"description\": \"Premium basmati rice varieties\"\n}" }, "url": { "raw": "{{baseUrl}}/api/hierarchy/subcategories", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "subcategories"] } }, "event": [ { "listen": "test", "script": { "exec": [ "var jsonData = pm.response.json();", "if (jsonData.data && jsonData.data.id) {", "  pm.collectionVariables.set('subcategoryId', jsonData.data.id);", "}" ], "type": "text/javascript" } } ] },
             { "name": "GET List", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/subcategories?categoryId={{categoryId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "subcategories"], "query": [{"key":"categoryId","value":"{{categoryId}}"}] } } },
+            { "name": "GET By Category (Nested)", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/categories/{{categoryId}}/sub-categories", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "categories", "{{categoryId}}", "sub-categories"] } } },
             { "name": "GET By ID", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/subcategories/{{subcategoryId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "subcategories", "{{subcategoryId}}"] } } },
             { "name": "PATCH Update", "request": { "method": "PATCH", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"subCategoryName\": \"Updated Subcategory\",\n  \"description\": \"Updated description\"\n}" }, "url": { "raw": "{{baseUrl}}/api/hierarchy/subcategories/{{subcategoryId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "subcategories", "{{subcategoryId}}"] } } },
             { "name": "DELETE Delete", "request": { "method": "DELETE", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/subcategories/{{subcategoryId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "subcategories", "{{subcategoryId}}"] } } }
@@ -966,10 +967,11 @@
         {
           "name": "Sub-Brands",
           "item": [
-            { "name": "POST Create", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"brandId\": \"{{brandId}}\",\n  \"code\": \"SB-01\",\n  \"name\": \"Premium Harvest Gold\"\n}" }, "url": { "raw": "{{baseUrl}}/api/hierarchy/subbrands", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "subbrands"] } } },
-            { "name": "GET List", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/subbrands?brandId={{brandId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "subbrands"], "query": [{"key":"brandId","value":"{{brandId}}"}] } } },
-            { "name": "PATCH Update", "request": { "method": "PATCH", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Updated Sub-Brand\"\n}" }, "url": { "raw": "{{baseUrl}}/api/hierarchy/subbrands/{{subbrandId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "subbrands", "{{subbrandId}}"] } } },
-            { "name": "DELETE Delete", "request": { "method": "DELETE", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/subbrands/{{subbrandId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "subbrands", "{{subbrandId}}"] } } }
+            { "name": "POST Create", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"brandId\": \"{{brandId}}\",\n  \"code\": \"SB-01\",\n  \"name\": \"Premium Harvest Gold\"\n}" }, "url": { "raw": "{{baseUrl}}/api/hierarchy/sub-brands", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "sub-brands"] } } },
+             { "name": "GET List", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/sub-brands?brandId={{brandId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "sub-brands"], "query": [{"key":"brandId","value":"{{brandId}}"}] } } },
+             { "name": "GET By Brand ID", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/brands/{{brandId}}/sub-brands", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "brands", "{{brandId}}", "sub-brands"] } } },
+             { "name": "PATCH Update", "request": { "method": "PATCH", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Updated Sub-Brand\"\n}" }, "url": { "raw": "{{baseUrl}}/api/hierarchy/sub-brands/{{subbrandId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "sub-brands", "{{subbrandId}}"] } } },
+             { "name": "DELETE Delete", "request": { "method": "DELETE", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/hierarchy/sub-brands/{{subbrandId}}", "host": ["{{baseUrl}}"], "path": ["api", "hierarchy", "sub-brands", "{{subbrandId}}"] } } }
           ]
         },
         {
@@ -1171,6 +1173,24 @@
               "path": ["api", "geography", "activate-launched"]
             }
           }
+        }
+      ]
+    },
+    {
+      "name": "Masters Lookups",
+      "description": "Read-only lookup endpoints for FE dropdowns",
+      "item": [
+        {
+          "name": "Business Units (FE)",
+          "item": [
+            { "name": "GET List", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/masters/business-units", "host": ["{{baseUrl}}"], "path": ["api", "masters", "business-units"] } } }
+          ]
+        },
+        {
+          "name": "Divisions (FE)",
+          "item": [
+            { "name": "GET List", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"x-organization-id","value":"{{orgId}}"}], "url": { "raw": "{{baseUrl}}/api/masters/divisions?buId={{buId}}", "host": ["{{baseUrl}}"], "path": ["api", "masters", "divisions"], "query": [{"key":"buId","value":"{{buId}}"}] } } }
+          ]
         }
       ]
     },

@@ -6,14 +6,20 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import {
   CreateBrandDto,
+  CreateBusinessUnitDto,
+  CreateDivisionDto,
   CreateManufacturerDto,
   CreateProductCategoryDto,
   CreateProductSubCategoryDto,
+  CreateSubBrandDto,
   CreateUomDto,
   UpdateBrandDto,
+  UpdateBusinessUnitDto,
+  UpdateDivisionDto,
   UpdateManufacturerDto,
   UpdateProductCategoryDto,
   UpdateProductSubCategoryDto,
+  UpdateSubBrandDto,
   UpdateUomDto,
 } from './dto';
 
@@ -366,6 +372,191 @@ export class HierarchyService {
     return entity;
   }
 
+  // ── Business Units ────────────────────────────────────────────
+
+  async createBusinessUnit(userId: string, organizationId: string, dto: CreateBusinessUnitDto) {
+    await this.ensureUniqueCode('businessUnit', dto.code);
+    return this.prisma.businessUnit.create({
+      data: {
+        companyId: organizationId,
+        code: dto.code,
+        name: dto.name,
+        description: dto.description,
+        status: dto.status ?? true,
+        createdBy: userId,
+      },
+    });
+  }
+
+  async getBusinessUnits() {
+    return this.prisma.businessUnit.findMany({
+      where: { deletedAt: null },
+      orderBy: { name: 'asc' },
+    });
+  }
+
+  async getBusinessUnit(id: string) {
+    const entity = await this.findBusinessUnitOrFail(id);
+    return entity;
+  }
+
+  async updateBusinessUnit(id: string, userId: string, dto: UpdateBusinessUnitDto) {
+    const existing = await this.findBusinessUnitOrFail(id);
+    if (dto.code && dto.code !== existing.code) {
+      await this.ensureUniqueCode('businessUnit', dto.code, id);
+    }
+    return this.prisma.businessUnit.update({
+      where: { id },
+      data: { ...dto, updatedBy: userId },
+    });
+  }
+
+  async deleteBusinessUnit(id: string, userId: string) {
+    await this.findBusinessUnitOrFail(id);
+    return this.prisma.businessUnit.update({
+      where: { id },
+      data: { deletedAt: new Date(), deletedBy: userId },
+    });
+  }
+
+  private async findBusinessUnitOrFail(id: string) {
+    const entity = await this.prisma.businessUnit.findFirst({
+      where: { id, deletedAt: null },
+    });
+    if (!entity) {
+      throw new NotFoundException(`Business unit not found. The specified ID (${id}) does not exist or has been removed.`);
+    }
+    return entity;
+  }
+
+  // ── Divisions ─────────────────────────────────────────────────
+
+  async createDivision(userId: string, organizationId: string, dto: CreateDivisionDto) {
+    await this.ensureUniqueCode('division', dto.code);
+    await this.findBusinessUnitOrFail(dto.businessUnitId);
+    return this.prisma.division.create({
+      data: {
+        companyId: organizationId,
+        businessUnitId: dto.businessUnitId,
+        code: dto.code,
+        name: dto.name,
+        description: dto.description,
+        status: dto.status ?? true,
+        createdBy: userId,
+      },
+    });
+  }
+
+  async getDivisions(businessUnitId?: string) {
+    const where: any = { deletedAt: null };
+    if (businessUnitId) where.businessUnitId = businessUnitId;
+    return this.prisma.division.findMany({
+      where,
+      orderBy: { name: 'asc' },
+    });
+  }
+
+  async getDivision(id: string) {
+    const entity = await this.findDivisionOrFail(id);
+    return entity;
+  }
+
+  async updateDivision(id: string, userId: string, dto: UpdateDivisionDto) {
+    const existing = await this.findDivisionOrFail(id);
+    if (dto.code && dto.code !== existing.code) {
+      await this.ensureUniqueCode('division', dto.code, id);
+    }
+    if (dto.businessUnitId) {
+      await this.findBusinessUnitOrFail(dto.businessUnitId);
+    }
+    return this.prisma.division.update({
+      where: { id },
+      data: { ...dto, updatedBy: userId },
+    });
+  }
+
+  async deleteDivision(id: string, userId: string) {
+    await this.findDivisionOrFail(id);
+    return this.prisma.division.update({
+      where: { id },
+      data: { deletedAt: new Date(), deletedBy: userId },
+    });
+  }
+
+  private async findDivisionOrFail(id: string) {
+    const entity = await this.prisma.division.findFirst({
+      where: { id, deletedAt: null },
+    });
+    if (!entity) {
+      throw new NotFoundException(`Division not found. The specified ID (${id}) does not exist or has been removed.`);
+    }
+    return entity;
+  }
+
+  // ── Sub-Brands ────────────────────────────────────────────────
+
+  async createSubBrand(userId: string, organizationId: string, dto: CreateSubBrandDto) {
+    await this.ensureUniqueCode('subBrand', dto.code);
+    await this.findBrandOrFail(dto.brandId);
+    return this.prisma.subBrand.create({
+      data: {
+        companyId: organizationId,
+        brandId: dto.brandId,
+        code: dto.code,
+        name: dto.name,
+        description: dto.description,
+        status: dto.status ?? true,
+        createdBy: userId,
+      },
+    });
+  }
+
+  async getSubBrands(brandId?: string) {
+    const where: any = { deletedAt: null };
+    if (brandId) where.brandId = brandId;
+    return this.prisma.subBrand.findMany({
+      where,
+      orderBy: { name: 'asc' },
+    });
+  }
+
+  async getSubBrand(id: string) {
+    const entity = await this.findSubBrandOrFail(id);
+    return entity;
+  }
+
+  async updateSubBrand(id: string, userId: string, dto: UpdateSubBrandDto) {
+    const existing = await this.findSubBrandOrFail(id);
+    if (dto.code && dto.code !== existing.code) {
+      await this.ensureUniqueCode('subBrand', dto.code, id);
+    }
+    if (dto.brandId) {
+      await this.findBrandOrFail(dto.brandId);
+    }
+    return this.prisma.subBrand.update({
+      where: { id },
+      data: { ...dto, updatedBy: userId },
+    });
+  }
+
+  async deleteSubBrand(id: string, userId: string) {
+    await this.findSubBrandOrFail(id);
+    return this.prisma.subBrand.update({
+      where: { id },
+      data: { deletedAt: new Date(), deletedBy: userId },
+    });
+  }
+
+  private async findSubBrandOrFail(id: string) {
+    const entity = await this.prisma.subBrand.findFirst({
+      where: { id, deletedAt: null },
+    });
+    if (!entity) {
+      throw new NotFoundException(`Sub-brand not found. The specified ID (${id}) does not exist or has been removed.`);
+    }
+    return entity;
+  }
+
   // ── Helpers ───────────────────────────────────────────────────
 
   private async ensureUniqueCode(
@@ -382,6 +573,9 @@ export class HierarchyService {
       brand: 'brandCode',
       manufacturer: 'manufacturerCode',
       uom: 'uomCode',
+      businessUnit: 'code',
+      division: 'code',
+      subBrand: 'code',
     };
 
     const queryField = fieldMap[model];
@@ -426,6 +620,33 @@ export class HierarchyService {
         break;
       case 'uom':
         existing = await this.prisma.uom.findFirst({
+          where: {
+            [queryField]: code,
+            deletedAt: null,
+            id: excludeId ? { not: excludeId } : undefined,
+          },
+        });
+        break;
+      case 'businessUnit':
+        existing = await this.prisma.businessUnit.findFirst({
+          where: {
+            [queryField]: code,
+            deletedAt: null,
+            id: excludeId ? { not: excludeId } : undefined,
+          },
+        });
+        break;
+      case 'division':
+        existing = await this.prisma.division.findFirst({
+          where: {
+            [queryField]: code,
+            deletedAt: null,
+            id: excludeId ? { not: excludeId } : undefined,
+          },
+        });
+        break;
+      case 'subBrand':
+        existing = await this.prisma.subBrand.findFirst({
           where: {
             [queryField]: code,
             deletedAt: null,

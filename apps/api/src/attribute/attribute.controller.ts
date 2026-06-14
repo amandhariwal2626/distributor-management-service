@@ -32,7 +32,7 @@ export class AttributeController {
   // ==================== DEFINITIONS ====================
 
   @Post('definitions')
-  @Permissions('attributes.manage')
+  @Permissions('attribute.manage')
   @ApiOperation({ summary: 'Create an attribute definition' })
   createDefinition(
     @Headers('x-organization-id') organizationId: string,
@@ -43,7 +43,7 @@ export class AttributeController {
   }
 
   @Get('definitions')
-  @Permissions('attributes.read')
+  @Permissions('attribute.read')
   @ApiOperation({ summary: 'List attribute definitions' })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
@@ -72,14 +72,14 @@ export class AttributeController {
   }
 
   @Get('definitions/:id')
-  @Permissions('attributes.read')
+  @Permissions('attribute.read')
   @ApiOperation({ summary: 'Get attribute definition by ID' })
   findDefinitionById(@Param('id') id: string) {
     return this.attributeService.findById(id);
   }
 
   @Patch('definitions/:id')
-  @Permissions('attributes.manage')
+  @Permissions('attribute.manage')
   @ApiOperation({ summary: 'Update attribute definition' })
   updateDefinition(
     @Headers('x-organization-id') organizationId: string,
@@ -91,7 +91,7 @@ export class AttributeController {
   }
 
   @Delete('definitions/:id')
-  @Permissions('attributes.manage')
+  @Permissions('attribute.manage')
   @ApiOperation({ summary: 'Soft delete attribute definition' })
   deleteDefinition(
     @Headers('x-organization-id') organizationId: string,
@@ -104,7 +104,7 @@ export class AttributeController {
   // ==================== PRODUCT ATTRIBUTE VALUES ====================
 
   @Post('values')
-  @Permissions('attributes.assign')
+  @Permissions('attribute.assign')
   @ApiOperation({ summary: 'Set attribute value for a product (upsert)' })
   setValue(
     @Headers('x-organization-id') organizationId: string,
@@ -115,21 +115,21 @@ export class AttributeController {
   }
 
   @Get('values/product/:productId')
-  @Permissions('attributes.read')
+  @Permissions('attribute.read')
   @ApiOperation({ summary: 'Get all attribute values for a product' })
   getProductValues(@Param('productId') productId: string) {
     return this.attributeService.getProductValues(productId);
   }
 
   @Get('values/:id')
-  @Permissions('attributes.read')
+  @Permissions('attribute.read')
   @ApiOperation({ summary: 'Get attribute value by ID' })
   findValueById(@Param('id') id: string) {
     return this.attributeService.findValueById(id);
   }
 
   @Patch('values/:id')
-  @Permissions('attributes.assign')
+  @Permissions('attribute.assign')
   @ApiOperation({ summary: 'Update attribute value' })
   updateValue(
     @Headers('x-organization-id') organizationId: string,
@@ -146,7 +146,7 @@ export class AttributeController {
   }
 
   @Delete('values/:id')
-  @Permissions('attributes.assign')
+  @Permissions('attribute.assign')
   @ApiOperation({ summary: 'Soft delete attribute value' })
   deleteValue(
     @Headers('x-organization-id') organizationId: string,

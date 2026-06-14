@@ -79,6 +79,15 @@ model Organization {
   productWarehouses       ProductWarehouse[]
   productApprovals        ProductApproval[]
   productAuditLogs        ProductAuditLog[]
+  businessUnits           BusinessUnit[]
+  divisions               Division[]
+  subBrands               SubBrand[]
+  countries               Country[]
+  states                  State[]
+  zones                   Zone[]
+  regions                 Region[]
+  depots                  Depot[]
+  productGeographyMappings ProductGeographyMapping[]
 
   @@index([deletedAt])
   @@map("organizations")
@@ -548,6 +557,7 @@ model Brand {
   creator      User?        @relation("BrandCreator", fields: [createdBy], references: [id], onDelete: SetNull)
   updater      User?        @relation("BrandUpdater", fields: [updatedBy], references: [id], onDelete: SetNull)
   products     Product[]
+  subBrands    SubBrand[]
 
   @@unique([companyId, brandCode], map: "ux_brands_company_code")
   @@index([companyId, brandName])
@@ -684,6 +694,7 @@ model Product {
   tagMappings     ProductTagMapping[]
   warehouses      ProductWarehouse[]
   approvals       ProductApproval[]
+  geographyMappings ProductGeographyMapping[]
 
   @@unique([companyId, productCode], map: "ux_products_company_code")
   @@index([companyId, productName])
@@ -838,8 +849,8 @@ model ProductAttributeValue {
   deletedAt   DateTime? @map("deleted_at")
   deletedBy   String?  @map("deleted_by")
 
-  organization Organization        @relation(fields: [companyId], references: [id])
-  product      Product             @relation(fields: [productId], references: [id])
+  organization Organization         @relation(fields: [companyId], references: [id])
+  product      Product              @relation(fields: [productId], references: [id])
   attribute    AttributeDefinition @relation(fields: [attributeId], references: [id])
 
   @@unique([companyId, productId, attributeId], map: "ux_product_attribute_values_company")
@@ -935,6 +946,239 @@ model ProductAuditLog {
   @@index([companyId, tableName, recordId])
   @@index([companyId])
   @@map("product_audit_logs")
+}
+
+// ── Geography Models ─────────────────────────────────────────
+
+model Country {
+  id          String   @id @default(uuid())
+  companyId   String   @map("company_id")
+  code        String
+  name        String
+  isoCode     String?  @map("iso_code")
+  currency    String?
+  status      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdBy   String?  @map("created_by")
+  updatedBy   String?  @map("updated_by")
+  deletedAt   DateTime? @map("deleted_at")
+  deletedBy   String?  @map("deleted_by")
+
+  organization           Organization @relation(fields: [companyId], references: [id])
+  states                 State[]
+  productGeographyMappings ProductGeographyMapping[]
+
+  @@unique([companyId, code])
+  @@index([companyId])
+  @@map("countries")
+}
+
+model State {
+  id          String   @id @default(uuid())
+  companyId   String   @map("company_id")
+  countryId   String   @map("country_id")
+  code        String
+  name        String
+  gstCode     String?  @map("gst_code")
+  status      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdBy   String?  @map("created_by")
+  updatedBy   String?  @map("updated_by")
+  deletedAt   DateTime? @map("deleted_at")
+  deletedBy   String?  @map("deleted_by")
+
+  organization Organization @relation(fields: [companyId], references: [id])
+  country      Country      @relation(fields: [countryId], references: [id])
+  zones        Zone[]
+  productGeographyMappings ProductGeographyMapping[]
+
+  @@unique([companyId, code])
+  @@index([companyId, countryId])
+  @@index([companyId])
+  @@map("states")
+}
+
+model Zone {
+  id          String   @id @default(uuid())
+  companyId   String   @map("company_id")
+  stateId     String   @map("state_id")
+  code        String
+  name        String
+  status      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdBy   String?  @map("created_by")
+  updatedBy   String?  @map("updated_by")
+  deletedAt   DateTime? @map("deleted_at")
+  deletedBy   String?  @map("deleted_by")
+
+  organization Organization @relation(fields: [companyId], references: [id])
+  state        State        @relation(fields: [stateId], references: [id])
+  regions      Region[]
+  productGeographyMappings ProductGeographyMapping[]
+
+  @@unique([companyId, code])
+  @@index([companyId, stateId])
+  @@index([companyId])
+  @@map("zones")
+}
+
+model Region {
+  id          String   @id @default(uuid())
+  companyId   String   @map("company_id")
+  zoneId      String   @map("zone_id")
+  code        String
+  name        String
+  status      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdBy   String?  @map("created_by")
+  updatedBy   String?  @map("updated_by")
+  deletedAt   DateTime? @map("deleted_at")
+  deletedBy   String?  @map("deleted_by")
+
+  organization Organization @relation(fields: [companyId], references: [id])
+  zone         Zone         @relation(fields: [zoneId], references: [id])
+  depots       Depot[]
+  productGeographyMappings ProductGeographyMapping[]
+
+  @@unique([companyId, code])
+  @@index([companyId, zoneId])
+  @@index([companyId])
+  @@map("regions")
+}
+
+model Depot {
+  id          String   @id @default(uuid())
+  companyId   String   @map("company_id")
+  regionId    String   @map("region_id")
+  code        String
+  name        String
+  address     String?
+  city        String?
+  pincode     String?
+  status      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdBy   String?  @map("created_by")
+  updatedBy   String?  @map("updated_by")
+  deletedAt   DateTime? @map("deleted_at")
+  deletedBy   String?  @map("deleted_by")
+
+  organization Organization @relation(fields: [companyId], references: [id])
+  region       Region       @relation(fields: [regionId], references: [id])
+  productGeographyMappings ProductGeographyMapping[]
+
+  @@unique([companyId, code])
+  @@index([companyId, regionId])
+  @@index([companyId])
+  @@map("depots")
+}
+
+model ProductGeographyMapping {
+  id                 String   @id @default(uuid())
+  companyId          String   @map("company_id")
+  productId          String   @map("product_id")
+  countryId          String?  @map("country_id")
+  stateId            String?  @map("state_id")
+  zoneId             String?  @map("zone_id")
+  regionId           String?  @map("region_id")
+  depotId            String?  @map("depot_id")
+  availabilityStatus String   @default("AVAILABLE") @map("availability_status")
+  launchDate         DateTime? @map("launch_date")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+  createdBy          String?  @map("created_by")
+  updatedBy          String?  @map("updated_by")
+  deletedAt          DateTime? @map("deleted_at")
+  deletedBy          String?  @map("deleted_by")
+
+  organization Organization         @relation(fields: [companyId], references: [id])
+  product      Product              @relation(fields: [productId], references: [id])
+  country      Country?             @relation(fields: [countryId], references: [id])
+  state        State?               @relation(fields: [stateId], references: [id])
+  zone         Zone?                @relation(fields: [zoneId], references: [id])
+  region       Region?              @relation(fields: [regionId], references: [id])
+  depot        Depot?               @relation(fields: [depotId], references: [id])
+
+  @@unique([companyId, productId, countryId, stateId, zoneId, regionId, depotId])
+  @@index([companyId, productId])
+  @@index([companyId])
+  @@map("product_geography_mappings")
+}
+
+// ── Business Units, Divisions, Sub-Brands (for FE masters) ──
+
+model BusinessUnit {
+  id          String   @id @default(uuid())
+  companyId   String   @map("company_id")
+  code        String
+  name        String
+  description String?
+  status      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdBy   String?  @map("created_by")
+  updatedBy   String?  @map("updated_by")
+  deletedAt   DateTime? @map("deleted_at")
+  deletedBy   String?  @map("deleted_by")
+
+  organization Organization @relation(fields: [companyId], references: [id])
+  divisions    Division[]
+
+  @@unique([companyId, code])
+  @@index([companyId])
+  @@map("business_units")
+}
+
+model Division {
+  id              String   @id @default(uuid())
+  companyId       String   @map("company_id")
+  businessUnitId  String   @map("business_unit_id")
+  code            String
+  name            String
+  description     String?
+  status          Boolean  @default(true)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdBy       String?  @map("created_by")
+  updatedBy       String?  @map("updated_by")
+  deletedAt       DateTime? @map("deleted_at")
+  deletedBy       String?  @map("deleted_by")
+
+  organization  Organization  @relation(fields: [companyId], references: [id])
+  businessUnit  BusinessUnit  @relation(fields: [businessUnitId], references: [id])
+
+  @@unique([companyId, code])
+  @@index([companyId, businessUnitId])
+  @@index([companyId])
+  @@map("divisions")
+}
+
+model SubBrand {
+  id          String   @id @default(uuid())
+  companyId   String   @map("company_id")
+  brandId     String   @map("brand_id")
+  code        String
+  name        String
+  description String?
+  status      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdBy   String?  @map("created_by")
+  updatedBy   String?  @map("updated_by")
+  deletedAt   DateTime? @map("deleted_at")
+  deletedBy   String?  @map("deleted_by")
+
+  organization Organization @relation(fields: [companyId], references: [id])
+  brand        Brand        @relation(fields: [brandId], references: [id])
+
+  @@unique([companyId, code])
+  @@index([companyId, brandId])
+  @@index([companyId])
+  @@map("sub_brands")
 }
 
 // 18. Product Approvals

@@ -23,6 +23,7 @@ import { AttributeModule } from './attribute/attribute.module';
 import { DocumentModule } from './document/document.module';
 import { RbacModule } from './rbac/rbac.module';
 import { ReportingModule } from './reporting/reporting.module';
+import { GeographyModule } from './geography/geography.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { ReportingModule } from './reporting/reporting.module';
     DocumentModule,
     RbacModule,
     ReportingModule,
+    GeographyModule,
   ],
   controllers: [AppController],
   providers: [

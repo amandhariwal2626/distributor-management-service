@@ -4,6 +4,9 @@ export {
   CreateBrandDto,
   CreateManufacturerDto,
   CreateUomDto,
+  CreateBusinessUnitDto,
+  CreateDivisionDto,
+  CreateSubBrandDto,
 } from './create-hierarchy.dto';
 
 export {
@@ -12,4 +15,7 @@ export {
   UpdateBrandDto,
   UpdateManufacturerDto,
   UpdateUomDto,
+  UpdateBusinessUnitDto,
+  UpdateDivisionDto,
+  UpdateSubBrandDto,
 } from './update-hierarchy.dto';

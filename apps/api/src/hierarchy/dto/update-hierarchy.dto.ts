@@ -137,6 +137,91 @@ export class UpdateManufacturerDto {
   status?: boolean;
 }
 
+export class UpdateBusinessUnitDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  code?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  name?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  description?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  status?: boolean;
+}
+
+export class UpdateDivisionDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  code?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  name?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUUID()
+  businessUnitId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  description?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  status?: boolean;
+}
+
+export class UpdateSubBrandDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  code?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  name?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUUID()
+  brandId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  description?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  status?: boolean;
+}
+
 export class UpdateUomDto {
   @ApiPropertyOptional()
   @IsOptional()

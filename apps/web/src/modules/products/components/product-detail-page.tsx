@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Separator } from "@/components/ui/separator";
+import Image from "next/image";
 import { ArrowLeft, Package, FileText, History } from "lucide-react";
 import Link from "next/link";
 
@@ -35,10 +36,13 @@ export function ProductDetailPage({ id }: { id: string }) {
       <Card className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center">
         <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-md border border-border bg-muted text-muted-foreground">
           {data?.imageUrl ? (
-            <img
+            <Image
               src={data.imageUrl}
               alt={data.name}
+              width={64}
+              height={64}
               className="h-full w-full object-cover"
+              unoptimized
             />
           ) : (
             <Package className="h-6 w-6" />

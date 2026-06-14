@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { format } from "date-fns"
 import { History, User, Calendar } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -13,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { DatePicker } from "@/components/ui/date-picker"
 import { PageHeader } from "@/components/shared/page-header"
 import { ErrorState } from "@/components/shared/error-state"
 import { EmptyState } from "@/components/shared/empty-state"
@@ -104,14 +106,14 @@ function AuditTimelineSkeleton() {
 export function AuditPage() {
   const [search, setSearch] = useState("")
   const [moduleFilter, setModuleFilter] = useState("")
-  const [fromDate, setFromDate] = useState("")
-  const [toDate, setToDate] = useState("")
+  const [fromDate, setFromDate] = useState<Date>()
+  const [toDate, setToDate] = useState<Date>()
 
   const filters: Record<string, string> = {}
   if (search) filters.user = search
   if (moduleFilter) filters.module = moduleFilter
-  if (fromDate) filters.from = fromDate
-  if (toDate) filters.to = toDate
+  if (fromDate) filters.from = format(fromDate, "yyyy-MM-dd")
+  if (toDate) filters.to = format(toDate, "yyyy-MM-dd")
 
   const { data: entries, isLoading, isError, refetch } = useAudit(
     Object.keys(filters).length ? filters : undefined,
@@ -143,17 +145,17 @@ export function AuditPage() {
           </SelectContent>
         </Select>
         <div className="flex items-center gap-2">
-          <Input
-            type="date"
+          <DatePicker
             value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
+            onChange={setFromDate}
+            placeholder="From date"
             className="w-40"
           />
           <span className="text-sm text-muted-foreground">to</span>
-          <Input
-            type="date"
+          <DatePicker
             value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
+            onChange={setToDate}
+            placeholder="To date"
             className="w-40"
           />
         </div>
@@ -164,8 +166,8 @@ export function AuditPage() {
             onClick={() => {
               setSearch("")
               setModuleFilter("")
-              setFromDate("")
-              setToDate("")
+              setFromDate(undefined)
+              setToDate(undefined)
             }}
           >
             Clear

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, type ReactNode } from "react"
+import { useMemo, useState, type ReactNode } from "react"
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -75,61 +75,75 @@ interface DataTableProps<TData> {
   enableGlobalFilter?: boolean
 }
 
-export function DataTable<TData>({
+interface InnerProps<TData> {
+  columns: ColumnDef<TData>[]
+  data: TData[]
+  sorting: SortingState
+  columnFilters: ColumnFiltersState
+  columnVisibility: VisibilityState
+  rowSelection: RowSelectionState
+  globalFilter: string
+  onSortingChange: (v: SortingState) => void
+  onColumnFiltersChange: (v: ColumnFiltersState) => void
+  onColumnVisibilityChange: (v: VisibilityState) => void
+  onRowSelectionChange: (v: RowSelectionState) => void
+  onGlobalFilterChange: (v: string) => void
+  onRowClick?: (row: TData) => void
+  onDeleteRows?: (rows: TData[]) => void
+  bulkActions?: (selected: TData[]) => ReactNode
+  rowKey?: (row: TData) => string
+  pageSize: number
+  allColumns: ColumnDef<TData>[]
+  emptyTitle: string
+  emptyDescription?: string
+  emptyIcon?: ReactNode
+  emptyAction?: { label: string; onClick: () => void }
+  globalFilterValue: string
+  onGlobalFilterClear: () => void
+  enableGlobalFilter: boolean
+  searchPlaceholder: string
+  toolbarActions?: ReactNode
+}
+
+function DataTableInner<TData>({
   columns,
   data,
-  loading,
-  searchKey,
-  searchPlaceholder = "Search...",
-  pageSize = 10,
+  sorting,
+  columnFilters,
+  columnVisibility,
+  rowSelection,
+  globalFilter,
+  onSortingChange,
+  onColumnFiltersChange,
+  onColumnVisibilityChange,
+  onRowSelectionChange,
+  onGlobalFilterChange,
   onRowClick,
   onDeleteRows,
-  toolbarActions,
-  emptyTitle = "No results found.",
+  bulkActions,
+  rowKey,
+  pageSize,
+  allColumns,
+  emptyTitle,
   emptyDescription,
   emptyIcon,
   emptyAction,
-  enableSelection,
-  bulkActions,
-  rowKey,
-  enableGlobalFilter = true,
-}: DataTableProps<TData>) {
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
-  const [globalFilter, setGlobalFilter] = useState("")
-
-  const allColumns = enableSelection
-    ? [
-        {
-          id: "__select",
-          size: 32,
-          header: ({ table }: { table: { getIsAllPageRowsSelected: () => boolean; toggleAllPageRowsSelected: (v: boolean) => void } }) => (
-            <input type="checkbox" className="h-3.5 w-3.5 rounded border-border accent-foreground"
-              checked={table.getIsAllPageRowsSelected()}
-              onChange={(e) => table.toggleAllPageRowsSelected(!!e.target.checked)} />
-          ),
-          cell: ({ row }: { row: Row<TData> }) => (
-            <input type="checkbox" className="h-3.5 w-3.5 rounded border-border accent-foreground"
-              checked={row.getIsSelected()}
-              onChange={(e) => row.toggleSelected(!!e.target.checked)}
-              onClick={(e) => e.stopPropagation()} />
-          ),
-        } as ColumnDef<TData>,
-        ...columns,
-      ]
-    : columns
-
+  globalFilterValue,
+  onGlobalFilterClear,
+  enableGlobalFilter,
+  searchPlaceholder,
+  toolbarActions,
+}: InnerProps<TData>) {
+  "use no memo"
   const table = useReactTable({
-    data: data ?? [],
-    columns: allColumns,
+    data,
+    columns,
     state: { sorting, columnFilters, columnVisibility, rowSelection, globalFilter },
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    onGlobalFilterChange: setGlobalFilter,
+    onSortingChange,
+    onColumnFiltersChange,
+    onColumnVisibilityChange,
+    onRowSelectionChange,
+    onGlobalFilterChange,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -139,74 +153,40 @@ export function DataTable<TData>({
   })
 
   const selectedRows = table.getFilteredSelectedRowModel().rows.map((r) => r.original)
-  const hasData = (data?.length ?? 0) > 0
-
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center gap-4">
-          <Skeleton className="h-10 flex-1" />
-          <Skeleton className="h-10 w-[180px]" />
-          <Skeleton className="h-10 w-[120px]" />
-        </div>
-        <div className="overflow-hidden rounded-lg border border-border bg-card">
-          <div className="max-h-[640px] overflow-auto">
-            <Table>
-              <TableHeader className="sticky top-0 z-10 bg-card">
-                <TableRow className="border-border hover:bg-transparent">
-                  {allColumns.map((_c, i) => (
-                    <TableHead key={i} className="h-10 border-b border-border"><Skeleton className="h-4 w-full max-w-[100px]" /></TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <TableRow key={i} className="border-border">
-                    {allColumns.map((_c, j) => (
-                      <TableCell key={j} className="py-3"><Skeleton className="h-4 w-full max-w-[120px]" /></TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  const hasSelectedRows = selectedRows.length > 0
 
   return (
-    <div className="space-y-3">
+    <>
       <div className="flex items-center gap-2">
-        {(enableGlobalFilter || searchKey) && (
+        {enableGlobalFilter && (
           <div className="relative max-w-sm flex-1">
             <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder={searchPlaceholder}
-              value={globalFilter}
-              onChange={(e) => setGlobalFilter(e.target.value)}
+              value={globalFilterValue}
+              onChange={(e) => onGlobalFilterChange(e.target.value)}
               className="h-9 pl-8 pr-8"
             />
-            {globalFilter && (
-              <button onClick={() => setGlobalFilter("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+            {globalFilterValue && (
+              <button onClick={onGlobalFilterClear} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                 <X className="h-3.5 w-3.5" />
               </button>
             )}
           </div>
         )}
-        <div className="flex-1" />
-        {toolbarActions}
-        {enableSelection && selectedRows.length > 0 && bulkActions && (
+        {onDeleteRows && hasSelectedRows && (
+          <Button variant="destructive" size="sm" className="h-9" onClick={() => onDeleteRows(selectedRows)}>
+            Delete ({selectedRows.length})
+          </Button>
+        )}
+        {hasSelectedRows && bulkActions && (
           <div className="flex items-center gap-2 rounded-md border border-border bg-card px-2 py-1">
             <span className="text-xs text-muted-foreground">{selectedRows.length} selected</span>
             {bulkActions(selectedRows)}
           </div>
         )}
-        {onDeleteRows && selectedRows.length > 0 && (
-          <Button variant="destructive" size="sm" className="h-9" onClick={() => onDeleteRows(selectedRows)}>
-            Delete ({selectedRows.length})
-          </Button>
-        )}
+        <div className="flex-1" />
+        {toolbarActions}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="h-9">
@@ -280,7 +260,7 @@ export function DataTable<TData>({
         </div>
       </div>
 
-      {hasData && (
+      {data.length > 0 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
             Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()} ({table.getFilteredRowModel().rows.length} total)
@@ -311,6 +291,127 @@ export function DataTable<TData>({
           </div>
         </div>
       )}
+    </>
+  )
+}
+
+export function DataTable<TData>({
+  columns,
+  data,
+  loading,
+  searchKey,
+  searchPlaceholder = "Search...",
+  pageSize = 10,
+  onRowClick,
+  onDeleteRows,
+  toolbarActions,
+  emptyTitle = "No results found.",
+  emptyDescription,
+  emptyIcon,
+  emptyAction,
+  enableSelection,
+  bulkActions,
+  rowKey,
+  enableGlobalFilter = true,
+}: DataTableProps<TData>) {
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+  const [globalFilter, setGlobalFilter] = useState("")
+
+  const allColumns = useMemo(
+    () =>
+      enableSelection
+        ? [
+            {
+              id: "__select",
+              size: 32,
+              header: ({ table }: { table: { getIsAllPageRowsSelected: () => boolean; toggleAllPageRowsSelected: (v: boolean) => void } }) => (
+                <input type="checkbox" className="h-3.5 w-3.5 rounded border-border accent-foreground"
+                  checked={table.getIsAllPageRowsSelected()}
+                  onChange={(e) => table.toggleAllPageRowsSelected(!!e.target.checked)} />
+              ),
+              cell: ({ row }: { row: Row<TData> }) => (
+                <input type="checkbox" className="h-3.5 w-3.5 rounded border-border accent-foreground"
+                  checked={row.getIsSelected()}
+                  onChange={(e) => row.toggleSelected(!!e.target.checked)}
+                  onClick={(e) => e.stopPropagation()} />
+              ),
+            } as ColumnDef<TData>,
+            ...columns,
+          ]
+        : columns,
+    [enableSelection, columns],
+  )
+
+  const safeData = useMemo(() => data ?? [], [data])
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-10 flex-1" />
+          <Skeleton className="h-10 w-[180px]" />
+          <Skeleton className="h-10 w-[120px]" />
+        </div>
+        <div className="overflow-hidden rounded-lg border border-border bg-card">
+          <div className="max-h-[640px] overflow-auto">
+            <Table>
+              <TableHeader className="sticky top-0 z-10 bg-card">
+                <TableRow className="border-border hover:bg-transparent">
+                  {allColumns.map((_c, i) => (
+                    <TableHead key={i} className="h-10 border-b border-border"><Skeleton className="h-4 w-full max-w-[100px]" /></TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <TableRow key={i} className="border-border">
+                    {allColumns.map((_c, j) => (
+                      <TableCell key={j} className="py-3"><Skeleton className="h-4 w-full max-w-[120px]" /></TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      <DataTableInner
+        columns={allColumns}
+        data={safeData}
+        sorting={sorting}
+        columnFilters={columnFilters}
+        columnVisibility={columnVisibility}
+        rowSelection={rowSelection}
+        globalFilter={globalFilter}
+        onSortingChange={setSorting}
+        onColumnFiltersChange={setColumnFilters}
+        onColumnVisibilityChange={setColumnVisibility}
+        onRowSelectionChange={setRowSelection}
+        onGlobalFilterChange={setGlobalFilter}
+        onRowClick={onRowClick}
+        onDeleteRows={onDeleteRows}
+        bulkActions={bulkActions}
+        rowKey={rowKey}
+        pageSize={pageSize}
+        allColumns={allColumns}
+        emptyTitle={emptyTitle}
+        emptyDescription={emptyDescription}
+        emptyIcon={emptyIcon}
+        emptyAction={emptyAction}
+        globalFilterValue={globalFilter}
+        onGlobalFilterClear={() => setGlobalFilter("")}
+        enableGlobalFilter={!!(enableGlobalFilter || searchKey)}
+        searchPlaceholder={searchPlaceholder}
+        toolbarActions={toolbarActions}
+      />
     </div>
   )
 }

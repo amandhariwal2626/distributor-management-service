@@ -43,6 +43,7 @@ const ROLES: RoleSeed[] = [
       'workflow.read', 'workflow.create', 'workflow.approve',
       'attribute.read', 'attribute.create',
       'document.read', 'document.create', 'document.delete',
+      'geography.read', 'geography.manage', 'geography.map',
     ],
   },
   {
@@ -58,6 +59,7 @@ const ROLES: RoleSeed[] = [
       'report.read', 'report.export',
       'product.read',
       'price.read',
+      'geography.read',
     ],
   },
   {
@@ -73,6 +75,7 @@ const ROLES: RoleSeed[] = [
       'report.read', 'report.export',
       'product.read',
       'price.read',
+      'geography.read',
     ],
   },
   {
@@ -88,6 +91,7 @@ const ROLES: RoleSeed[] = [
       'report.read', 'report.export',
       'product.read',
       'price.read',
+      'geography.read',
     ],
   },
   {
@@ -103,6 +107,7 @@ const ROLES: RoleSeed[] = [
       'report.read', 'report.export',
       'product.read',
       'price.read',
+      'geography.read',
     ],
   },
   {
@@ -116,6 +121,7 @@ const ROLES: RoleSeed[] = [
       'hierarchy.read',
       'product.read',
       'price.read',
+      'geography.read',
     ],
   },
   {
@@ -528,11 +534,66 @@ async function main() {
     });
   }
 
+  // ── 14. BUSINESS UNITS (10) ──────────────────────────────────────
+
+  const buData = [
+    { code: 'BU-FNB', name: 'Food & Beverages', description: 'Food and beverage product lines' },
+    { code: 'BU-HPC', name: 'Home & Personal Care', description: 'Home care and personal hygiene products' },
+    { code: 'BU-HLW', name: 'Health & Wellness', description: 'Health supplements and wellness products' },
+    { code: 'BU-BBY', name: 'Baby Care', description: 'Baby and infant care products' },
+    { code: 'BU-BEV', name: 'Beverages', description: 'Non-alcoholic beverages' },
+    { code: 'BU-SNC', name: 'Snacks & Confectionery', description: 'Snack foods and confectionery items' },
+    { code: 'BU-DRY', name: 'Dairy & Frozen', description: 'Dairy products and frozen foods' },
+    { code: 'BU-SPI', name: 'Spices & Condiments', description: 'Spices, masalas, and condiments' },
+    { code: 'BU-CLN', name: 'Cleaning & Household', description: 'Cleaning products and household supplies' },
+    { code: 'BU-PET', name: 'Pet Care', description: 'Pet food and pet care products' },
+  ];
+
+  const createdBus: { id: string; code: string }[] = [];
+
+  for (const bu of buData) {
+    const record = await prisma.businessUnit.upsert({
+      where: { companyId_code: { companyId: organizationId, code: bu.code } },
+      create: { companyId: organizationId, code: bu.code, name: bu.name, description: bu.description },
+      update: {},
+    });
+    createdBus.push({ id: record.id, code: record.code });
+  }
+
+  function findBu(code: string) {
+    return createdBus.find((b) => b.code === code);
+  }
+
+  // ── 15. DIVISIONS (10) ───────────────────────────────────────────
+
+  const divisionData = [
+    { code: 'DIV-PKG', name: 'Packaged Foods', businessUnitCode: 'BU-FNB' },
+    { code: 'DIV-GRN', name: 'Grains & Pulses', businessUnitCode: 'BU-FNB' },
+    { code: 'DIV-OIL', name: 'Edible Oils', businessUnitCode: 'BU-FNB' },
+    { code: 'DIV-SOAP', name: 'Soaps & Detergents', businessUnitCode: 'BU-HPC' },
+    { code: 'DIV-ORL', name: 'Oral Care', businessUnitCode: 'BU-HPC' },
+    { code: 'DIV-VIT', name: 'Vitamins & Supplements', businessUnitCode: 'BU-HLW' },
+    { code: 'DIV-OTC', name: 'OTC Medicines', businessUnitCode: 'BU-HLW' },
+    { code: 'DIV-DIA', name: 'Diapers & Wipes', businessUnitCode: 'BU-BBY' },
+    { code: 'DIV-CARB', name: 'Carbonated Drinks', businessUnitCode: 'BU-BEV' },
+    { code: 'DIV-JUI', name: 'Juices & Drinks', businessUnitCode: 'BU-BEV' },
+  ];
+
+  for (const div of divisionData) {
+    const bu = findBu(div.businessUnitCode);
+    if (!bu) continue;
+    await prisma.division.upsert({
+      where: { companyId_code: { companyId: organizationId, code: div.code } },
+      create: { companyId: organizationId, businessUnitId: bu.id, code: div.code, name: div.name },
+      update: {},
+    });
+  }
+
   // ════════════════════════════════════════════════════════════════
   // PRODUCT MASTER MODULE — V2 SEED DATA
   // ════════════════════════════════════════════════════════════════
 
-  // ── 14. PRODUCT CATEGORIES (10) ─────────────────────────────────
+  // ── 16. PRODUCT CATEGORIES (10) ─────────────────────────────────
 
   const categoryData = [
     { categoryCode: 'CAT-FG', categoryName: 'Food Grains', description: 'Rice, wheat, and other grains' },
@@ -564,7 +625,7 @@ async function main() {
     return c;
   }
 
-  // ── 15. PRODUCT SUB-CATEGORIES (10) ─────────────────────────────
+  // ── 18. PRODUCT SUB-CATEGORIES (10) ─────────────────────────────
 
   const subCategoryData = [
     { subCategoryCode: 'SCT-RICE', subCategoryName: 'Rice', description: 'All varieties of rice', categoryCode: 'CAT-FG' },
@@ -595,7 +656,7 @@ async function main() {
     return createdSubCategories.find((sc) => sc.subCategoryCode === code);
   }
 
-  // ── 16. BRANDS (10) ─────────────────────────────────────────────
+  // ── 19. BRANDS (10) ─────────────────────────────────────────────
 
   const brandData = [
     { brandCode: 'BRD-PH', brandName: 'Premium Harvest', description: 'Premium quality food products' },
@@ -625,7 +686,32 @@ async function main() {
     return createdBrands.find((b) => b.brandCode === code);
   }
 
-  // ── 17. MANUFACTURERS (10) ──────────────────────────────────────
+  // ── 20. SUB-BRANDS (10) ─────────────────────────────────────────
+
+  const subBrandData = [
+    { code: 'SB-PH-CL', name: 'Premium Harvest Classic', brandCode: 'BRD-PH' },
+    { code: 'SB-PH-OR', name: 'Premium Harvest Organic', brandCode: 'BRD-PH' },
+    { code: 'SB-NF-COL', name: "Nature's Fresh Cold Pressed", brandCode: 'BRD-NF' },
+    { code: 'SB-NF-ORG', name: "Nature's Fresh Organic Select", brandCode: 'BRD-NF' },
+    { code: 'SB-CF-DIET', name: 'Cool Fizz Diet', brandCode: 'BRD-CF' },
+    { code: 'SB-CF-ZERO', name: 'Cool Fizz Zero Sugar', brandCode: 'BRD-CF' },
+    { code: 'SB-CB-SALT', name: 'Crunchy Bites Classic Salted', brandCode: 'BRD-CB' },
+    { code: 'SB-CB-MAS', name: 'Crunchy Bites Masala', brandCode: 'BRD-CB' },
+    { code: 'SB-DF-PRO', name: 'Daily Fresh Pro', brandCode: 'BRD-DF' },
+    { code: 'SB-DF-NAT', name: 'Daily Fresh Natural', brandCode: 'BRD-DF' },
+  ];
+
+  for (const sb of subBrandData) {
+    const brand = createdBrands.find((b) => b.brandCode === sb.brandCode);
+    if (!brand) continue;
+    await prisma.subBrand.upsert({
+      where: { companyId_code: { companyId: organizationId, code: sb.code } },
+      create: { companyId: organizationId, brandId: brand.id, code: sb.code, name: sb.name },
+      update: {},
+    });
+  }
+
+  // ── 21. MANUFACTURERS (10) ──────────────────────────────────────
 
   const manufacturerData = [
     { manufacturerCode: 'MFR-ABC', manufacturerName: 'ABC Foods Ltd', gstNumber: '27AABCA1234B1Z1', contactPerson: 'Rajesh Mehta', email: 'rajesh@abcfoods.in', phone: '9876543210', address: 'Mumbai, Maharashtra' },
@@ -655,7 +741,7 @@ async function main() {
     return createdManufacturers.find((m) => m.manufacturerCode === code);
   }
 
-  // ── 18. UOMs (10) ───────────────────────────────────────────────
+  // ── 21. UOMs (10) ───────────────────────────────────────────────
 
   const uomData = [
     { uomCode: 'UOM-KG', uomName: 'Kilogram', description: 'Weight in kilograms' },
@@ -685,7 +771,7 @@ async function main() {
     return createdUoms.find((u) => u.uomCode === code);
   }
 
-  // ── 19. TAX GROUPS (10) ─────────────────────────────────────────
+  // ── 22. TAX GROUPS (10) ─────────────────────────────────────────
 
   const taxGroupData = [
     { taxCode: 'GST-5', taxName: 'GST 5%', cgst: 2.5, sgst: 2.5, igst: 5.0, cess: 0 },
@@ -715,7 +801,7 @@ async function main() {
     return createdTaxGroups.find((t) => t.taxCode === code);
   }
 
-  // ── 20. PRODUCTS (10) ───────────────────────────────────────────
+  // ── 23. PRODUCTS (10) ───────────────────────────────────────────
 
   const productData = [
     {
@@ -829,7 +915,7 @@ async function main() {
     return createdProducts.find((p) => p.productCode === code);
   }
 
-  // ── 21. PRODUCT UOM CONVERSIONS (10) ────────────────────────────
+  // ── 24. PRODUCT UOM CONVERSIONS (10) ────────────────────────────
 
   const conversionData = [
     { productCode: 'PROD-001', fromUomCode: 'UOM-KG', toUomCode: 'UOM-GM', conversionFactor: 1000 },
@@ -870,7 +956,7 @@ async function main() {
     });
   }
 
-  // ── 22. PRODUCT PRICES (10) ─────────────────────────────────────
+  // ── 25. PRODUCT PRICES (10) ─────────────────────────────────────
 
   await prisma.productPrice.deleteMany({ where: { companyId: organizationId } });
 
@@ -905,7 +991,7 @@ async function main() {
     });
   }
 
-  // ── 23. PRODUCT IMAGES (10) ─────────────────────────────────────
+  // ── 26. PRODUCT IMAGES (10) ─────────────────────────────────────
 
   await prisma.productImage.deleteMany({ where: { companyId: organizationId } });
 
@@ -926,7 +1012,7 @@ async function main() {
     });
   }
 
-  // ── 24. PRODUCT DOCUMENTS (10) ──────────────────────────────────
+  // ── 27. PRODUCT DOCUMENTS (10) ──────────────────────────────────
 
   await prisma.prodDocument.deleteMany({ where: { companyId: organizationId } });
 
@@ -949,7 +1035,7 @@ async function main() {
     });
   }
 
-  // ── 25. ATTRIBUTE DEFINITIONS (10) ──────────────────────────────
+  // ── 28. ATTRIBUTE DEFINITIONS (10) ──────────────────────────────
 
   const attributeData = [
     { attributeCode: 'ATTR-FLAVOR', attributeName: 'Flavor', dataType: 'DROPDOWN' as const, mandatory: false },
@@ -975,7 +1061,7 @@ async function main() {
     createdAttributes.push({ id: record.id, attributeCode: record.attributeCode });
   }
 
-  // ── 26. PRODUCT ATTRIBUTE VALUES (10) ───────────────────────────
+  // ── 29. PRODUCT ATTRIBUTE VALUES (10) ───────────────────────────
 
   const attrValueData = [
     { productCode: 'PROD-001', attributeCode: 'ATTR-WEIGHT', value: '5000' },
@@ -1013,7 +1099,7 @@ async function main() {
     });
   }
 
-  // ── 27. PRODUCT TAGS (10) ───────────────────────────────────────
+  // ── 30. PRODUCT TAGS (10) ───────────────────────────────────────
 
   const tagNames = ['Bestseller', 'New Arrival', 'Organic', 'Seasonal', 'Discount Eligible', 'Premium', 'Eco-Friendly', 'Limited Edition', 'Bulk Pack', 'Sample'];
 
@@ -1028,7 +1114,7 @@ async function main() {
     createdTags.push({ id: record.id, tagName: record.tagName });
   }
 
-  // ── 28. PRODUCT TAG MAPPINGS (10) ───────────────────────────────
+  // ── 31. PRODUCT TAG MAPPINGS (10) ───────────────────────────────
 
   for (let i = 0; i < 10; i++) {
     const productCode = `PROD-${String((i % 10) + 1).padStart(3, '0')}`;
@@ -1053,7 +1139,7 @@ async function main() {
     });
   }
 
-  // ── 29. PRODUCT WAREHOUSES (10) ─────────────────────────────────
+  // ── 32. PRODUCT WAREHOUSES (10) ─────────────────────────────────
 
   await prisma.productWarehouse.deleteMany({ where: { companyId: organizationId } });
 
@@ -1076,7 +1162,7 @@ async function main() {
     });
   }
 
-  // ── 30. PRODUCT AUDIT LOGS (10) ─────────────────────────────────
+  // ── 33. PRODUCT AUDIT LOGS (10) ─────────────────────────────────
 
   await prisma.productAuditLog.deleteMany({ where: { companyId: organizationId } });
 
@@ -1099,7 +1185,7 @@ async function main() {
     });
   }
 
-  // ── 31. PRODUCT APPROVALS (10) ──────────────────────────────────
+  // ── 34. PRODUCT APPROVALS (10) ──────────────────────────────────
 
   await prisma.productApproval.deleteMany({ where: { companyId: organizationId } });
 
@@ -1124,16 +1210,188 @@ async function main() {
     });
   }
 
+  // ── 35. COUNTRIES (1 + 3) ──────────────────────────────────────
+
+  const countryData = [
+    { code: 'IN', name: 'India', isoCode: 'IND', currency: 'INR' },
+    { code: 'AE', name: 'United Arab Emirates', isoCode: 'ARE', currency: 'AED' },
+    { code: 'NP', name: 'Nepal', isoCode: 'NPL', currency: 'NPR' },
+    { code: 'BD', name: 'Bangladesh', isoCode: 'BGD', currency: 'BDT' },
+  ];
+
+  const createdCountries: { id: string; code: string }[] = [];
+
+  for (const c of countryData) {
+    const record = await prisma.country.upsert({
+      where: { companyId_code: { companyId: organizationId, code: c.code } },
+      create: { companyId: organizationId, code: c.code, name: c.name, isoCode: c.isoCode, currency: c.currency },
+      update: {},
+    });
+    createdCountries.push({ id: record.id, code: record.code });
+  }
+
+  function findCountry(code: string) {
+    return createdCountries.find((c) => c.code === code);
+  }
+
+  // ── 36. STATES (10) ─────────────────────────────────────────────
+
+  const stateData = [
+    { code: 'MH', name: 'Maharashtra', countryCode: 'IN', gstCode: '27' },
+    { code: 'DL', name: 'Delhi', countryCode: 'IN', gstCode: '07' },
+    { code: 'KA', name: 'Karnataka', countryCode: 'IN', gstCode: '29' },
+    { code: 'TN', name: 'Tamil Nadu', countryCode: 'IN', gstCode: '33' },
+    { code: 'WB', name: 'West Bengal', countryCode: 'IN', gstCode: '19' },
+    { code: 'TG', name: 'Telangana', countryCode: 'IN', gstCode: '36' },
+    { code: 'GJ', name: 'Gujarat', countryCode: 'IN', gstCode: '24' },
+    { code: 'UP', name: 'Uttar Pradesh', countryCode: 'IN', gstCode: '09' },
+    { code: 'RJ', name: 'Rajasthan', countryCode: 'IN', gstCode: '08' },
+    { code: 'HR', name: 'Haryana', countryCode: 'IN', gstCode: '06' },
+  ];
+
+  const createdStates: { id: string; code: string }[] = [];
+
+  for (const s of stateData) {
+    const country = findCountry(s.countryCode);
+    if (!country) continue;
+    const record = await prisma.state.upsert({
+      where: { companyId_code: { companyId: organizationId, code: s.code } },
+      create: { companyId: organizationId, countryId: country.id, code: s.code, name: s.name, gstCode: s.gstCode },
+      update: {},
+    });
+    createdStates.push({ id: record.id, code: record.code });
+  }
+
+  function findState(code: string) {
+    return createdStates.find((s) => s.code === code);
+  }
+
+  // ── 37. ZONES (10) ──────────────────────────────────────────────
+
+  const zoneData = [
+    { code: 'Z-WEST', name: 'West Zone', stateCode: 'MH' },
+    { code: 'Z-NORTH', name: 'North Zone', stateCode: 'DL' },
+    { code: 'Z-SOUTH', name: 'South Zone', stateCode: 'KA' },
+    { code: 'Z-SOUTH-2', name: 'South Zone II', stateCode: 'TN' },
+    { code: 'Z-EAST', name: 'East Zone', stateCode: 'WB' },
+    { code: 'Z-SOUTH-3', name: 'South Central Zone', stateCode: 'TG' },
+    { code: 'Z-WEST-2', name: 'West Zone II', stateCode: 'GJ' },
+    { code: 'Z-NORTH-2', name: 'Central North Zone', stateCode: 'UP' },
+    { code: 'Z-NORTH-3', name: 'North West Zone', stateCode: 'RJ' },
+    { code: 'Z-NORTH-4', name: 'North East Zone', stateCode: 'HR' },
+  ];
+
+  const createdZones: { id: string; code: string }[] = [];
+
+  for (const z of zoneData) {
+    const state = findState(z.stateCode);
+    if (!state) continue;
+    const record = await prisma.zone.upsert({
+      where: { companyId_code: { companyId: organizationId, code: z.code } },
+      create: { companyId: organizationId, stateId: state.id, code: z.code, name: z.name },
+      update: {},
+    });
+    createdZones.push({ id: record.id, code: record.code });
+  }
+
+  function findZone(code: string) {
+    return createdZones.find((z) => z.code === code);
+  }
+
+  // ── 38. REGIONS (10) ────────────────────────────────────────────
+
+  const regionData = [
+    { code: 'R-MUM', name: 'Mumbai', zoneCode: 'Z-WEST' },
+    { code: 'R-PUN', name: 'Pune', zoneCode: 'Z-WEST' },
+    { code: 'R-DEL', name: 'Delhi NCR', zoneCode: 'Z-NORTH' },
+    { code: 'R-BLR', name: 'Bengaluru', zoneCode: 'Z-SOUTH' },
+    { code: 'R-CHE', name: 'Chennai', zoneCode: 'Z-SOUTH-2' },
+    { code: 'R-KOL', name: 'Kolkata', zoneCode: 'Z-EAST' },
+    { code: 'R-HYD', name: 'Hyderabad', zoneCode: 'Z-SOUTH-3' },
+    { code: 'R-AHM', name: 'Ahmedabad', zoneCode: 'Z-WEST-2' },
+    { code: 'R-LKO', name: 'Lucknow', zoneCode: 'Z-NORTH-2' },
+    { code: 'R-JAI', name: 'Jaipur', zoneCode: 'Z-NORTH-3' },
+  ];
+
+  const createdRegions: { id: string; code: string }[] = [];
+
+  for (const r of regionData) {
+    const zone = findZone(r.zoneCode);
+    if (!zone) continue;
+    const record = await prisma.region.upsert({
+      where: { companyId_code: { companyId: organizationId, code: r.code } },
+      create: { companyId: organizationId, zoneId: zone.id, code: r.code, name: r.name },
+      update: {},
+    });
+    createdRegions.push({ id: record.id, code: record.code });
+  }
+
+  function findRegion(code: string) {
+    return createdRegions.find((r) => r.code === code);
+  }
+
+  // ── 39. DEPOTS (10) ─────────────────────────────────────────────
+
+  const depotData = [
+    { code: 'DP-MUM-01', name: 'Mumbai Central Depot', regionCode: 'R-MUM', address: 'Andheri East, Mumbai', city: 'Mumbai', pincode: '400093' },
+    { code: 'DP-PUN-01', name: 'Pune Main Depot', regionCode: 'R-PUN', address: 'Hinjewadi, Pune', city: 'Pune', pincode: '411057' },
+    { code: 'DP-DEL-01', name: 'Delhi Hub Depot', regionCode: 'R-DEL', address: 'Karol Bagh, Delhi', city: 'Delhi', pincode: '110005' },
+    { code: 'DP-BLR-01', name: 'Bengaluru Central Depot', regionCode: 'R-BLR', address: 'Whitefield, Bangalore', city: 'Bangalore', pincode: '560066' },
+    { code: 'DP-CHE-01', name: 'Chennai Port Depot', regionCode: 'R-CHE', address: 'T Nagar, Chennai', city: 'Chennai', pincode: '600017' },
+    { code: 'DP-KOL-01', name: 'Kolkata Warehouse', regionCode: 'R-KOL', address: 'Park Street, Kolkata', city: 'Kolkata', pincode: '700016' },
+    { code: 'DP-HYD-01', name: 'Hyderabad Distribution Center', regionCode: 'R-HYD', address: 'Banjara Hills, Hyderabad', city: 'Hyderabad', pincode: '500034' },
+    { code: 'DP-AHM-01', name: 'Ahmedabad Depot', regionCode: 'R-AHM', address: 'Navrangpura, Ahmedabad', city: 'Ahmedabad', pincode: '380009' },
+    { code: 'DP-LKO-01', name: 'Lucknow Regional Depot', regionCode: 'R-LKO', address: 'Hazratganj, Lucknow', city: 'Lucknow', pincode: '226001' },
+    { code: 'DP-JAI-01', name: 'Jaipur Depot', regionCode: 'R-JAI', address: 'MI Road, Jaipur', city: 'Jaipur', pincode: '302001' },
+  ];
+
+  for (const d of depotData) {
+    const region = findRegion(d.regionCode);
+    if (!region) continue;
+    await prisma.depot.upsert({
+      where: { companyId_code: { companyId: organizationId, code: d.code } },
+      create: { companyId: organizationId, regionId: region.id, code: d.code, name: d.name, address: d.address, city: d.city, pincode: d.pincode },
+      update: {},
+    });
+  }
+
+  // ── 40. PRODUCT GEOGRAPHY MAPPINGS (10) ─────────────────────────
+
+  await prisma.productGeographyMapping.deleteMany({ where: { companyId: organizationId } });
+
+  for (let i = 0; i < 10; i++) {
+    const productCode = `PROD-${String((i % 10) + 1).padStart(3, '0')}`;
+    const product = findProduct(productCode);
+    if (!product) continue;
+
+    const country = findCountry('IN');
+    const state = findState(['MH', 'DL', 'KA', 'TN', 'WB', 'TG', 'GJ', 'UP', 'RJ', 'HR'][i]);
+    if (!country || !state) continue;
+
+    await prisma.productGeographyMapping.create({
+      data: {
+        companyId: organizationId,
+        productId: product.id,
+        countryId: country.id,
+        stateId: state.id,
+        availabilityStatus: 'AVAILABLE',
+        createdBy: adminId,
+      },
+    });
+  }
+
   // ── SUMMARY ─────────────────────────────────────────────────────
   const summary: Record<string, number> = {};
   for (const model of [
     'Organization', 'User', 'Role', 'Permission', 'UserRole', 'RolePermission',
     'Session', 'PasswordResetToken', 'RevokedToken', 'InviteToken',
     'UserPermission', 'UserAuditLog', 'AuditLog', 'SecurityEvent', 'DistributorMaster',
+    'BusinessUnit', 'Division', 'SubBrand',
     'ProductCategory', 'ProductSubCategory', 'Brand', 'Manufacturer', 'Uom',
     'TaxGroup', 'Product', 'ProductUomConversion', 'ProductPrice', 'ProductImage',
     'ProdDocument', 'AttributeDefinition', 'ProductAttributeValue', 'ProductTag',
     'ProductTagMapping', 'ProductWarehouse', 'ProductAuditLog', 'ProductApproval',
+    'Country', 'State', 'Zone', 'Region', 'Depot', 'ProductGeographyMapping',
   ]) {
     const count = await (prisma as any)[model[0].toLowerCase() + model.slice(1)].count();
     summary[model] = count;

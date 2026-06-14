@@ -19,14 +19,20 @@ import { Permissions } from '../decorators/permissions.decorator';
 import { HierarchyService } from './hierarchy.service';
 import {
   CreateBrandDto,
+  CreateBusinessUnitDto,
+  CreateDivisionDto,
   CreateManufacturerDto,
   CreateProductCategoryDto,
   CreateProductSubCategoryDto,
+  CreateSubBrandDto,
   CreateUomDto,
   UpdateBrandDto,
+  UpdateBusinessUnitDto,
+  UpdateDivisionDto,
   UpdateManufacturerDto,
   UpdateProductCategoryDto,
   UpdateProductSubCategoryDto,
+  UpdateSubBrandDto,
   UpdateUomDto,
 } from './dto';
 
@@ -66,6 +72,13 @@ export class HierarchyController {
   @ApiOperation({ summary: 'Get a product category by ID' })
   getCategory(@Param('id') id: string) {
     return this.hierarchyService.getCategory(id);
+  }
+
+  @Get('categories/:id/sub-categories')
+  @Permissions('hierarchy.view')
+  @ApiOperation({ summary: 'Get sub-categories by category ID' })
+  getSubCategoriesByCategoryId(@Param('id') id: string) {
+    return this.hierarchyService.getSubCategories(id);
   }
 
   @Patch('categories/:id')
@@ -166,6 +179,13 @@ export class HierarchyController {
   @ApiOperation({ summary: 'Get a brand by ID' })
   getBrand(@Param('id') id: string) {
     return this.hierarchyService.getBrand(id);
+  }
+
+  @Get('brands/:id/sub-brands')
+  @Permissions('hierarchy.view')
+  @ApiOperation({ summary: 'Get sub-brands by brand ID' })
+  getSubBrandsByBrandId(@Param('id') id: string) {
+    return this.hierarchyService.getSubBrands(id);
   }
 
   @Patch('brands/:id')
@@ -287,5 +307,149 @@ export class HierarchyController {
     @Req() req: Request & { user: { sub: string } },
   ) {
     return this.hierarchyService.deleteUom(id, req.user.sub);
+  }
+
+  // ── Business Units ─────────────────────────────────────────────
+
+  @Post('business-units')
+  @Permissions('product.create')
+  @ApiOperation({ summary: 'Create a business unit' })
+  createBusinessUnit(
+    @Req() req: Request & { user: { sub: string } },
+    @Body() dto: CreateBusinessUnitDto,
+    @Headers('x-organization-id') organizationId: string,
+  ) {
+    return this.hierarchyService.createBusinessUnit(req.user.sub, organizationId, dto);
+  }
+
+  @Get('business-units')
+  @Permissions('hierarchy.view')
+  @ApiOperation({ summary: 'List all business units' })
+  getBusinessUnits() {
+    return this.hierarchyService.getBusinessUnits();
+  }
+
+  @Get('business-units/:id')
+  @Permissions('hierarchy.view')
+  @ApiOperation({ summary: 'Get a business unit by ID' })
+  getBusinessUnit(@Param('id') id: string) {
+    return this.hierarchyService.getBusinessUnit(id);
+  }
+
+  @Patch('business-units/:id')
+  @Permissions('product.create')
+  @ApiOperation({ summary: 'Update a business unit' })
+  updateBusinessUnit(
+    @Param('id') id: string,
+    @Req() req: Request & { user: { sub: string } },
+    @Body() dto: UpdateBusinessUnitDto,
+  ) {
+    return this.hierarchyService.updateBusinessUnit(id, req.user.sub, dto);
+  }
+
+  @Delete('business-units/:id')
+  @Permissions('product.create')
+  @ApiOperation({ summary: 'Soft-delete a business unit' })
+  deleteBusinessUnit(
+    @Param('id') id: string,
+    @Req() req: Request & { user: { sub: string } },
+  ) {
+    return this.hierarchyService.deleteBusinessUnit(id, req.user.sub);
+  }
+
+  // ── Divisions ──────────────────────────────────────────────────
+
+  @Post('divisions')
+  @Permissions('product.create')
+  @ApiOperation({ summary: 'Create a division' })
+  createDivision(
+    @Req() req: Request & { user: { sub: string } },
+    @Body() dto: CreateDivisionDto,
+    @Headers('x-organization-id') organizationId: string,
+  ) {
+    return this.hierarchyService.createDivision(req.user.sub, organizationId, dto);
+  }
+
+  @Get('divisions')
+  @Permissions('hierarchy.view')
+  @ApiOperation({ summary: 'List divisions (optionally by business unit)' })
+  getDivisions(@Query('businessUnitId') businessUnitId?: string) {
+    return this.hierarchyService.getDivisions(businessUnitId);
+  }
+
+  @Get('divisions/:id')
+  @Permissions('hierarchy.view')
+  @ApiOperation({ summary: 'Get a division by ID' })
+  getDivision(@Param('id') id: string) {
+    return this.hierarchyService.getDivision(id);
+  }
+
+  @Patch('divisions/:id')
+  @Permissions('product.create')
+  @ApiOperation({ summary: 'Update a division' })
+  updateDivision(
+    @Param('id') id: string,
+    @Req() req: Request & { user: { sub: string } },
+    @Body() dto: UpdateDivisionDto,
+  ) {
+    return this.hierarchyService.updateDivision(id, req.user.sub, dto);
+  }
+
+  @Delete('divisions/:id')
+  @Permissions('product.create')
+  @ApiOperation({ summary: 'Soft-delete a division' })
+  deleteDivision(
+    @Param('id') id: string,
+    @Req() req: Request & { user: { sub: string } },
+  ) {
+    return this.hierarchyService.deleteDivision(id, req.user.sub);
+  }
+
+  // ── Sub-Brands ─────────────────────────────────────────────────
+
+  @Post('sub-brands')
+  @Permissions('product.create')
+  @ApiOperation({ summary: 'Create a sub-brand' })
+  createSubBrand(
+    @Req() req: Request & { user: { sub: string } },
+    @Body() dto: CreateSubBrandDto,
+    @Headers('x-organization-id') organizationId: string,
+  ) {
+    return this.hierarchyService.createSubBrand(req.user.sub, organizationId, dto);
+  }
+
+  @Get('sub-brands')
+  @Permissions('hierarchy.view')
+  @ApiOperation({ summary: 'List sub-brands (optionally by brand)' })
+  getSubBrands(@Query('brandId') brandId?: string) {
+    return this.hierarchyService.getSubBrands(brandId);
+  }
+
+  @Get('sub-brands/:id')
+  @Permissions('hierarchy.view')
+  @ApiOperation({ summary: 'Get a sub-brand by ID' })
+  getSubBrand(@Param('id') id: string) {
+    return this.hierarchyService.getSubBrand(id);
+  }
+
+  @Patch('sub-brands/:id')
+  @Permissions('product.create')
+  @ApiOperation({ summary: 'Update a sub-brand' })
+  updateSubBrand(
+    @Param('id') id: string,
+    @Req() req: Request & { user: { sub: string } },
+    @Body() dto: UpdateSubBrandDto,
+  ) {
+    return this.hierarchyService.updateSubBrand(id, req.user.sub, dto);
+  }
+
+  @Delete('sub-brands/:id')
+  @Permissions('product.create')
+  @ApiOperation({ summary: 'Soft-delete a sub-brand' })
+  deleteSubBrand(
+    @Param('id') id: string,
+    @Req() req: Request & { user: { sub: string } },
+  ) {
+    return this.hierarchyService.deleteSubBrand(id, req.user.sub);
   }
 }

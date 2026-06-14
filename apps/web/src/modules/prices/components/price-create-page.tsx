@@ -1,8 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { format } from "date-fns";
 import {
   useForm,
+  useWatch,
   Controller,
   type Resolver,
   type UseFormRegisterReturn,
@@ -15,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { SearchableCombobox } from "@/components/shared/searchable-combobox";
 import { Separator } from "@/components/ui/separator";
 import { useCreatePrice, useProductsList } from "../hooks/use-prices";
@@ -28,7 +31,6 @@ export function PriceCreatePage() {
     register,
     handleSubmit,
     control,
-    watch,
     formState: { errors },
   } = useForm<PriceFormValues>({
     resolver: zodResolver(priceSchema) as unknown as Resolver<PriceFormValues>,
@@ -45,10 +47,10 @@ export function PriceCreatePage() {
     mode: "onBlur",
   });
 
-  const mrp = Number(watch("mrp")) || 0;
-  const ptr = Number(watch("ptr")) || 0;
-  const pts = Number(watch("pts")) || 0;
-  const pp = Number(watch("purchasePrice")) || 0;
+  const mrp = Number(useWatch({ control, name: "mrp" })) || 0;
+  const ptr = Number(useWatch({ control, name: "ptr" })) || 0;
+  const pts = Number(useWatch({ control, name: "pts" })) || 0;
+  const pp = Number(useWatch({ control, name: "purchasePrice" })) || 0;
 
   const checks = [
     { ok: mrp >= ptr, label: "MRP ≥ PTR" },
@@ -132,15 +134,37 @@ export function PriceCreatePage() {
               register={register("purchasePrice")}
               error={errors.purchasePrice?.message}
             />
-            <DateField
-              label="Effective From"
-              register={register("effectiveFrom")}
-              error={errors.effectiveFrom?.message}
+            <Controller
+              control={control}
+              name="effectiveFrom"
+              render={({ field }) => (
+                <div>
+                  <Label className="mb-1.5 inline-block text-xs font-medium">Effective From</Label>
+                  <DatePicker
+                    value={field.value ? new Date(field.value) : undefined}
+                    onChange={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                  />
+                  {errors.effectiveFrom?.message ? (
+                    <p className="mt-1 text-xs text-destructive">{errors.effectiveFrom.message}</p>
+                  ) : null}
+                </div>
+              )}
             />
-            <DateField
-              label="Effective To"
-              register={register("effectiveTo")}
-              error={errors.effectiveTo?.message}
+            <Controller
+              control={control}
+              name="effectiveTo"
+              render={({ field }) => (
+                <div>
+                  <Label className="mb-1.5 inline-block text-xs font-medium">Effective To</Label>
+                  <DatePicker
+                    value={field.value ? new Date(field.value) : undefined}
+                    onChange={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                  />
+                  {errors.effectiveTo?.message ? (
+                    <p className="mt-1 text-xs text-destructive">{errors.effectiveTo.message}</p>
+                  ) : null}
+                </div>
+              )}
             />
             <div className="md:col-span-2">
               <Label className="mb-1.5 inline-block text-xs font-medium">
@@ -218,20 +242,4 @@ function PriceField({
   );
 }
 
-function DateField({
-  label,
-  register,
-  error,
-}: {
-  label: string;
-  register: UseFormRegisterReturn;
-  error?: string;
-}) {
-  return (
-    <div>
-      <Label className="mb-1.5 inline-block text-xs font-medium">{label}</Label>
-      <Input type="date" {...register} />
-      {error ? <p className="mt-1 text-xs text-destructive">{error}</p> : null}
-    </div>
-  );
-}
+

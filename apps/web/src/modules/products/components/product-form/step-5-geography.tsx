@@ -1,9 +1,11 @@
 "use client"
 
 import { useFormContext, Controller } from "react-hook-form"
+import { format } from "date-fns"
 import type { ProductFormValues } from "../../schemas"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { DatePicker } from "@/components/ui/date-picker"
 import { useGeography } from "../../hooks/use-master-data"
 import { useMemo, useState } from "react"
 import type { GeographyNode } from "../../types"
@@ -75,11 +77,14 @@ export function Step5Geography() {
                         {STATUSES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
                       </SelectContent>
                     </Select>
-                    <Input type="date" value={g.launchDate ?? ""} onChange={(e) => {
-                      const next = [...(field.value ?? [])]
-                      next[idx] = { ...next[idx], launchDate: e.target.value }
-                      field.onChange(next)
-                    }} className="h-8" />
+                    <DatePicker
+                      value={g.launchDate ? new Date(g.launchDate) : undefined}
+                      onChange={(date) => {
+                        const next = [...(field.value ?? [])]
+                        next[idx] = { ...next[idx], launchDate: date ? format(date, "yyyy-MM-dd") : undefined }
+                        field.onChange(next)
+                      }}
+                    />
                   </div>
                 </div>
               ))

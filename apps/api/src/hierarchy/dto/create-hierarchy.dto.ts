@@ -138,6 +138,91 @@ export class CreateManufacturerDto {
   status?: boolean;
 }
 
+export class CreateBusinessUnitDto {
+  @ApiProperty({ description: 'Unique code for the business unit' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(50)
+  code!: string;
+
+  @ApiProperty({ description: 'Business unit name' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(200)
+  name!: string;
+
+  @ApiPropertyOptional({ description: 'Description of the business unit' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  description?: string;
+
+  @ApiPropertyOptional({ default: true })
+  @IsOptional()
+  @IsBoolean()
+  status?: boolean;
+}
+
+export class CreateDivisionDto {
+  @ApiProperty({ description: 'Unique code for the division' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(50)
+  code!: string;
+
+  @ApiProperty({ description: 'Division name' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(200)
+  name!: string;
+
+  @ApiProperty({ description: 'Parent business unit ID' })
+  @IsUUID()
+  @IsNotEmpty()
+  businessUnitId!: string;
+
+  @ApiPropertyOptional({ description: 'Description of the division' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  description?: string;
+
+  @ApiPropertyOptional({ default: true })
+  @IsOptional()
+  @IsBoolean()
+  status?: boolean;
+}
+
+export class CreateSubBrandDto {
+  @ApiProperty({ description: 'Unique code for the sub-brand' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(50)
+  code!: string;
+
+  @ApiProperty({ description: 'Sub-brand name' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(200)
+  name!: string;
+
+  @ApiProperty({ description: 'Parent brand ID' })
+  @IsUUID()
+  @IsNotEmpty()
+  brandId!: string;
+
+  @ApiPropertyOptional({ description: 'Description of the sub-brand' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  description?: string;
+
+  @ApiPropertyOptional({ default: true })
+  @IsOptional()
+  @IsBoolean()
+  status?: boolean;
+}
+
 export class CreateUomDto {
   @ApiProperty({ description: 'Unique code for the UOM' })
   @IsString()

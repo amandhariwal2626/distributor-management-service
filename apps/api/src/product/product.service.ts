@@ -95,7 +95,7 @@ export class ProductService {
     });
 
     await this.auditLog.create({
-      organizationId: null as unknown as string,
+      organizationId,
       actorId: userId,
       action: 'PRODUCT_CREATED',
       entityType: 'product',

@@ -42,7 +42,9 @@ export function PriceListPage() {
     pageSize: 25,
   });
   const pricesQ = usePrices(filters);
-  const rows = pricesQ.data?.data ?? [];
+  const rows = useMemo(() => pricesQ.data?.data ?? [], [pricesQ.data?.data]);
+
+  const [expiryThreshold] = useState(() => new Date(Date.now() + 30 * 86400000));
 
   const kpis = useMemo(
     () => ({
@@ -50,12 +52,10 @@ export function PriceListPage() {
       future: rows.filter((r) => r.status === "future").length,
       pending: rows.filter((r) => r.status === "pending").length,
       expiring: rows.filter(
-        (r) =>
-          r.effectiveTo &&
-          new Date(r.effectiveTo) < new Date(Date.now() + 30 * 86400000),
+        (r) => r.effectiveTo && new Date(r.effectiveTo) < expiryThreshold,
       ).length,
     }),
-    [rows],
+    [rows, expiryThreshold],
   );
 
   const columns = useMemo<ColumnDef<Price>[]>(
